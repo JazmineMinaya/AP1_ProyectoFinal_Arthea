@@ -1,0 +1,23 @@
+﻿# Archivos generados por .NET
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Configuraciones privadas de desarrollo
+appsettings.Development.json
+**/appsettings.*.local.json
+
+# Bases de datos locales
+*.db
+*.db-shm
+*.db-wal
+
+# Archivos temporales
+*.log
+
+# Archivos de publicación
+publish/
