@@ -121,8 +121,7 @@
             return;
         }
 
-        if (await administradoresService.CorreoExiste(
-            Administrador.Correo, Administrador.AdministradorId))
+        if (await administradoresService.CorreoExiste(Administrador.Correo, Administrador.AdministradorId))
         {
             toastService.ShowError("Este correo ya está registrado");
             return;
