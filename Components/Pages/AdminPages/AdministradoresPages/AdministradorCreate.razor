@@ -1,0 +1,134 @@
+﻿@page "/Administradores/Create"
+@rendermode InteractiveServer
+
+@inject AdministradoresService administradoresService
+@inject NavigationManager navigationManager
+@inject ToastService toastService
+
+<PageTitle>Crear Administrador</PageTitle>
+
+<EditForm Model="Administrador" OnValidSubmit="Guardar" FormName="crearAdministrador" Context="formContext">
+    <DataAnnotationsValidator />
+
+    <div class="container">
+        <div class="card shadow-lg">
+
+            <div class="card-header">
+                <h5 class="card-title">Crear Administrador</h5>
+            </div>
+
+            <div class="card-body">
+
+                @* AdministradorId *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>AdministradorId</strong></label>
+                    <InputNumber class="form-control" @bind-Value="Administrador.AdministradorId" readonly />
+                </div>
+
+                @* Nombres *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Nombres</strong></label>
+                    <InputText class="form-control" @bind-Value="Administrador.Nombres" />
+                    <ValidationMessage For="@(() => Administrador.Nombres)" />
+                </div>
+
+                @* Correo *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Correo</strong></label>
+                    <InputText class="form-control" @bind-Value="Administrador.Correo" />
+                    <ValidationMessage For="@(() => Administrador.Correo)" />
+                </div>
+
+                @* Teléfono *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Teléfono</strong></label>
+                    <InputText class="form-control" @bind-Value="Administrador.Telefono" />
+                    <ValidationMessage For="@(() => Administrador.Telefono)" />
+                </div>
+           
+                @* Contraseña *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Contraseña</strong></label>
+                    <input type="password" class="form-control" value="@Password" @oninput="ActualizarPassword" />
+                    <ValidationMessage For="@(() => Administrador.PasswordHash)" />
+                </div>
+
+                @* Fecha de Registro *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Fecha de Registro</strong></label>
+                    <InputDate class="form-control" @bind-Value="Administrador.FechaRegistro" readonly />
+                </div>
+            
+                @* Estado *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Estado</strong></label>
+                    <InputSelect class="form-select" @bind-Value="Administrador.Activo">
+                        <option value="true">Activo</option>
+                        <option value="false">Inactivo</option>
+                    </InputSelect>
+                </div>
+
+                @* Foto de Perfil *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Foto de Perfil (opcional)</strong></label>
+                    <InputText class="form-control" @bind-Value="Administrador.FotoPerfil" />
+                </div>
+
+            </div>
+
+            @* Footer *@
+            <div class="card-footer text-center mt-2">
+                <a href="/Administradores/Index" class="btn btn-secondary"><span class="bi bi-arrow-left"></span> Volver</a>
+                <button type="submit" class="btn btn-primary bi bi-floppy"> Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    public Administradores Administrador = new Administradores();
+
+    public string Password { get; set; } = string.Empty;
+
+    private async Task Guardar()
+    {
+        if (string.IsNullOrWhiteSpace(Password))
+        {
+            toastService.ShowError("Ingrese una contraseña");
+            return;
+        }
+
+        if (await administradoresService.CorreoExiste(
+            Administrador.Correo, Administrador.AdministradorId))
+        {
+            toastService.ShowError("Este correo ya está registrado");
+            return;
+        }
+
+        Administrador.PasswordHash =
+            administradoresService.GenerarHash(Administrador, Password);
+
+        var resultado = await administradoresService.Guardar(Administrador);
+
+        resultado.OnSuccess(() =>
+        {
+            toastService.ShowSuccess("Administrador guardado correctamente");
+            navigationManager.NavigateTo("/Administradores/Index");
+        });
+
+        resultado.OnFailure(() =>
+        {
+            toastService.ShowError("No se ha podido guardar el administrador");
+        });
+    }
+    
+    private void ActualizarPassword(ChangeEventArgs e)
+    {
+        Password = e.Value?.ToString() ?? string.Empty;
+
+        Administrador.PasswordHash = string.IsNullOrWhiteSpace(Password)
+            ? string.Empty
+            : administradoresService.GenerarHash(Administrador, Password);
+    }
+}

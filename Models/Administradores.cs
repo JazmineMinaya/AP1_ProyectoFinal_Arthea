@@ -21,8 +21,7 @@ public class Administradores
     [Required(ErrorMessage = "Este campo es requerido")]
     public string PasswordHash { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Este campo es requerido")]
-    public string Rol { get; set; } = string.Empty;
+    public string Rol { get; set; } = "Administrador";
 
     public DateTime FechaRegistro { get; set; } = DateTime.Now;
 

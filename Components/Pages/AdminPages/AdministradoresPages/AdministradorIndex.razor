@@ -41,7 +41,6 @@
                         <option value="AdministradorId">AdministradorId</option>
                         <option value="Nombres">Nombres</option>
                         <option value="Correo">Correo</option>
-                        <option value="Rol">Rol</option>
                     </InputSelect>
                 </div>
 
@@ -64,10 +63,13 @@
                         <PropertyColumn Property="a => a.AdministradorId" Title="AdministradorId" Sortable="true" />
                         <PropertyColumn Property="a => a.Nombres" Title="Nombres" Sortable="true" />
                         <PropertyColumn Property="a => a.Correo" Title="Correo" Sortable="true" />
-                        <PropertyColumn Property="a => a.Telefono" Title="Teléfono" Sortable="true" />
-                        <PropertyColumn Property="a => a.Rol" Title="Rol" Sortable="true" />
-                        <PropertyColumn Property="a => a.FechaRegistro" Title="Fecha de Registro" Sortable="true" />
-                        <PropertyColumn Property="a => a.Activo" Title="Activo" Sortable="true" />
+                        <PropertyColumn Property="a => a.Telefono" Title="Teléfono" Sortable="true" />                   
+                        <PropertyColumn Property="a => a.FechaRegistro" Title="Fecha de Registro" Format="dd/MM/yyyy" Sortable="true" />
+                        
+                        <TemplateColumn Title="Estado" Sortable="true" SortBy="GridSort<Administradores>.ByAscending(a => a.Activo)">
+                            @(context.Activo ? "Activo" : "Inactivo")
+                        </TemplateColumn>
+
                         <TemplateColumn Title="Opciones" Align="Align.Center">
                             <a href="/Administradores/Edit/@context.AdministradorId" class="btn btn-outline-primary bi bi-pencil-square"></a>
                         </TemplateColumn>
@@ -119,14 +121,6 @@
         {
             var valor = ValorFiltro.Trim().ToLower();
             var resultado = await administradoresService.GetList(a => a.Correo.ToLower().Contains(valor));
-
-            ListaAdministradores = resultado.Value;
-        }
-
-        else if (Filtro == "Rol")
-        {
-            var valor = ValorFiltro.Trim().ToLower();
-            var resultado = await administradoresService.GetList(a => a.Rol.ToLower().Contains(valor));
 
             ListaAdministradores = resultado.Value;
         }
