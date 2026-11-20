@@ -1,30 +1,182 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@rendermode InteractiveServer
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">AP1_ProyectoFinal_Arthea</a>
+        <a class="navbar-brand" href="">
+            AP1_ProyectoFinal_Arthea
+        </a>
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+<input type="checkbox"
+       title="Navigation menu"
+       class="navbar-toggler" />
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+<div class="nav-scrollable">
+
+    @* Logotipo *@
+    <div class="text-center my-3">
+        <img src="/imagenes/logo-arthea.png"
+             alt="Logo Arthea"
+             class="logo-arthea" />
+    </div>
+
+    @* Perfil del usuario *@
+    <div class="perfil-usuario">
+        <div class="marco-usuario">
+            <img src="imagenes/usuario.jpeg"
+                 alt="Usuario"
+                 class="foto-usuario" />
+        </div>
+
+        <h6 class="nombre-usuario">Administrador</h6>
+    </div>
+
+    <hr class="separador-arthea" />
+
     <nav class="nav flex-column">
+
+        @* Inicio *@
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            <NavLink class="nav-link"
+                     href=""
+                     Match="NavLinkMatch.All"
+                     @onclick="CerrarMenu">
+                <span class="bi bi-house-door-fill"></span>
+                Inicio
             </NavLink>
         </div>
 
+        @* Gestión de Usuarios *@
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            <button class="nav-link menu-desplegable"
+                    type="button"
+                    @onclick='() => AlternarMenu("Usuarios")'
+                    aria-expanded='@(menuAbierto == "Usuarios")'>
+
+                <span class="bi bi-people-fill"></span>
+                Gestión de Usuarios
+                <span class="bi bi-chevron-down ms-auto"></span>
+            </button>
+
+            @if (menuAbierto == "Usuarios")
+            {
+                <div class="submenu">
+                    <NavLink class="nav-link"
+                             href="Artistas/Index">
+                        Artistas
+                    </NavLink>
+
+                    <NavLink class="nav-link"
+                             href="Clientes/Index">
+                        Clientes
+                    </NavLink>
+                </div>
+            }
+        </div>
+
+        @* Gestión Artística *@
+        <div class="nav-item px-3">
+            <button class="nav-link menu-desplegable"
+                    type="button"
+                    @onclick='() => AlternarMenu("Artistica")'
+                    aria-expanded='@(menuAbierto == "Artistica")'>
+
+                <span class="bi bi-palette-fill"></span>
+                Gestión Artística
+                <span class="bi bi-chevron-down ms-auto"></span>
+            </button>
+
+            @if (menuAbierto == "Artistica")
+            {
+                <div class="submenu">
+                    <NavLink class="nav-link"
+                             href="Portafolios/Index">
+                        Portafolios
+                    </NavLink>
+
+                    <NavLink class="nav-link"
+                             href="Obras/Index">
+                        Obras
+                    </NavLink>
+
+                    <NavLink class="nav-link"
+                             href="Servicios/Index">
+                        Servicios
+                    </NavLink>
+                </div>
+            }
+        </div>
+
+        @* Gestión Comercial *@
+        <div class="nav-item px-3">
+            <button class="nav-link menu-desplegable"
+                    type="button"
+                    @onclick='() => AlternarMenu("Comercial")'
+                    aria-expanded='@(menuAbierto == "Comercial")'>
+
+                <span class="bi bi-bag-fill"></span>
+                Gestión Comercial
+                <span class="bi bi-chevron-down ms-auto"></span>
+            </button>
+
+            @if (menuAbierto == "Comercial")
+            {
+                <div class="submenu">
+                    <NavLink class="nav-link"
+                             href="Pedidos/Index">
+                        Pedidos
+                    </NavLink>
+                </div>
+            }
+        </div>
+
+        @* Administración *@
+        <div class="nav-item px-3">
+            <button class="nav-link menu-desplegable"
+                    type="button"
+                    @onclick='() => AlternarMenu("Administracion")'
+                    aria-expanded='@(menuAbierto == "Administracion")'>
+
+                <span class="bi bi-gear-fill"></span>
+                Administración
+                <span class="bi bi-chevron-down ms-auto"></span>
+            </button>
+
+            @if (menuAbierto == "Administracion")
+            {
+                <div class="submenu">
+                    <NavLink class="nav-link"
+                             href="Administradores/Index">
+                        Administradores
+                    </NavLink>
+                </div>
+            }
+        </div>
+
+        @* Reportes *@
+        <div class="nav-item px-3">
+            <NavLink class="nav-link"
+                     href="Reportes"
+                     @onclick="CerrarMenu">
+                <span class="bi bi-bar-chart-fill"></span>
+                Reportes
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
     </nav>
 </div>
 
+@code {
+    private string? menuAbierto = null;
+
+    private void AlternarMenu(string menu)
+    {
+        menuAbierto = menuAbierto == menu ? null : menu;
+    }
+
+    private void CerrarMenu()
+    {
+        menuAbierto = null;
+    }
+}
