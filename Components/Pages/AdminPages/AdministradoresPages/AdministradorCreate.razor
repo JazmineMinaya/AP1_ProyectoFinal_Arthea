@@ -1,0 +1,259 @@
+﻿@page "/Administradores/Create"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador")]
+
+@inject AdministradoresService administradoresService
+@inject UserManager<Usuarios> userManager
+@inject RoleManager<IdentityRole> roleManager
+@inject NavigationManager navigationManager
+@inject ToastService toastService
+@inject IWebHostEnvironment environment
+
+<PageTitle>Crear Administrador</PageTitle>
+
+<EditForm Model="Usuario" OnValidSubmit="Guardar" FormName="crearAdministrador" Context="formContext">
+    <DataAnnotationsValidator />
+
+    <div class="container arthea-admin-create">
+        <div class="card shadow-lg">
+
+            <div class="card-header">
+                <h5 class="card-title">Crear Administrador</h5>
+            </div>
+
+            <div class="card-body">
+
+                @* Foto de Perfil *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Foto de Perfil (opcional)</strong></label>
+
+                    <div>
+                        <label for="imagen" class="cuadro-imagen">
+                            @if (string.IsNullOrEmpty(imagenPreview))
+                            {
+                                <i class="bi bi-plus-lg"></i>
+                            }
+                            else
+                            {
+                                <img src="@imagenPreview" alt="Foto de perfil" />
+                            }
+                        </label>
+
+                        <InputFile id="imagen" class="d-none" accept=".jpg,.jpeg,.png" OnChange="SeleccionarImagen" />
+                    </div>
+                </div>
+
+                @* AdministradorId *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>AdministradorId</strong></label>
+                    <InputNumber class="form-control" @bind-Value="Administrador.AdministradorId" readonly />
+                </div>
+
+                @* Nombres *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Nombre</strong></label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <InputText class="form-control" @bind-Value="Usuario.Nombres" placeholder="Nombres" />
+                            <ValidationMessage For="@(() => Usuario.Nombres)" />
+                        </div>
+                        <div class="col-6">
+                            <InputText class="form-control" @bind-Value="Usuario.Apellidos" placeholder="Apellidos" />
+                            <ValidationMessage For="@(() => Usuario.Apellidos)" />
+                        </div>
+                    </div>
+                </div>
+
+                @* Correo *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Correo</strong></label>
+                    <InputText type="email" class="form-control" @bind-Value="Usuario.Email" />
+                    <ValidationMessage For="@(() => Usuario.Email)" />
+                </div>
+
+                @* Contraseña *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Contraseña</strong></label>
+                    <div class="input-group">
+                        <input type="@(MostrarPassword ? "text" : "password")" class="form-control" @bind="Password" @bind:event="oninput" />
+                        <button type="button" class="btn btn-password" @onclick="() => MostrarPassword = !MostrarPassword">
+                            <i class="bi @(MostrarPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                        </button>
+                    </div>
+                </div>
+
+                @* Fecha de Registro *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Fecha de Registro</strong></label>
+                    <InputDate class="form-control" @bind-Value="Usuario.FechaRegistro" readonly />
+                </div>
+
+                @* Estado *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Estado</strong></label>
+                    <InputSelect class="form-select" @bind-Value="Usuario.Estado">
+                        <option value="true">Activo</option>
+                        <option value="false">Inactivo</option>
+                    </InputSelect>
+                </div>
+
+            </div>
+
+            @* Footer *@
+            <div class="card-footer text-center mt-2">
+                <a href="/Administradores/Index" class="btn btn-secondary"><span class="bi bi-arrow-left"></span> Volver</a>
+                <button type="submit" class="btn btn-primary bi bi-floppy"> Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    public Administradores Administrador = new Administradores();
+    public Usuarios Usuario = new Usuarios();
+    public string Password { get; set; } = string.Empty;
+
+    private IBrowserFile? imagenSeleccionada;
+    private string? imagenPreview;
+
+    private bool MostrarPassword = false;
+
+    private async Task Guardar()
+    {
+        if (string.IsNullOrWhiteSpace(Password))
+        {
+            toastService.ShowError("Ingrese una contraseña");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Usuario.Email))
+        {
+            toastService.ShowError("Ingrese un correo");
+            return;
+        }
+
+        if (await userManager.FindByEmailAsync(Usuario.Email) is not null)
+        {
+            toastService.ShowError("Este correo ya está registrado");
+            return;
+        }
+
+        Usuario.UserName = Usuario.Email;
+
+        var resultadoUsuario = await userManager.CreateAsync(Usuario, Password);
+
+        if (!resultadoUsuario.Succeeded)
+        {
+            toastService.ShowError(string.Join(" ", resultadoUsuario.Errors.Select(e => e.Description)));
+            return;
+        }
+
+        if (!await roleManager.RoleExistsAsync("Administrador"))
+        {
+            var resultadoRol = await roleManager.CreateAsync(new IdentityRole("Administrador"));
+
+            if (!resultadoRol.Succeeded)
+            {
+                await userManager.DeleteAsync(Usuario);
+                toastService.ShowError("No se pudo crear el rol Administrador");
+                return;
+            }
+        }
+
+        var resultadoAsignacion = await userManager.AddToRoleAsync(Usuario, "Administrador");
+
+        if (!resultadoAsignacion.Succeeded)
+        {
+            await userManager.DeleteAsync(Usuario);
+            toastService.ShowError("No se pudo asignar el rol Administrador");
+            return;
+        }
+
+        Administrador.UsuarioId = Usuario.Id;
+
+        try
+        {
+            await GuardarFotografia();
+
+            var resultado = await administradoresService.Guardar(Administrador);
+            bool guardado = false;
+
+            resultado.OnSuccess(() =>
+            {
+                guardado = true;
+            });
+
+            resultado.OnFailure(() =>
+            {
+                guardado = false;
+            });
+
+            if (!guardado)
+            {
+                await userManager.DeleteAsync(Usuario);
+                toastService.ShowError("No se ha podido guardar el administrador");
+                return;
+            }
+
+            toastService.ShowSuccess("Administrador guardado correctamente");
+            navigationManager.NavigateTo("/Administradores/Index");
+        }
+        catch
+        {
+            await userManager.DeleteAsync(Usuario);
+            toastService.ShowError("No se ha podido guardar el administrador");
+        }
+    }
+
+    private async Task SeleccionarImagen(InputFileChangeEventArgs archivoSeleccionado)
+    {
+        var imagen = archivoSeleccionado.File;
+
+        var formatos = new[] { "image/jpeg", "image/png" };
+
+        if (!formatos.Contains(imagen.ContentType.ToLowerInvariant()))
+        {
+            toastService.ShowError("Solo se permiten fotografías JPG, JPEG y PNG");
+            return;
+        }
+
+        if (imagen.Size > 5 * 1024 * 1024)
+        {
+            toastService.ShowError("La fotografía no puede superar los 5 MB");
+            return;
+        }
+
+        imagenSeleccionada = imagen;
+
+        using var memoria = new MemoryStream();
+        await imagen.OpenReadStream(5 * 1024 * 1024).CopyToAsync(memoria);
+
+        imagenPreview = $"data:{imagen.ContentType};base64,{Convert.ToBase64String(memoria.ToArray())}";
+    }
+
+    private async Task GuardarFotografia()
+    {
+        if (imagenSeleccionada is null)
+            return;
+
+        var carpeta = Path.Combine(environment.WebRootPath, "imagenes", "administradores");
+
+        Directory.CreateDirectory(carpeta);
+
+        var extension = imagenSeleccionada.ContentType.ToLowerInvariant() switch
+        {
+            "image/jpeg" => ".jpg",
+            "image/png" => ".png",
+            _ => throw new InvalidOperationException("Formato no permitido")
+        };
+
+        var nombreArchivo = $"{Guid.NewGuid():N}{extension}";
+        var rutaArchivo = Path.Combine(carpeta, nombreArchivo);
+
+        await using var archivo = new FileStream(rutaArchivo, FileMode.CreateNew);
+        await imagenSeleccionada.OpenReadStream(5 * 1024 * 1024).CopyToAsync(archivo);
+
+        Administrador.FotoPerfil = $"/imagenes/administradores/{nombreArchivo}";
+    }
+}
