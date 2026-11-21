@@ -16,7 +16,7 @@ partial class ContextoModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261121124412_AgregarIdentity";
+    public override string LastMigrationId => "20261121140243_Artistas";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -47,6 +47,39 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.HasIndex("UsuarioId");
 
                 b.ToTable("Administradores");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Artistas", b =>
+            {
+                var artistaId = b.Property<int>("ArtistaId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(artistaId);
+
+                b.Property<string>("Biografia")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Disciplina")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("FotoPerfil")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Telefono")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("UsuarioId")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(450)");
+
+                b.HasKey("ArtistaId");
+
+                b.HasIndex("UsuarioId");
+
+                b.ToTable("Artistas");
             });
 
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Usuarios", b =>
@@ -262,6 +295,17 @@ partial class ContextoModelSnapshot : ModelSnapshot
             });
 
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Administradores", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Usuarios", "Usuario")
+                    .WithMany()
+                    .HasForeignKey("UsuarioId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Usuario");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Artistas", b =>
             {
                 b.HasOne("AP1_ProyectoFinal_Arthea.Models.Usuarios", "Usuario")
                     .WithMany()
