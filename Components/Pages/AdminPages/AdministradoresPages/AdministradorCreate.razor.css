@@ -164,3 +164,17 @@
         font-family: Georgia, "Times New Roman", serif;
         font-size: 14px;
     }
+
+/* Botón visualizar contraseña */
+.btn-password {
+    background-color: #FFFCF8;
+    color: #6F563B;
+    border: 1px solid #9C8060;
+}
+
+    .btn-password:hover,
+    .btn-password:focus {
+        background-color: #6F563B;
+        border-color: #6F563B;
+        color: white;
+    }
