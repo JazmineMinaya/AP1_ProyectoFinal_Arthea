@@ -1,5 +1,6 @@
 ﻿@page "/Administradores/Index"
 @rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador")]
 
 @inject AdministradoresService administradoresService
 @inject ToastService toastService
@@ -37,7 +38,7 @@
                 @* Filtrar por *@
                 <div class="col-3">
                     <InputSelect class="form-select" @bind-Value="Filtro">
-                        <option value="" selected disabled>Elija una opción</option>
+                        <option value="" disabled>Elija una opción</option>
                         <option value="AdministradorId">AdministradorId</option>
                         <option value="Nombres">Nombres</option>
                         <option value="Correo">Correo</option>
@@ -61,13 +62,16 @@
                 <div class="grid">
                     <QuickGrid Items="ListaAdministradores.AsQueryable()" Class="table table-hover mt-3">
                         <PropertyColumn Property="a => a.AdministradorId" Title="AdministradorId" Sortable="true" />
-                        <PropertyColumn Property="a => a.Nombres" Title="Nombres" Sortable="true" />
-                        <PropertyColumn Property="a => a.Correo" Title="Correo" Sortable="true" />
-                        <PropertyColumn Property="a => a.Telefono" Title="Teléfono" Sortable="true" />                   
-                        <PropertyColumn Property="a => a.FechaRegistro" Title="Fecha de Registro" Format="dd/MM/yyyy" Sortable="true" />
-                        
-                        <TemplateColumn Title="Estado" Sortable="true" SortBy="GridSort<Administradores>.ByAscending(a => a.Activo)">
-                            @(context.Activo ? "Activo" : "Inactivo")
+
+                        <TemplateColumn Title="Nombres" Sortable="true" SortBy="GridSort<Administradores>.ByAscending(a => a.Usuario!.Nombres)">
+                            @($"{context.Usuario?.Nombres} {context.Usuario?.Apellidos}")
+                        </TemplateColumn>
+
+                        <PropertyColumn Property="a => a.Usuario!.Email" Title="Correo" Sortable="true" />
+                        <PropertyColumn Property="a => a.Usuario!.FechaRegistro" Title="Fecha de Registro" Format="dd/MM/yyyy" Sortable="true" />
+
+                        <TemplateColumn Title="Estado" Sortable="true" SortBy="GridSort<Administradores>.ByAscending(a => a.Usuario!.Estado)">
+                            @(context.Usuario?.Estado == true ? "Activo" : "Inactivo")
                         </TemplateColumn>
 
                         <TemplateColumn Title="Opciones" Align="Align.Center">
@@ -95,8 +99,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var resultado = await administradoresService.GetList(a => a.AdministradorId > 0);
-        ListaAdministradores = resultado.Value;
+        await Reestablecer();
     }
 
     private async Task Buscar()
@@ -106,23 +109,23 @@
             var valor = ValorFiltro.Trim();
             var resultado = await administradoresService.GetList(a => a.AdministradorId.ToString() == valor);
 
-            ListaAdministradores = resultado.Value;
+            ListaAdministradores = resultado.Value ?? new();
         }
 
         else if (Filtro == "Nombres")
         {
             var valor = ValorFiltro.Trim().ToLower();
-            var resultado = await administradoresService.GetList(a => a.Nombres.ToLower().Contains(valor));
+            var resultado = await administradoresService.GetList(a => a.Usuario != null && (a.Usuario.Nombres + " " + a.Usuario.Apellidos).ToLower().Contains(valor));
 
-            ListaAdministradores = resultado.Value;
+            ListaAdministradores = resultado.Value ?? new();
         }
 
         else if (Filtro == "Correo")
         {
             var valor = ValorFiltro.Trim().ToLower();
-            var resultado = await administradoresService.GetList(a => a.Correo.ToLower().Contains(valor));
+            var resultado = await administradoresService.GetList(a => a.Usuario != null && a.Usuario.Email != null && a.Usuario.Email.ToLower().Contains(valor));
 
-            ListaAdministradores = resultado.Value;
+            ListaAdministradores = resultado.Value ?? new();
         }
 
         else
@@ -134,7 +137,7 @@
     private async Task Reestablecer()
     {
         var resultado = await administradoresService.GetList(a => a.AdministradorId > 0);
-        ListaAdministradores = resultado.Value;
+        ListaAdministradores = resultado.Value ?? new();
 
         Filtro = string.Empty;
         ValorFiltro = string.Empty;

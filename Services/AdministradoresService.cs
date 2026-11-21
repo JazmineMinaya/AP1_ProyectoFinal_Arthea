@@ -3,7 +3,6 @@ using AP1_ProyectoFinal_Arthea.Models;
 using Aplicada1.Core;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using Microsoft.AspNetCore.Identity;
 
 namespace AP1_ProyectoFinal_Arthea.Services;
 
@@ -11,8 +10,6 @@ public class AdministradoresService(
     IDbContextFactory<Contexto> contextFactory
 ) : IServiceResult<Administradores, int>
 {
-    private readonly PasswordHasher<Administradores> passwordHasher = new();
-
     public async Task<Result> Guardar(Administradores administrador)
     {
         if (!await Existe(administrador.AdministradorId))
@@ -34,14 +31,6 @@ public class AdministradoresService(
             .AnyAsync(e => e.AdministradorId == administradorId);
     }
 
-    public async Task<bool> CorreoExiste(string correo, int administradorId)
-    {
-        await using var contexto = await contextFactory.CreateDbContextAsync();
-
-        return await contexto.Administradores
-            .AnyAsync(a => a.Correo == correo && a.AdministradorId != administradorId);
-    }
-
     private async Task<bool> Insertar(Administradores administrador)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
@@ -52,7 +41,14 @@ public class AdministradoresService(
     private async Task<bool> Modificar(Administradores administrador)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
-        contexto.Update(administrador);
+
+        var existente = await contexto.Administradores.FindAsync(administrador.AdministradorId);
+
+        if (existente is null)
+            return false;
+
+        existente.FotoPerfil = administrador.FotoPerfil;
+
         return await contexto.SaveChangesAsync() > 0;
     }
 
@@ -60,6 +56,7 @@ public class AdministradoresService(
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
         return await contexto.Administradores
+            .Include(a => a.Usuario)
             .FirstOrDefaultAsync(e => e.AdministradorId == administradorId);
     }
 
@@ -78,24 +75,9 @@ public class AdministradoresService(
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
         return await contexto.Administradores
+            .Include(a => a.Usuario)
             .Where(criterio)
             .AsNoTracking()
             .ToListAsync();
-    }
-
-    public string GenerarHash(Administradores administrador, string password)
-    {
-        return passwordHasher.HashPassword(administrador, password);
-    }
-
-    public bool VerificarPassword(Administradores administrador, string password)
-    {
-        var resultado = passwordHasher.VerifyHashedPassword(
-            administrador,
-            administrador.PasswordHash,
-            password
-        );
-
-        return resultado != PasswordVerificationResult.Failed;
     }
 }
