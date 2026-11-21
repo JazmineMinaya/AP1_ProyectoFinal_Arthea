@@ -20,4 +20,6 @@ public class Artistas
     public string Disciplina { get; set; } = string.Empty;
 
     public string? Biografia { get; set; }
+
+    public string? FotoPerfil { get; set; }
 }
