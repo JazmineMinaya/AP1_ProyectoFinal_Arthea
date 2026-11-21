@@ -1,0 +1,271 @@
+﻿@page "/login"
+@rendermode InteractiveServer
+
+@inject NavigationManager navigationManager
+
+@layout LoginLayout
+
+<PageTitle>Iniciar Sesión - Arthea</PageTitle>
+
+<div class="container arthea-login">
+
+    <div class="card shadow-lg">
+
+        <div class="card-body">
+
+            @* Logo *@
+            <div class="text-center mb-4">
+                <img src="/imagenes/logo-arthea-normal.png" alt="Arthea" class="logo-login" />
+                <p>Cada expresión, una historia. Cada historia, arte</p>
+            </div>
+
+            @if (VistaActual == "Login")
+            {
+                @* Inicio de Sesión *@
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Correo electrónico</strong></label>
+                    <input type="email" class="form-control" @bind="Correo" placeholder="Ingrese su correo" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Contraseña</strong></label>
+
+                    <div class="input-group">
+                        <input type="@(MostrarPassword ? "text" : "password")" class="form-control" @bind="Password" placeholder="Ingrese su contraseña" />
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadPassword"><i class="bi @(MostrarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-primary w-100" @onclick="IniciarSesion">Iniciar Sesión</button>
+
+                <div class="text-center mt-3">
+                    <span>¿No tienes una cuenta?</span>
+                    <button type="button" class="btn btn-link" @onclick="MostrarRegistro">Regístrate aquí</button>
+                </div>
+
+                <hr />
+
+                @* Acceso como visitante *@
+                <button type="button" class="btn btn-outline-secondary w-100"@onclick="EntrarComoVisitante"><i class="bi bi-eye"></i> Explorar como visitante</button>
+            }
+
+            else if (VistaActual == "SeleccionRegistro")
+            {
+                @* Selección del tipo de usuario *@
+
+                <h5 class="text-center mb-3">Forma parte de Arthea</h5>
+                <p class="text-center">¿Cómo deseas participar en nuestra comunidad artística?</p>
+
+                <div class="row">
+
+                    @* Cliente *@
+                    <div class="col-6">
+
+                        <button type="button" class="btn btn-outline-primary w-100" @onclick="MostrarRegistroCliente">
+
+                            <i class="bi bi-person fs-2"></i>
+
+                            <div>
+                                <strong>Cliente</strong>
+                            </div>
+
+                            <small>
+                                Descubre obras y contrata servicios artísticos.
+                            </small>
+
+                        </button>
+
+                    </div>
+
+                    @* Artista *@
+                    <div class="col-6">
+
+                        <button type="button" class="btn btn-outline-primary w-100" @onclick="MostrarRegistroArtista">
+
+                            <i class="bi bi-palette fs-2"></i>
+
+                            <div>
+                                <strong>Artista</strong>
+                            </div>
+
+                            <small>
+                                Comparte tus obras y ofrece tus servicios.
+                            </small>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="text-center mt-3">
+                    <button type="button" class="btn btn-secondary" @onclick="VolverLogin"><i class="bi bi-arrow-left"></i> Volver</button>
+                </div>
+            }
+
+            else if (VistaActual == "RegistroCliente")
+            {
+                @* Registro de Cliente *@
+
+                <h5 class="text-center mb-3"> Registro de Cliente</h5>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Nombres y apellidos</strong></label>
+                    <input class="form-control" @bind="Nombres" placeholder="Ingrese sus nombres y apellidos" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Correo electrónico</strong></label>
+                    <input type="email" class="form-control" @bind="Correo" placeholder="Ingrese su correo" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Teléfono</strong></label>
+                    <input type="tel" class="form-control" @bind="Telefono" placeholder="Ingrese su teléfono" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Contraseña</strong></label>
+                    <input type="password" class="form-control" @bind="Password" placeholder="Ingrese una contraseña" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Confirmar contraseña</strong></label>
+                    <input type="password" class="form-control" @bind="ConfirmarPassword" placeholder="Confirme su contraseña" />
+                </div>
+
+                <button type="button" class="btn btn-primary w-100" @onclick="RegistrarCliente">Registrarme</button>
+
+                <div class="text-center mt-3">
+                    <button type="button" class="btn btn-secondary" @onclick="MostrarRegistro"><i class="bi bi-arrow-left"></i> Volver</button>
+                </div>
+            }
+
+            else if (VistaActual == "RegistroArtista")
+            {
+                @* Registro de Artista *@
+
+                <h5 class="text-center mb-3">Registro de Artista</h5>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Nombres y apellidos</strong></label>
+                    <input class="form-control" @bind="Nombres" placeholder="Ingrese sus nombres y apellidos" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Correo electrónico</strong></label>
+                    <input type="email" class="form-control" @bind="Correo" placeholder="Ingrese su correo" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Teléfono</strong></label>
+                    <input type="tel" class="form-control" @bind="Telefono" placeholder="Ingrese su teléfono" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Disciplina artística</strong></label>
+
+                    <select class="form-select" @bind="Disciplina">
+                        <option value="">Seleccione una disciplina</option>
+                        <option value="Pintura">Pintura</option>
+                        <option value="Escultura">Escultura</option>
+                        <option value="Fotografía">Fotografía</option>
+                        <option value="Ilustración">Ilustración</option>
+                        <option value="Otra">Otra</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Contraseña</strong></label>
+                    <input type="password" class="form-control" @bind="Password" placeholder="Ingrese una contraseña" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Confirmar contraseña</strong></label>
+                    <input type="password" class="form-control" @bind="ConfirmarPassword" placeholder="Confirme su contraseña" />
+                </div>
+
+                <button type="button" class="btn btn-primary w-100" @onclick="RegistrarArtista">Registrarme</button>
+
+                <div class="text-center mt-3">
+                    <button type="button" class="btn btn-secondary" @onclick="MostrarRegistro"><i class="bi bi-arrow-left"></i> Volver</button>
+                </div>
+            }
+
+        </div>
+    </div>
+</div>
+
+@code {
+    public string VistaActual { get; set; } = "Login";
+
+    public string Nombres { get; set; } = string.Empty;
+    public string Correo { get; set; } = string.Empty;
+    public string Telefono { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public string ConfirmarPassword { get; set; } = string.Empty;
+    public string Disciplina { get; set; } = string.Empty;
+
+    public bool MostrarPassword { get; set; } = false;
+
+    private void CambiarVisibilidadPassword()
+    {
+        MostrarPassword = !MostrarPassword;
+    }
+
+    private void MostrarRegistro()
+    {
+        VistaActual = "SeleccionRegistro";
+    }
+
+    private void MostrarRegistroCliente()
+    {
+        LimpiarCampos();
+        VistaActual = "RegistroCliente";
+    }
+
+    private void MostrarRegistroArtista()
+    {
+        LimpiarCampos();
+        VistaActual = "RegistroArtista";
+    }
+
+    private void VolverLogin()
+    {
+        LimpiarCampos();
+        VistaActual = "Login";
+    }
+
+    private void LimpiarCampos()
+    {
+        Nombres = string.Empty;
+        Correo = string.Empty;
+        Telefono = string.Empty;
+        Password = string.Empty;
+        ConfirmarPassword = string.Empty;
+        Disciplina = string.Empty;
+    }
+
+    private void IniciarSesion()
+    {
+        // Pendiente: implementar autenticación.
+    }
+
+    private void RegistrarCliente()
+    {
+        // Pendiente: guardar cliente en la base de datos.
+    }
+
+    private void RegistrarArtista()
+    {
+        // Pendiente: guardar artista en la base de datos.
+    }
+
+    private void EntrarComoVisitante()
+    {
+        // Acceso visual temporal.
+        // Cambiar esta ruta cuando tengamos la página de inicio pública.
+        navigationManager.NavigateTo("/");
+    }
+}
