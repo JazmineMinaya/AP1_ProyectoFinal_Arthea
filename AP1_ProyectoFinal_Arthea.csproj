@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Aplicada1.Core" Version="1.1.0" />
     <PackageReference Include="Blazor.Bootstrap" Version="4.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="11.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="11.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="11.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -23,9 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Components\Pages\AdminPages\NewFolder\" />
-    <Folder Include="Models\" />
-    <Folder Include="Services\" />
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

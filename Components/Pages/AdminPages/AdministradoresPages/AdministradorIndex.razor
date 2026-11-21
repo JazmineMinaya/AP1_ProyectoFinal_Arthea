@@ -1,0 +1,142 @@
+﻿@page "/Administradores/Index"
+@rendermode InteractiveServer
+
+@inject AdministradoresService administradoresService
+@inject ToastService toastService
+
+<PageTitle>Administradores</PageTitle>
+
+<div class="container arthea-admin-index">
+    <div class="card shadow-lg">
+
+        @* Encabezado *@
+        <div class="card-header d-flex justify-content-between align-content-center">
+            <h5 class="card-title">Registro de Administradores</h5>
+            <a href="/Administradores/Create" class="btn btn-primary"><span class="bi bi-plus-square mt-3"></span> Crear</a>
+        </div>
+
+        <div class="card-body">
+
+            @* Labels *@
+            <div class="row">
+
+                @* Filtrar por *@
+                <div class="col-3">
+                    <label class="col-form-label"><strong>Filtrar por</strong></label>
+                </div>
+
+                @* Búsqueda *@
+                <div class="col-4">
+                    <label class="col-form-label"><strong>Búsqueda</strong></label>
+                </div>
+            </div>
+
+            @* Filtros *@
+            <div class="row align-items-end">
+
+                @* Filtrar por *@
+                <div class="col-3">
+                    <InputSelect class="form-select" @bind-Value="Filtro">
+                        <option value="" selected disabled>Elija una opción</option>
+                        <option value="AdministradorId">AdministradorId</option>
+                        <option value="Nombres">Nombres</option>
+                        <option value="Correo">Correo</option>
+                    </InputSelect>
+                </div>
+
+                @* Búsqueda *@
+                <div class="col-4">
+                    <div class="input-group">
+                        <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
+                        <button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
+                    </div>
+                </div>
+
+                @* Reestablecer *@
+                <div class="col-2">
+                    <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Reestablecer"></button>
+                </div>
+
+                @* QuickGrid *@
+                <div class="grid">
+                    <QuickGrid Items="ListaAdministradores.AsQueryable()" Class="table table-hover mt-3">
+                        <PropertyColumn Property="a => a.AdministradorId" Title="AdministradorId" Sortable="true" />
+                        <PropertyColumn Property="a => a.Nombres" Title="Nombres" Sortable="true" />
+                        <PropertyColumn Property="a => a.Correo" Title="Correo" Sortable="true" />
+                        <PropertyColumn Property="a => a.Telefono" Title="Teléfono" Sortable="true" />                   
+                        <PropertyColumn Property="a => a.FechaRegistro" Title="Fecha de Registro" Format="dd/MM/yyyy" Sortable="true" />
+                        
+                        <TemplateColumn Title="Estado" Sortable="true" SortBy="GridSort<Administradores>.ByAscending(a => a.Activo)">
+                            @(context.Activo ? "Activo" : "Inactivo")
+                        </TemplateColumn>
+
+                        <TemplateColumn Title="Opciones" Align="Align.Center">
+                            <a href="/Administradores/Edit/@context.AdministradorId" class="btn btn-outline-primary bi bi-pencil-square"></a>
+                        </TemplateColumn>
+                    </QuickGrid>
+                </div>
+
+            </div>
+        </div>
+
+        @* Footer *@
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <label><strong>Cantidad: </strong> @ListaAdministradores.Count()</label>
+        </div>
+
+    </div>
+</div>
+
+@code {
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+
+    public List<Administradores> ListaAdministradores { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resultado = await administradoresService.GetList(a => a.AdministradorId > 0);
+        ListaAdministradores = resultado.Value;
+    }
+
+    private async Task Buscar()
+    {
+        if (Filtro == "AdministradorId")
+        {
+            var valor = ValorFiltro.Trim();
+            var resultado = await administradoresService.GetList(a => a.AdministradorId.ToString() == valor);
+
+            ListaAdministradores = resultado.Value;
+        }
+
+        else if (Filtro == "Nombres")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await administradoresService.GetList(a => a.Nombres.ToLower().Contains(valor));
+
+            ListaAdministradores = resultado.Value;
+        }
+
+        else if (Filtro == "Correo")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await administradoresService.GetList(a => a.Correo.ToLower().Contains(valor));
+
+            ListaAdministradores = resultado.Value;
+        }
+
+        else
+        {
+            toastService.ShowError("Seleccione un filtro");
+        }
+    }
+
+    private async Task Reestablecer()
+    {
+        var resultado = await administradoresService.GetList(a => a.AdministradorId > 0);
+        ListaAdministradores = resultado.Value;
+
+        Filtro = string.Empty;
+        ValorFiltro = string.Empty;
+    }
+}
