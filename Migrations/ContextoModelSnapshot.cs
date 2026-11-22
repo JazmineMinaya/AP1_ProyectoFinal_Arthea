@@ -16,7 +16,7 @@ partial class ContextoModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261121140243_Artistas";
+    public override string LastMigrationId => "20261122161305_Servicios";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -80,6 +80,58 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.HasIndex("UsuarioId");
 
                 b.ToTable("Artistas");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Servicios", b =>
+            {
+                var servicioId = b.Property<int>("ServicioId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(servicioId);
+
+                b.Property<int>("ArtistaId")
+                    .HasColumnType("int");
+
+                b.Property<string>("Categoria")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Descripcion")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<bool>("Estado")
+                    .HasColumnType("bit");
+
+                b.Property<string>("Imagen1")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Imagen2")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Imagen3")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Imagen4")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Imagen5")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Nombre")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<decimal>("Precio")
+                    .HasColumnType("decimal(18,2)");
+
+                b.HasKey("ServicioId");
+
+                b.HasIndex("ArtistaId");
+
+                b.ToTable("Servicios");
             });
 
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Usuarios", b =>
@@ -314,6 +366,17 @@ partial class ContextoModelSnapshot : ModelSnapshot
                     .IsRequired();
 
                 b.Navigation("Usuario");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Servicios", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Artistas", "Artista")
+                    .WithMany()
+                    .HasForeignKey("ArtistaId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Artista");
             });
 
         modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
