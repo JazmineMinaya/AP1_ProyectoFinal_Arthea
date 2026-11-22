@@ -1,0 +1,306 @@
+﻿@page "/Servicios/Create"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador")]
+
+@inject ServiciosService serviciosService
+@inject ArtistasService artistasService
+@inject NavigationManager navigationManager
+@inject ToastService toastService
+@inject IWebHostEnvironment environment
+
+<PageTitle>Crear Servicio</PageTitle>
+
+<EditForm Model="Servicio" OnValidSubmit="Guardar" FormName="crearServicio" Context="formContext">
+    <DataAnnotationsValidator />
+
+    <div class="container arthea-servicios-create">
+        <div class="card shadow-lg">
+
+            @* Encabezado *@
+            <div class="card-header">
+                <h5 class="card-title">Crear Servicio</h5>
+            </div>
+
+            <div class="card-body">
+
+                @* Imágenes del Servicio *@
+                <div class="mb-4">
+                    <label class="form-label"><strong>Imágenes del Servicio</strong></label>
+                    <p class="texto-ayuda">Agregue una portada obligatoria y hasta cuatro imágenes adicionales.</p>
+
+                    <div class="contenedor-imagenes">
+                        @for (int i = 0; i < 5; i++)
+                        {
+                            int indice = i;
+
+                            <div class="imagen-item">
+                                <label class="form-label imagen-titulo">@(indice == 0 ? "Portada" : $"Imagen {indice + 1} (opcional)")</label>
+
+                                <label for="@($"imagen{indice}")" class="cuadro-imagen">
+                                    @if (string.IsNullOrEmpty(imagenesPreview[indice]))
+                                    {
+                                        <i class="bi bi-plus-lg"></i>
+                                    }
+                                    else
+                                    {
+                                        <img src="@imagenesPreview[indice]" alt="Imagen del servicio" />
+                                    }
+                                </label>
+
+                                <InputFile id="@($"imagen{indice}")" @key="versionesImagen[indice]" class="d-none" accept=".jpg,.jpeg,.png" OnChange="e => SeleccionarImagen(e, indice)" />
+
+                                @if (!string.IsNullOrEmpty(imagenesPreview[indice]))
+                                {
+                                    <button type="button" class="btn btn-quitar-imagen" @onclick="() => QuitarImagen(indice)">
+                                        <i class="bi bi-x-circle"></i> Quitar
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <ValidationMessage For="@(() => Servicio.Imagen1)" />
+                </div>
+
+                @* ServicioId *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>ServicioId</strong></label>
+                    <InputNumber class="form-control" @bind-Value="Servicio.ServicioId" readonly />
+                </div>
+
+                @* Artista *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Artista</strong></label>
+                    <InputSelect class="form-select" @bind-Value="Servicio.ArtistaId">
+                        <option value="0">Seleccione un artista</option>
+                        @foreach (var artista in ListaArtistas)
+                        {
+                            <option value="@artista.ArtistaId">@artista.Usuario?.Nombres @artista.Usuario?.Apellidos</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => Servicio.ArtistaId)" />
+                </div>
+
+                @* Nombre *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Nombre</strong></label>
+                    <InputText class="form-control" @bind-Value="Servicio.Nombre" />
+                    <ValidationMessage For="@(() => Servicio.Nombre)" />
+                </div>
+
+                @* Categoría *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Categoría</strong></label>
+                    <InputSelect class="form-select" @bind-Value="Servicio.Categoria">
+                        <option value="">Seleccione una categoría</option>
+                        <option value="Pintura">Pintura</option>
+                        <option value="Escultura">Escultura</option>
+                        <option value="Fotografía">Fotografía</option>
+                        <option value="Música">Música</option>
+                        <option value="Ilustración">Ilustración</option>
+                        <option value="Danza">Danza</option>
+                        <option value="Diseño Gráfico">Diseño Gráfico</option>
+                        <option value="Artesanía">Artesanía</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => Servicio.Categoria)" />
+                </div>
+
+                @* Descripción *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Descripción</strong></label>
+                    <InputTextArea class="form-control" @bind-Value="Servicio.Descripcion" rows="4" />
+                    <div class="texto-ayuda">Máximo 150 palabras.</div>
+                    <ValidationMessage For="@(() => Servicio.Descripcion)" />
+                </div>
+
+                @* Precio *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Precio (RD$)</strong></label>
+                    <InputNumber class="form-control" @bind-Value="Servicio.Precio" min="0.01" step="0.01" />
+                    <ValidationMessage For="@(() => Servicio.Precio)" />
+                </div>
+
+                @* Estado *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Estado</strong></label>
+                    <InputSelect class="form-select" @bind-Value="Servicio.Estado">
+                        <option value="true">Disponible</option>
+                        <option value="false">No disponible</option>
+                    </InputSelect>
+                </div>
+
+            </div>
+
+            @* Footer *@
+            <div class="card-footer text-center mt-2">
+                <a href="/Servicios/Index" class="btn btn-secondary"><span class="bi bi-arrow-left"></span> Volver</a>
+                <button type="submit" class="btn btn-primary bi bi-floppy"> Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    public Servicios Servicio = new Servicios();
+    public List<Artistas> ListaArtistas { get; set; } = new();
+
+    private IBrowserFile?[] imagenesSeleccionadas = new IBrowserFile?[5];
+    private string?[] imagenesPreview = new string?[5];
+    private int[] versionesImagen = new int[5];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resultado = await artistasService.GetList(a => a.ArtistaId > 0);
+        ListaArtistas = resultado.Value ?? new();
+    }
+
+    private async Task Guardar()
+    {
+        if (Servicio.ArtistaId <= 0)
+        {
+            toastService.ShowError("Seleccione un artista");
+            return;
+        }
+
+        if (imagenesSeleccionadas[0] is null)
+        {
+            toastService.ShowError("Debe agregar una portada");
+            return;
+        }
+
+        int cantidadPalabras = Servicio.Descripcion.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
+
+        if (cantidadPalabras > 150)
+        {
+            toastService.ShowError("La descripción no puede superar las 150 palabras");
+            return;
+        }
+
+        var rutasGuardadas = new List<string>();
+
+        try
+        {
+            var carpeta = Path.Combine(environment.WebRootPath, "imagenes", "servicios");
+            Directory.CreateDirectory(carpeta);
+
+            for (int i = 0; i < 5; i++)
+            {
+                if (imagenesSeleccionadas[i] is null)
+                    continue;
+
+                var imagen = imagenesSeleccionadas[i]!;
+                var extension = imagen.ContentType.ToLowerInvariant() switch
+                {
+                    "image/jpeg" => ".jpg",
+                    "image/png" => ".png",
+                    _ => throw new InvalidOperationException("Formato no permitido")
+                };
+
+                var nombreArchivo = $"{Guid.NewGuid():N}{extension}";
+                var rutaArchivo = Path.Combine(carpeta, nombreArchivo);
+
+                await using (var archivo = new FileStream(rutaArchivo, FileMode.CreateNew))
+                {
+                    await imagen.OpenReadStream(5 * 1024 * 1024).CopyToAsync(archivo);
+                }
+
+                rutasGuardadas.Add(rutaArchivo);
+                var rutaWeb = $"/imagenes/servicios/{nombreArchivo}";
+
+                switch (i)
+                {
+                    case 0: 
+                        Servicio.Imagen1 = rutaWeb; 
+                        break;
+
+                    case 1: 
+                        Servicio.Imagen2 = rutaWeb; 
+                        break;
+
+                    case 2: 
+                        Servicio.Imagen3 = rutaWeb; 
+                        break;
+
+                    case 3: 
+                        Servicio.Imagen4 = rutaWeb; 
+                        break;
+
+                    case 4: 
+                        Servicio.Imagen5 = rutaWeb;
+                        break;
+                }
+            }
+
+            var resultado = await serviciosService.Guardar(Servicio);
+            bool guardado = false;
+
+            resultado.OnSuccess(() => { guardado = true; });
+            resultado.OnFailure(() => { guardado = false; });
+
+            if (!guardado)
+            {
+                EliminarArchivos(rutasGuardadas);
+                Servicio.Imagen1 = "PortadaSeleccionada";
+                toastService.ShowError("No se ha podido guardar el servicio");
+                return;
+            }
+
+            toastService.ShowSuccess("Servicio guardado correctamente");
+            navigationManager.NavigateTo("/Servicios/Index");
+        }
+        catch
+        {
+            EliminarArchivos(rutasGuardadas);
+            Servicio.Imagen1 = "PortadaSeleccionada";
+            toastService.ShowError("No se ha podido guardar el servicio");
+        }
+    }
+
+    private async Task SeleccionarImagen(InputFileChangeEventArgs archivoSeleccionado, int indice)
+    {
+        var imagen = archivoSeleccionado.File;
+        var formatos = new[] { "image/jpeg", "image/png" };
+
+        if (!formatos.Contains(imagen.ContentType.ToLowerInvariant()))
+        {
+            toastService.ShowError("Solo se permiten imágenes JPG, JPEG y PNG");
+            return;
+        }
+
+        if (imagen.Size > 5 * 1024 * 1024)
+        {
+            toastService.ShowError("Cada imagen no puede superar los 5 MB");
+            return;
+        }
+
+        imagenesSeleccionadas[indice] = imagen;
+
+        if (indice == 0)
+            Servicio.Imagen1 = "PortadaSeleccionada";
+
+        using var memoria = new MemoryStream();
+        await imagen.OpenReadStream(5 * 1024 * 1024).CopyToAsync(memoria);
+
+        imagenesPreview[indice] = $"data:{imagen.ContentType};base64,{Convert.ToBase64String(memoria.ToArray())}";
+    }
+
+    private void QuitarImagen(int indice)
+    {
+        imagenesSeleccionadas[indice] = null;
+        imagenesPreview[indice] = null;
+        versionesImagen[indice]++;
+
+        if (indice == 0)
+            Servicio.Imagen1 = string.Empty;
+    }
+
+    private void EliminarArchivos(List<string> rutas)
+    {
+        foreach (var ruta in rutas)
+        {
+            if (File.Exists(ruta))
+                File.Delete(ruta);
+        }
+    }
+}
