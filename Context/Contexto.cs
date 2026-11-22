@@ -10,4 +10,6 @@ public class Contexto : IdentityDbContext<Usuarios>
 
     public DbSet<Administradores> Administradores { get; set; }
     public DbSet<Artistas> Artistas { get; set; }
+    public DbSet<Clientes> Clientes { get; set; }
+    public DbSet<Obras> Obras { get; set; }
 }

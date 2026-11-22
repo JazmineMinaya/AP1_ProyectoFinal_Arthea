@@ -16,7 +16,7 @@ partial class ContextoModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261121140243_Artistas";
+    public override string LastMigrationId => "20261122145753_AgregarClientesYObras";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -80,6 +80,79 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.HasIndex("UsuarioId");
 
                 b.ToTable("Artistas");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Clientes", b =>
+            {
+                var clienteId = b.Property<int>("ClienteId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(clienteId);
+
+                b.Property<string>("Direccion")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("FotoPerfil")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Telefono")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("UsuarioId")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(450)");
+
+                b.HasKey("ClienteId");
+
+                b.HasIndex("UsuarioId");
+
+                b.ToTable("Clientes");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Obras", b =>
+            {
+                var obraId = b.Property<int>("ObraId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(obraId);
+
+                b.Property<int>("ArtistaId")
+                    .HasColumnType("int");
+
+                b.Property<string>("Categoria")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Descripcion")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Estado")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<DateTime>("FechaPublicacion")
+                    .HasColumnType("datetime2");
+
+                b.Property<string>("ImagenUrl")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<decimal>("Precio")
+                    .HasColumnType("decimal(18,2)");
+
+                b.Property<string>("Titulo")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.HasKey("ObraId");
+
+                b.HasIndex("ArtistaId");
+
+                b.ToTable("Obras");
             });
 
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Usuarios", b =>
@@ -314,6 +387,28 @@ partial class ContextoModelSnapshot : ModelSnapshot
                     .IsRequired();
 
                 b.Navigation("Usuario");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Clientes", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Usuarios", "Usuario")
+                    .WithMany()
+                    .HasForeignKey("UsuarioId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Usuario");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Obras", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Artistas", "Artista")
+                    .WithMany()
+                    .HasForeignKey("ArtistaId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Artista");
             });
 
         modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
