@@ -1,0 +1,299 @@
+@page "/Clientes/Edit/{ClienteId:int}"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador")]
+
+@inject ClientesService clientesService
+@inject UserManager<Usuarios> userManager
+@inject NavigationManager navigationManager
+@inject ToastService toastService
+@inject IWebHostEnvironment environment
+
+<PageTitle>Modificar Cliente</PageTitle>
+
+@if (Usuario is not null)
+{
+    <EditForm Model="Usuario" OnValidSubmit="Modificar" FormName="editarCliente" Context="formContext">
+        <DataAnnotationsValidator />
+
+        <div class="container arthea-cliente-edit">
+            <div class="card shadow-lg">
+
+                <div class="card-header">
+                    <h5 class="card-title">Modificar Cliente</h5>
+                </div>
+
+                <div class="card-body">
+
+                    @* Foto de Perfil *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Foto de Perfil (opcional)</strong></label>
+                        <div>
+                            <label for="imagen" class="cuadro-imagen">
+                                @if (string.IsNullOrEmpty(imagenPreview))
+                                {
+                                    <i class="bi bi-plus-lg"></i>
+                                }
+                                else
+                                {
+                                    <img src="@imagenPreview" alt="Foto de perfil" />
+                                }
+                            </label>
+                            <InputFile id="imagen" class="d-none" accept=".jpg,.jpeg,.png" OnChange="SeleccionarImagen" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>ClienteId</strong></label>
+                        <InputNumber class="form-control" @bind-Value="Cliente.ClienteId" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Nombre</strong></label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <InputText class="form-control" @bind-Value="Usuario.Nombres" placeholder="Nombres" />
+                                <ValidationMessage For="@(() => Usuario.Nombres)" />
+                            </div>
+                            <div class="col-6">
+                                <InputText class="form-control" @bind-Value="Usuario.Apellidos" placeholder="Apellidos" />
+                                <ValidationMessage For="@(() => Usuario.Apellidos)" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Correo</strong></label>
+                        <InputText type="email" class="form-control" @bind-Value="Usuario.Email" />
+                        <ValidationMessage For="@(() => Usuario.Email)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Teléfono</strong></label>
+                        <InputText type="tel" class="form-control" @bind-Value="Cliente.Telefono" />
+                        <ValidationMessage For="@(() => Cliente.Telefono)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Dirección</strong></label>
+                        <InputText class="form-control" @bind-Value="Cliente.Direccion" />
+                        <ValidationMessage For="@(() => Cliente.Direccion)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Contraseña (opcional)</strong></label>
+                        <div class="input-group">
+                            <input type="@(MostrarPassword ? "text" : "password")" class="form-control" @bind="Password" @bind:event="oninput" placeholder="Escribir nueva contraseña" />
+                            <button type="button" class="btn btn-password" @onclick="() => MostrarPassword = !MostrarPassword">
+                                <i class="bi @(MostrarPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Fecha de Registro</strong></label>
+                        <InputDate class="form-control" @bind-Value="Usuario.FechaRegistro" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Estado</strong></label>
+                        <InputSelect class="form-select" @bind-Value="Usuario.Estado">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </InputSelect>
+                    </div>
+
+                </div>
+
+                <div class="card-footer text-center mt-2">
+                    <a href="/Clientes/Index" class="btn btn-secondary"><span class="bi bi-arrow-left"></span> Volver</a>
+                    <button type="submit" class="btn btn-primary bi bi-floppy"> Modificar</button>
+                    <button type="button" class="btn btn-danger bi bi-trash" data-bs-toggle="modal" data-bs-target="#eliminarModal"> Eliminar</button>
+                </div>
+
+            </div>
+        </div>
+    </EditForm>
+}
+
+<div class="modal fade" id="eliminarModal" tabindex="-1" aria-labelledby="eliminarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eliminarModalLabel">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                ¿Está seguro que desea eliminar este cliente?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Cancelar</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @onclick="Eliminar"> Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int ClienteId { get; set; }
+
+    public Clientes Cliente = new Clientes();
+    public Usuarios? Usuario;
+    public string Password { get; set; } = string.Empty;
+
+    private IBrowserFile? imagenSeleccionada;
+    private string? imagenPreview;
+    private bool MostrarPassword = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resultado = await clientesService.Buscar(ClienteId);
+
+        if (resultado.Value is not null)
+        {
+            Cliente = resultado.Value;
+            Usuario = await userManager.FindByIdAsync(Cliente.UsuarioId);
+
+            if (Usuario is null)
+            {
+                toastService.ShowError("Usuario no encontrado");
+                navigationManager.NavigateTo("/Clientes/Index");
+                return;
+            }
+
+            imagenPreview = !string.IsNullOrWhiteSpace(Cliente.FotoPerfil)
+                && Cliente.FotoPerfil.StartsWith("/imagenes/clientes/") ? Cliente.FotoPerfil : null;
+        }
+        else
+        {
+            toastService.ShowError("Cliente no encontrado");
+            navigationManager.NavigateTo("/Clientes/Index");
+        }
+    }
+
+    private async Task Modificar()
+    {
+        if (Usuario is null) return;
+
+        if (string.IsNullOrWhiteSpace(Cliente.Telefono) || !new System.ComponentModel.DataAnnotations.PhoneAttribute().IsValid(Cliente.Telefono))
+        {
+            toastService.ShowError("Ingrese un teléfono válido");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Cliente.Direccion))
+        {
+            toastService.ShowError("Ingrese una dirección");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Usuario.Email))
+        {
+            toastService.ShowError("Ingrese un correo");
+            return;
+        }
+
+        var correoExistente = await userManager.FindByEmailAsync(Usuario.Email);
+        if (correoExistente is not null && correoExistente.Id != Usuario.Id)
+        {
+            toastService.ShowError("Este correo ya está registrado");
+            return;
+        }
+
+        Usuario.UserName = Usuario.Email;
+        var resultadoUsuario = await userManager.UpdateAsync(Usuario);
+
+        if (!resultadoUsuario.Succeeded)
+        {
+            toastService.ShowError(string.Join(" ", resultadoUsuario.Errors.Select(e => e.Description)));
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(Password))
+        {
+            var token = await userManager.GeneratePasswordResetTokenAsync(Usuario);
+            var resultadoPassword = await userManager.ResetPasswordAsync(Usuario, token, Password);
+            if (!resultadoPassword.Succeeded)
+            {
+                toastService.ShowError(string.Join(" ", resultadoPassword.Errors.Select(e => e.Description)));
+                return;
+            }
+        }
+
+        try
+        {
+            await GuardarFotografia();
+            var resultado = await clientesService.Guardar(Cliente);
+
+            resultado.OnSuccess(() =>
+            {
+                toastService.ShowSuccess("Cliente modificado correctamente");
+                navigationManager.NavigateTo("/Clientes/Index");
+            });
+
+            resultado.OnFailure(() => toastService.ShowError("No se ha podido modificar el cliente"));
+        }
+        catch
+        {
+            toastService.ShowError("No se ha podido modificar el cliente");
+        }
+    }
+
+    private async Task SeleccionarImagen(InputFileChangeEventArgs archivoSeleccionado)
+    {
+        var imagen = archivoSeleccionado.File;
+        var formatos = new[] { "image/jpeg", "image/png" };
+
+        if (!formatos.Contains(imagen.ContentType.ToLowerInvariant()))
+        {
+            toastService.ShowError("Solo se permiten fotografías JPG, JPEG y PNG");
+            return;
+        }
+
+        if (imagen.Size > 5 * 1024 * 1024)
+        {
+            toastService.ShowError("La fotografía no puede superar los 5 MB");
+            return;
+        }
+
+        imagenSeleccionada = imagen;
+        using var memoria = new MemoryStream();
+        await imagen.OpenReadStream(5 * 1024 * 1024).CopyToAsync(memoria);
+        imagenPreview = $"data:{imagen.ContentType};base64,{Convert.ToBase64String(memoria.ToArray())}";
+    }
+
+    private async Task GuardarFotografia()
+    {
+        if (imagenSeleccionada is null) return;
+
+        var carpeta = Path.Combine(environment.WebRootPath, "imagenes", "clientes");
+        Directory.CreateDirectory(carpeta);
+
+        var extension = imagenSeleccionada.ContentType.ToLowerInvariant() switch
+        {
+            "image/jpeg" => ".jpg",
+            "image/png" => ".png",
+            _ => throw new InvalidOperationException("Formato no permitido")
+        };
+
+        var nombreArchivo = $"{Guid.NewGuid():N}{extension}";
+        var rutaArchivo = Path.Combine(carpeta, nombreArchivo);
+
+        await using var archivo = new FileStream(rutaArchivo, FileMode.CreateNew);
+        await imagenSeleccionada.OpenReadStream(5 * 1024 * 1024).CopyToAsync(archivo);
+
+        Cliente.FotoPerfil = $"/imagenes/clientes/{nombreArchivo}";
+    }
+
+    private async Task Eliminar()
+    {
+        var resultado = await clientesService.Eliminar(Cliente.ClienteId);
+
+        resultado.OnSuccess(() =>
+        {
+            toastService.ShowSuccess("Cliente eliminado correctamente");
+            navigationManager.NavigateTo("/Clientes/Index");
+        });
+
+        resultado.OnFailure(() => toastService.ShowError("No se ha podido eliminar el cliente"));
+    }
+}
