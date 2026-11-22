@@ -15,6 +15,10 @@ var ConStr = builder.Configuration.GetConnectionString("SqlConStr");
 
 builder.Services.AddDbContextFactory<Contexto>(o => o.UseSqlServer(ConStr));
 builder.Services.AddScoped<AdministradoresService>();
+builder.Services.AddScoped<ArtistasService>();
+builder.Services.AddScoped<ServiciosService>();
+builder.Services.AddScoped<ClientesService>();
+builder.Services.AddScoped<ObrasService>();
 
 builder.Services.AddIdentity<Usuarios, IdentityRole>()
     .AddEntityFrameworkStores<Contexto>()

@@ -1,0 +1,182 @@
+﻿@page "/Servicios/Index"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador")]
+
+@inject ServiciosService serviciosService
+@inject ToastService toastService
+
+<PageTitle>Servicios</PageTitle>
+
+<div class="container arthea-servicios-index">
+    <div class="card shadow-lg">
+
+        @* Encabezado *@
+        <div class="card-header d-flex justify-content-between align-content-center">
+            <h5 class="card-title">Registro de Servicios</h5>
+            <a href="/Servicios/Create" class="btn btn-primary"><span class="bi bi-plus-square mt-3"></span> Crear</a>
+        </div>
+
+        <div class="card-body">
+
+            @* Labels *@
+            <div class="row">
+
+                @* Filtrar por *@
+                <div class="col-3">
+                    <label class="col-form-label"><strong>Filtrar por</strong></label>
+                </div>
+
+                @* Búsqueda *@
+                <div class="col-4">
+                    <label class="col-form-label"><strong>Búsqueda</strong></label>
+                </div>
+            </div>
+
+            @* Filtros *@
+            <div class="row align-items-end">
+
+                @* Filtrar por *@
+                <div class="col-3">
+                    <InputSelect class="form-select" @bind-Value="Filtro">
+                        <option value="" disabled>Elija una opción</option>
+                        <option value="ServicioId">ServicioId</option>
+                        <option value="Nombre">Nombre</option>
+                        <option value="Artista">Artista</option>
+                        <option value="Categoria">Categoría</option>
+                        <option value="Estado">Estado</option>
+                    </InputSelect>
+                </div>
+
+                @* Búsqueda *@
+                <div class="col-4">
+                    <div class="input-group">
+                        <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
+                        <button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
+                    </div>
+                </div>
+
+                @* Restablecer *@
+                <div class="col-2">
+                    <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Reestablecer"></button>
+                </div>
+            </div>
+
+            @* QuickGrid *@
+            <div class="grid">
+                <QuickGrid Items="ListaServicios.AsQueryable()" Class="table table-hover mt-3">
+
+                    <PropertyColumn Property="s => s.ServicioId" Title="ServicioId" Sortable="true" />
+
+                    <TemplateColumn Title="Portada">
+                        <img src="@context.Imagen1" class="portada-servicio" alt="Portada del servicio" />
+                    </TemplateColumn>
+
+                    <PropertyColumn Property="s => s.Nombre" Title="Nombre" Sortable="true" />
+
+                    <TemplateColumn Title="Artista" Sortable="true" SortBy="GridSort<Servicios>.ByAscending(s => s.Artista!.Usuario!.Nombres)">
+                        @($"{context.Artista?.Usuario?.Nombres} {context.Artista?.Usuario?.Apellidos}")
+                    </TemplateColumn>
+
+                    <PropertyColumn Property="s => s.Categoria" Title="Categoría" Sortable="true" />
+
+                    <TemplateColumn Title="Precio" Sortable="true" SortBy="GridSort<Servicios>.ByAscending(s => s.Precio)">
+                        @($"RD$ {context.Precio:N2}")
+                    </TemplateColumn>
+
+                    <TemplateColumn Title="Estado" Sortable="true" SortBy="GridSort<Servicios>.ByAscending(s => s.Estado)">
+                        <span class="estado-servicio @(context.Estado ? "estado-activo" : "estado-inactivo")">@(context.Estado ? "Disponible" : "No disponible")</span>
+                    </TemplateColumn>
+
+                    <TemplateColumn Title="Opciones" Align="Align.Center">
+                        <a href="/Servicios/Edit/@context.ServicioId" class="btn btn-outline-primary bi bi-pencil-square"></a>
+                    </TemplateColumn>
+
+                </QuickGrid>
+            </div>
+        </div>
+
+        @* Footer *@
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <label><strong>Cantidad: </strong> @ListaServicios.Count</label>
+        </div>
+    </div>
+</div>
+
+@code {
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+
+    public List<Servicios> ListaServicios { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resultado = await serviciosService.GetList(s => s.ServicioId > 0);
+        ListaServicios = resultado.Value ?? new();
+    }
+
+    private async Task Buscar()
+    {
+        if (string.IsNullOrWhiteSpace(Filtro))
+        {
+            toastService.ShowError("Seleccione un filtro");
+            return;
+        }
+
+        var valor = ValorFiltro.Trim();
+
+        if (string.IsNullOrWhiteSpace(valor))
+        {
+            toastService.ShowError("Ingrese un valor de búsqueda");
+            return;
+        }
+
+        if (Filtro == "ServicioId")
+        {
+            if (!int.TryParse(valor, out int servicioId))
+            {
+                toastService.ShowError("Ingrese un ServicioId válido");
+                return;
+            }
+
+            var resultado = await serviciosService.GetList(s => s.ServicioId == servicioId);
+            ListaServicios = resultado.Value ?? new();
+        }
+        else if (Filtro == "Nombre")
+        {
+            var resultado = await serviciosService.GetList(s => s.Nombre.ToLower().Contains(valor.ToLower()));
+            ListaServicios = resultado.Value ?? new();
+        }
+        else if (Filtro == "Artista")
+        {
+            var resultado = await serviciosService.GetList(s => s.Artista != null && s.Artista.Usuario != null && (s.Artista.Usuario.Nombres + " " + s.Artista.Usuario.Apellidos).ToLower().Contains(valor.ToLower()));
+            ListaServicios = resultado.Value ?? new();
+        }
+        else if (Filtro == "Categoria")
+        {
+            var resultado = await serviciosService.GetList(s => s.Categoria.ToLower().Contains(valor.ToLower()));
+            ListaServicios = resultado.Value ?? new();
+        }
+        else if (Filtro == "Estado")
+        {
+            valor = valor.ToLower();
+
+            if (valor != "disponible" && valor != "no disponible")
+            {
+                toastService.ShowError("Ingrese Disponible o No disponible");
+                return;
+            }
+
+            var resultado = await serviciosService.GetList(s => s.Estado == (valor == "disponible"));
+            ListaServicios = resultado.Value ?? new();
+        }
+    }
+
+    private async Task Reestablecer()
+    {
+        var resultado = await serviciosService.GetList(s => s.ServicioId > 0);
+        ListaServicios = resultado.Value?.OrderByDescending(s => s.ServicioId).ToList() ?? new();
+
+        Filtro = string.Empty;
+        ValorFiltro = string.Empty;
+    }
+}
