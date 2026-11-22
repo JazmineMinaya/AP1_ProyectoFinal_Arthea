@@ -46,6 +46,7 @@
                         <option value="Titulo">Título</option>
                         <option value="Artista">Artista</option>
                         <option value="Categoria">Categoría</option>
+                        <option value ="Técnica">Técnica</option>
                         <option value="Estado">Estado</option>
                     </InputSelect>
                 </div>
@@ -72,6 +73,7 @@
 
                         <PropertyColumn Property="o => o.Categoria" Title="Categoría" Sortable="true" />
                         <PropertyColumn Property="o => o.Precio" Title="Precio" Format="C2" Sortable="true" />
+                        <PropertyColumn Property="o => o.Cantidad" Title="Cantidad" Format="C2" Sortable="true"/>
                         <PropertyColumn Property="o => o.FechaPublicacion" Title="Fecha" Format="dd/MM/yyyy" Sortable="true" />
                         <PropertyColumn Property="o => o.Estado" Title="Estado" Sortable="true" />
 

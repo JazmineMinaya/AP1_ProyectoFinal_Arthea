@@ -1,4 +1,5 @@
 using AP1_ProyectoFinal_Arthea.Context;
+using AP1_ProyectoFinal_Arthea.Migrations;
 using AP1_ProyectoFinal_Arthea.Models;
 using Aplicada1.Core;
 using Microsoft.EntityFrameworkCore;
@@ -50,8 +51,10 @@ public class ObrasService(
         existente.ArtistaId = obra.ArtistaId;
         existente.Titulo = obra.Titulo;
         existente.Categoria = obra.Categoria;
+        existente.Tecnica = obra.Tecnica;
         existente.Descripcion = obra.Descripcion;
         existente.Precio = obra.Precio;
+        existente.Cantidad = obra.Cantidad;
         existente.Estado = obra.Estado;
         existente.ImagenUrl = obra.ImagenUrl;
 
