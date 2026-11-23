@@ -11,6 +11,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddAuthorization();
+
 var ConStr = builder.Configuration.GetConnectionString("SqlConStr");
 
 builder.Services.AddDbContextFactory<Contexto>(o => o.UseSqlServer(ConStr));

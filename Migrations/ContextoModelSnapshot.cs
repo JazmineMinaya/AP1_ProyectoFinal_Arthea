@@ -16,7 +16,7 @@ partial class ContextoModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261122205905_AgregarTecnicaObras";
+    public override string LastMigrationId => "20261123002019_Pedidos";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -112,6 +112,39 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.ToTable("Clientes");
             });
 
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Facturas", b =>
+            {
+                var facturaId = b.Property<int>("FacturaId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(facturaId);
+
+                b.Property<string>("Estado")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<DateTime>("Fecha")
+                    .HasColumnType("datetime2");
+
+                b.Property<string>("NumeroFactura")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<int>("PedidoId")
+                    .HasColumnType("int");
+
+                b.Property<double>("Total")
+                    .HasColumnType("float");
+
+                b.HasKey("FacturaId");
+
+                b.HasIndex("PedidoId")
+                    .IsUnique();
+
+                b.ToTable("Facturas");
+            });
+
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Obras", b =>
             {
                 var obraId = b.Property<int>("ObraId")
@@ -160,6 +193,94 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.HasIndex("ArtistaId");
 
                 b.ToTable("Obras");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Pedidos", b =>
+            {
+                var pedidoId = b.Property<int>("PedidoId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(pedidoId);
+
+                b.Property<int>("ArtistaId")
+                    .HasColumnType("int");
+
+                b.Property<int>("ClienteId")
+                    .HasColumnType("int");
+
+                b.Property<string>("DireccionEntrega")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Estado")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("EstadoPago")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<DateTime>("Fecha")
+                    .HasColumnType("datetime2");
+
+                b.Property<DateTime?>("FechaCancelacion")
+                    .HasColumnType("datetime2");
+
+                b.Property<DateTime?>("FechaPago")
+                    .HasColumnType("datetime2");
+
+                b.Property<DateTime?>("FechaRecepcion")
+                    .HasColumnType("datetime2");
+
+                b.Property<DateTime?>("FechaReembolso")
+                    .HasColumnType("datetime2");
+
+                b.Property<double>("MontoReembolsado")
+                    .HasColumnType("float");
+
+                b.Property<string>("MotivoCancelacion")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<double>("Total")
+                    .HasColumnType("float");
+
+                b.HasKey("PedidoId");
+
+                b.HasIndex("ArtistaId");
+
+                b.HasIndex("ClienteId");
+
+                b.ToTable("Pedidos");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.PedidosDetalle", b =>
+            {
+                var detalleId = b.Property<int>("DetalleId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(detalleId);
+
+                b.Property<int>("Cantidad")
+                    .HasColumnType("int");
+
+                b.Property<int>("PedidoId")
+                    .HasColumnType("int");
+
+                b.Property<double>("Precio")
+                    .HasColumnType("float");
+
+                b.Property<int>("ServicioId")
+                    .HasColumnType("int");
+
+                b.HasKey("DetalleId");
+
+                b.HasIndex("PedidoId");
+
+                b.HasIndex("ServicioId");
+
+                b.ToTable("PedidosDetalles");
             });
 
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Servicios", b =>
@@ -459,6 +580,17 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.Navigation("Usuario");
             });
 
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Facturas", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Pedidos", "Pedido")
+                    .WithOne("Factura")
+                    .HasForeignKey("AP1_ProyectoFinal_Arthea.Models.Facturas", "PedidoId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Pedido");
+            });
+
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Obras", b =>
             {
                 b.HasOne("AP1_ProyectoFinal_Arthea.Models.Artistas", "Artista")
@@ -468,6 +600,44 @@ partial class ContextoModelSnapshot : ModelSnapshot
                     .IsRequired();
 
                 b.Navigation("Artista");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Pedidos", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Artistas", "Artista")
+                    .WithMany()
+                    .HasForeignKey("ArtistaId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Clientes", "Cliente")
+                    .WithMany()
+                    .HasForeignKey("ClienteId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.Navigation("Artista");
+
+                b.Navigation("Cliente");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.PedidosDetalle", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Pedidos", "Pedido")
+                    .WithMany("PedidosDetalle")
+                    .HasForeignKey("PedidoId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Servicios", "Servicio")
+                    .WithMany()
+                    .HasForeignKey("ServicioId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Pedido");
+
+                b.Navigation("Servicio");
             });
 
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Servicios", b =>
@@ -530,6 +700,13 @@ partial class ContextoModelSnapshot : ModelSnapshot
                     .HasForeignKey("UserId")
                     .OnDelete(DeleteBehavior.Cascade)
                     .IsRequired();
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Pedidos", b =>
+            {
+                b.Navigation("Factura");
+
+                b.Navigation("PedidosDetalle");
             });
 #pragma warning restore 612, 618
     }

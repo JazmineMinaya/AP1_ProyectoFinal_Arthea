@@ -16,4 +16,21 @@ public class Contexto : IdentityDbContext<Usuarios>
     public DbSet<Pedidos> Pedidos { get; set; }
     public DbSet<PedidosDetalle> PedidosDetalles { get; set; }
     public DbSet<Facturas> Facturas { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Pedidos>()
+            .HasOne(p => p.Cliente)
+            .WithMany()
+            .HasForeignKey(p => p.ClienteId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<Pedidos>()
+            .HasOne(p => p.Artista)
+            .WithMany()
+            .HasForeignKey(p => p.ArtistaId)
+            .OnDelete(DeleteBehavior.NoAction);
+    }
 }
