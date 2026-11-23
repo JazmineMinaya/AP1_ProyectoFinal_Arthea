@@ -1,0 +1,254 @@
+﻿@page "/Catalogo/Index"
+@rendermode InteractiveServer
+
+@inject ArtistasService artistasService
+
+<PageTitle>Catálogo Artístico</PageTitle>
+
+<div class="container arthea-catalogo">
+    <div class="card shadow-lg">
+
+        @* Encabezado *@
+        <div class="card-header catalogo-encabezado">
+            <h2>Catálogo Artístico</h2>
+            <p>Descubre el talento y la historia de nuestros artistas</p>
+        </div>
+
+        <div class="card-body">
+
+            @* Categorías *@
+            <div class="catalogo-categorias">
+                <button type="button" class="categoria-btn @(categoriaSeleccionada == "Artistas" ? "activo" : "")" @onclick='() => CambiarCategoria("Artistas")'>Artistas</button>
+                <button type="button" class="categoria-btn @(categoriaSeleccionada == "Obras" ? "activo" : "")" @onclick='() => CambiarCategoria("Obras")'>Obras</button>
+                <button type="button" class="categoria-btn @(categoriaSeleccionada == "Portafolios" ? "activo" : "")" @onclick='() => CambiarCategoria("Portafolios")'>Portafolios</button>
+                <button type="button" class="categoria-btn @(categoriaSeleccionada == "Servicios" ? "activo" : "")" @onclick='() => CambiarCategoria("Servicios")'>Servicios</button>
+            </div>
+
+            @if (categoriaSeleccionada == "Artistas")
+            {
+                @* Labels *@
+                <div class="row">
+
+                    @* Filtrar por *@
+                    <div class="col-3">
+                        <label class="col-form-label"><strong>Filtrar por</strong></label>
+                    </div>
+
+                    @* Búsqueda *@
+                    <div class="col-4">
+                        <label class="col-form-label"><strong>Búsqueda</strong></label>
+                    </div>
+                </div>
+
+                @* Filtros *@
+                <div class="row align-items-end catalogo-filtros">
+
+                    @* Filtrar por *@
+                    <div class="col-3">
+                        <select class="form-select" @bind="Filtro">
+                            <option value="" disabled>Elija una opción</option>
+                            <option value="Nombre">Nombre</option>
+                            <option value="Disciplina">Disciplina</option>
+                        </select>
+                    </div>
+
+                    @* Búsqueda *@
+                    <div class="col-4">
+                        <div class="input-group">
+                            <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
+                            <button type="button" class="btn btn-outline-primary bi bi-search" title="Buscar" @onclick="Buscar"></button>
+                        </div>
+                    </div>
+
+                    @* Reestablecer *@
+                    <div class="col-2">
+                        <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" title="Restablecer" @onclick="Reestablecer"></button>
+                    </div>
+                </div>
+
+                @* Artistas *@
+                @if (cargando)
+                {
+                    <div class="catalogo-mensaje">Cargando artistas...</div>
+                }
+                else if (!string.IsNullOrEmpty(error))
+                {
+                    <div class="catalogo-mensaje">@error</div>
+                }
+                else if (!ListaArtistas.Any())
+                {
+                    <div class="catalogo-mensaje">No se encontraron artistas</div>
+                }
+                else
+                {
+                    <div class="catalogo-grid">
+                        @foreach (var artista in ListaArtistas)
+                        {
+                            <div class="artista-card" @key="artista.ArtistaId">
+                                <div class="artista-imagen">
+                                    <img src="@ObtenerFoto(artista.FotoPerfil)" alt="Fotografía de @ObtenerNombre(artista)" />
+                                </div>
+
+                                <div class="artista-informacion">
+                                    <h5>@ObtenerNombre(artista)</h5>
+                                    <p class="artista-disciplina">@artista.Disciplina</p>
+
+                                    <button type="button" class="btn-detalles" @onclick="() => MostrarDetalles(artista)">Ver detalles <i class="bi bi-arrow-up-right"></i></button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="catalogo-mensaje">
+                    Próximamente estará disponible el catálogo de @categoriaSeleccionada.ToLower()
+                </div>
+            }
+
+        </div>
+    </div>
+
+    @* Modal de detalles *@
+    @if (artistaSeleccionado is not null)
+    {
+        <div class="catalogo-modal-fondo" @onclick="CerrarDetalles">
+            <div class="catalogo-modal" role="dialog" aria-modal="true" aria-label="Detalles del artista" @onclick:stopPropagation="true">
+                <button type="button" class="modal-cerrar" aria-label="Cerrar" @onclick="CerrarDetalles">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+
+                <div class="modal-artista">
+                    <div class="modal-imagen">
+                        <img src="@ObtenerFoto(artistaSeleccionado.FotoPerfil)" alt="Fotografía de @ObtenerNombre(artistaSeleccionado)" />
+                    </div>
+
+                    <div class="modal-informacion">
+                        <h3>@ObtenerNombre(artistaSeleccionado)</h3>
+                        <p class="modal-disciplina">@artistaSeleccionado.Disciplina</p>
+
+                        <h5>Biografía</h5>
+                        <p class="modal-biografia">@(string.IsNullOrWhiteSpace(artistaSeleccionado.Biografia) ? "Este artista todavía no ha agregado una biografía." : artistaSeleccionado.Biografia)</p>
+
+                        <h5>Teléfono</h5>
+                        <p class="modal-telefono"><i class="bi bi-telephone"></i> @artistaSeleccionado.Telefono</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+    public List<Artistas> ListaArtistas { get; set; } = new();
+
+    private Artistas? artistaSeleccionado;
+    private string categoriaSeleccionada = "Artistas";
+    private string? error;
+    private bool cargando = true;
+    private long versionImagen = DateTime.UtcNow.Ticks;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Reestablecer();
+    }
+
+    private async Task Buscar()
+    {
+        cargando = true;
+        error = null;
+
+        try
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+
+            if (Filtro == "Nombre")
+            {
+                var resultado = await artistasService.GetList(a => a.Usuario != null && (a.Usuario.Nombres + " " + a.Usuario.Apellidos).ToLower().Contains(valor));
+                ListaArtistas = resultado.Value ?? new();
+            }
+            else if (Filtro == "Disciplina")
+            {
+                var resultado = await artistasService.GetList(a => a.Disciplina.ToLower().Contains(valor));
+                ListaArtistas = resultado.Value ?? new();
+            }
+            else
+            {
+                error = "Seleccione un filtro para realizar la búsqueda";
+            }
+
+            versionImagen = DateTime.UtcNow.Ticks;
+        }
+        catch
+        {
+            error = "No fue posible realizar la búsqueda";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task Reestablecer()
+    {
+        cargando = true;
+        error = null;
+
+        try
+        {
+            var resultado = await artistasService.GetList(a => a.ArtistaId > 0);
+            ListaArtistas = resultado.Value ?? new();
+            Filtro = string.Empty;
+            ValorFiltro = string.Empty;
+            versionImagen = DateTime.UtcNow.Ticks;
+        }
+        catch
+        {
+            error = "No fue posible cargar los artistas";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task CambiarCategoria(string categoria)
+    {
+        categoriaSeleccionada = categoria;
+        artistaSeleccionado = null;
+
+        if (categoria == "Artistas")
+            await Reestablecer();
+    }
+
+    private static string ObtenerNombre(Artistas artista)
+    {
+        var nombre = $"{artista.Usuario?.Nombres} {artista.Usuario?.Apellidos}".Trim();
+        return string.IsNullOrWhiteSpace(nombre) ? "Artista" : nombre;
+    }
+
+    private string ObtenerFoto(string? foto)
+    {
+        if (string.IsNullOrWhiteSpace(foto))
+            return "/imagenes/artista-default.png";
+
+        var ruta = foto.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                   foto.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                   ? foto : "/" + foto.TrimStart('/');
+
+        return ruta + (ruta.Contains('?') ? "&" : "?") + "v=" + versionImagen;
+    }
+
+    private void MostrarDetalles(Artistas artista)
+    {
+        artistaSeleccionado = artista;
+    }
+
+    private void CerrarDetalles()
+    {
+        artistaSeleccionado = null;
+    }
+}
