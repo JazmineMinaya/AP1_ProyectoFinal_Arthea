@@ -23,9 +23,6 @@ public class Portafolios
 
     public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
-    [Required(ErrorMessage = "Seleccione un estado")]
-    public string Estado { get; set; } = "Publicado"; // Borrador, Pendiente de aprobación, Publicado, Rechazado
-
     public string? ImagenPortada { get; set; }
 
     public virtual ICollection<PortafoliosDetalle> PortafoliosDetalle { get; set; } = new List<PortafoliosDetalle>();

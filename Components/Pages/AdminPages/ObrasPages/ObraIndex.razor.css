@@ -25,7 +25,7 @@
             position: absolute;
             bottom: -1px;
             left: 16px;
-            width: 205px;
+            width: 210px;
             height: 2px;
             background-color: #A68B64;
         }
@@ -45,7 +45,7 @@
         background-size: 9px 9px;
     }
 
-    /* Etiquetas */
+    /* Etiquetas: Filtrar por y Búsqueda */
     .arthea-obra-index .col-form-label {
         font-family: Georgia, "Times New Roman", serif;
         color: #493827;
@@ -53,9 +53,19 @@
         letter-spacing: 0.2px;
     }
 
-    /* Campos y filtros */
+    /* Etiquetas: Desde, Hasta, Filtrar por y Búsqueda */
+    .arthea-obra-index .col-form-label {
+        font-family: Georgia, "Times New Roman", serif;
+        color: #493827;
+        font-size: 17px;
+        letter-spacing: 0.2px;
+    }
+
+    /* Campos, filtros y selectores de fecha (Desde / Hasta) */
     .arthea-obra-index .form-control,
-    .arthea-obra-index ::deep .form-select {
+    .arthea-obra-index ::deep .form-control,
+    .arthea-obra-index ::deep .form-select,
+    .arthea-obra-index ::deep input[type="date"] {
         background-color: #FFFCF8;
         border: 1px solid #D9CBB9;
         border-radius: 6px;
@@ -64,20 +74,21 @@
         font-size: 16px;
     }
 
-        /* Opciones del filtro */
-        .arthea-obra-index ::deep .form-select option {
-            background-color: #FFFCF8;
-            color: #493827;
-            font-family: Georgia, "Times New Roman", serif;
-        }
+    /* Ícono del calendario en Desde y Hasta */
+    .arthea-obra-index ::deep input[type="date"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.75;
+        filter: sepia(60%) saturate(150%) hue-rotate(350deg) brightness(45%);
+    }
 
-        /* Campos seleccionados */
-        .arthea-obra-index .form-control:focus,
-        .arthea-obra-index ::deep .form-select:focus {
-            border-color: #9C8060;
-            box-shadow: 0 0 0 0.2rem rgba(156, 128, 96, 0.15);
-        }
-
+    /* Campos seleccionados (Focus) */
+    .arthea-obra-index .form-control:focus,
+    .arthea-obra-index ::deep .form-control:focus,
+    .arthea-obra-index ::deep .form-select:focus,
+    .arthea-obra-index ::deep input[type="date"]:focus {
+        border-color: #9C8060;
+        box-shadow: 0 0 0 0.2rem rgba(156, 128, 96, 0.15);
+    }
     /* Botón Crear */
     .arthea-obra-index .btn-primary {
         background-color: #6F563B;
@@ -138,6 +149,16 @@
             vertical-align: middle;
         }
 
+    /* Miniatura de la obra en tabla */
+    .arthea-obra-index ::deep .portada-obra {
+        width: 55px;
+        height: 55px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #D8C7AF;
+        display: block;
+    }
+
     /* Footer */
     .arthea-obra-index .card-footer {
         background-color: #F0E6D9;
@@ -145,26 +166,3 @@
         color: #493827;
         font-family: Georgia, "Times New Roman", serif;
     }
-
-    /* Filtros de fecha: Desde y Hasta */
-    .arthea-obra-index ::deep input[type="date"] {
-        background-color: #FFFCF8;
-        border: 1px solid #D9CBB9;
-        border-radius: 6px;
-        color: #493827;
-        font-family: Georgia, "Times New Roman", serif;
-        font-size: 16px;
-    }
-
-        /* Al seleccionar una fecha */
-        .arthea-obra-index ::deep input[type="date"]:focus {
-            border-color: #9C8060;
-            box-shadow: 0 0 0 0.2rem rgba(156, 128, 96, 0.15);
-            outline: none;
-        }
-
-        /* Icono del calendario */
-        .arthea-obra-index ::deep input[type="date"]::-webkit-calendar-picker-indicator {
-            cursor: pointer;
-            opacity: 0.65;
-        }

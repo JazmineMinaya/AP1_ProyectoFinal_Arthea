@@ -96,8 +96,6 @@
                         </TemplateColumn>
 
                         <PropertyColumn Property="p => p.FechaCreacion" Title="Fecha" Format="dd/MM/yyyy" Sortable="true" />
-                        <PropertyColumn Property="p => p.Estado" Title="Estado" Sortable="true" />
-
                         <TemplateColumn Title="Opciones" Align="Align.Center">
                             <a href="/Portafolios/Edit/@context.PortafolioId" class="btn btn-outline-primary bi bi-pencil-square"></a>
                         </TemplateColumn>
@@ -177,16 +175,6 @@
                 (!ArtistaLogueadoId.HasValue || p.ArtistaId == ArtistaLogueadoId.Value) &&
                 p.Artista != null && p.Artista.Usuario != null &&
                 (p.Artista.Usuario.Nombres + " " + p.Artista.Usuario.Apellidos).ToLower().Contains(valor));
-
-            ListaPortafolios = resultado.Value ?? new();
-        }
-
-        else if (Filtro == "Estado")
-        {
-            var valor = ValorFiltro.Trim().ToLower();
-            var resultado = await portafoliosService.GetList(p =>
-                (!ArtistaLogueadoId.HasValue || p.ArtistaId == ArtistaLogueadoId.Value) &&
-                p.Estado.ToLower().Contains(valor));
 
             ListaPortafolios = resultado.Value ?? new();
         }
