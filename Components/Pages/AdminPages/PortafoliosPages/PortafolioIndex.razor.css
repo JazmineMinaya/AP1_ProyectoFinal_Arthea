@@ -1,0 +1,170 @@
+/* Contenedor principal */
+.arthea-portafolio-index {
+    color: #493827;
+}
+
+    /* Tarjeta principal */
+    .arthea-portafolio-index .card {
+        background-color: #F7F1E8;
+        border: 1px solid #D8C7AF;
+        border-radius: 8px;
+        box-shadow: 0 12px 30px rgba(61, 44, 29, 0.13) !important;
+    }
+
+    /* Encabezado */
+    .arthea-portafolio-index .card-header {
+        background-color: #F7F1E8;
+        border-bottom: 1px solid #D8C7AF;
+        color: #493827;
+        position: relative;
+    }
+
+        /* Línea decorativa del encabezado */
+        .arthea-portafolio-index .card-header::after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            left: 16px;
+            width: 205px;
+            height: 2px;
+            background-color: #A68B64;
+        }
+
+    /* Título */
+    .arthea-portafolio-index .card-title {
+        font-family: Georgia, "Times New Roman", serif;
+        font-variant: small-caps;
+        letter-spacing: 0.6px;
+        color: #493827;
+    }
+
+    /* Cuerpo con textura de papel */
+    .arthea-portafolio-index .card-body {
+        background-color: #FBF7F0;
+        background-image: radial-gradient(rgba(111, 86, 59, 0.045) 0.7px, transparent 0.7px);
+        background-size: 9px 9px;
+    }
+
+    /* Etiquetas */
+    .arthea-portafolio-index .col-form-label {
+        font-family: Georgia, "Times New Roman", serif;
+        color: #493827;
+        font-size: 17px;
+        letter-spacing: 0.2px;
+    }
+
+    /* Campos y filtros */
+    .arthea-portafolio-index .form-control,
+    .arthea-portafolio-index ::deep .form-select {
+        background-color: #FFFCF8;
+        border: 1px solid #D9CBB9;
+        border-radius: 6px;
+        color: #493827;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 16px;
+    }
+
+        /* Opciones del filtro */
+        .arthea-portafolio-index ::deep .form-select option {
+            background-color: #FFFCF8;
+            color: #493827;
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        /* Campos seleccionados */
+        .arthea-portafolio-index .form-control:focus,
+        .arthea-portafolio-index ::deep .form-select:focus {
+            border-color: #9C8060;
+            box-shadow: 0 0 0 0.2rem rgba(156, 128, 96, 0.15);
+        }
+
+    /* Botón Crear */
+    .arthea-portafolio-index .btn-primary {
+        background-color: #6F563B;
+        border-color: #6F563B;
+        color: white;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 16px;
+    }
+
+        .arthea-portafolio-index .btn-primary:hover {
+            background-color: #493827;
+            border-color: #493827;
+            color: white;
+        }
+
+    /* Botones Buscar y Modificar */
+    .arthea-portafolio-index .btn-outline-primary {
+        color: #6F563B;
+        border-color: #9C8060;
+    }
+
+        .arthea-portafolio-index .btn-outline-primary:hover {
+            background-color: #6F563B;
+            border-color: #6F563B;
+            color: white;
+        }
+
+    /* Botón Restablecer */
+    .arthea-portafolio-index .btn-outline-secondary {
+        color: #806B54;
+        border-color: #B9AA98;
+    }
+
+        .arthea-portafolio-index .btn-outline-secondary:hover {
+            background-color: #806B54;
+            border-color: #806B54;
+            color: white;
+        }
+
+    /* Tabla QuickGrid */
+    .arthea-portafolio-index ::deep .table {
+        --bs-table-bg: transparent;
+        --bs-table-color: #493827;
+        --bs-table-border-color: #DCCDBA;
+        --bs-table-hover-bg: #EFE5D7;
+        --bs-table-hover-color: #493827;
+    }
+
+        /* Encabezados de la tabla */
+        .arthea-portafolio-index ::deep .table th {
+            font-family: Georgia, "Times New Roman", serif;
+            font-weight: 600;
+            color: #493827;
+        }
+
+        /* Celdas */
+        .arthea-portafolio-index ::deep .table td {
+            vertical-align: middle;
+        }
+
+    /* Footer */
+    .arthea-portafolio-index .card-footer {
+        background-color: #F0E6D9;
+        border-top: 1px solid #D8C7AF;
+        color: #493827;
+        font-family: Georgia, "Times New Roman", serif;
+    }
+
+    /* Filtros de fecha: Desde y Hasta */
+    .arthea-portafolio-index ::deep input[type="date"] {
+        background-color: #FFFCF8;
+        border: 1px solid #D9CBB9;
+        border-radius: 6px;
+        color: #493827;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 16px;
+    }
+
+        /* Al seleccionar una fecha */
+        .arthea-portafolio-index ::deep input[type="date"]:focus {
+            border-color: #9C8060;
+            box-shadow: 0 0 0 0.2rem rgba(156, 128, 96, 0.15);
+            outline: none;
+        }
+
+        /* Icono del calendario */
+        .arthea-portafolio-index ::deep input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.65;
+        }

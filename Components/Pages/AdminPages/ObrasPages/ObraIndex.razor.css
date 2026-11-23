@@ -25,7 +25,7 @@
             position: absolute;
             bottom: -1px;
             left: 16px;
-            width: 300px;
+            width: 205px;
             height: 2px;
             background-color: #A68B64;
         }
@@ -41,11 +41,11 @@
     /* Cuerpo con textura de papel */
     .arthea-obra-index .card-body {
         background-color: #FBF7F0;
-        background-image: radial-gradient( rgba(111, 86, 59, 0.045) 0.7px, transparent 0.7px );
+        background-image: radial-gradient(rgba(111, 86, 59, 0.045) 0.7px, transparent 0.7px);
         background-size: 9px 9px;
     }
 
-    /* Etiquetas: Filtrar por y Búsqueda */
+    /* Etiquetas */
     .arthea-obra-index .col-form-label {
         font-family: Georgia, "Times New Roman", serif;
         color: #493827;
@@ -145,3 +145,26 @@
         color: #493827;
         font-family: Georgia, "Times New Roman", serif;
     }
+
+    /* Filtros de fecha: Desde y Hasta */
+    .arthea-obra-index ::deep input[type="date"] {
+        background-color: #FFFCF8;
+        border: 1px solid #D9CBB9;
+        border-radius: 6px;
+        color: #493827;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 16px;
+    }
+
+        /* Al seleccionar una fecha */
+        .arthea-obra-index ::deep input[type="date"]:focus {
+            border-color: #9C8060;
+            box-shadow: 0 0 0 0.2rem rgba(156, 128, 96, 0.15);
+            outline: none;
+        }
+
+        /* Icono del calendario */
+        .arthea-obra-index ::deep input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.65;
+        }
