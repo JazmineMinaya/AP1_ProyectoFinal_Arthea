@@ -14,8 +14,6 @@ public class PortafoliosDetalle
     [Range(1, int.MaxValue, ErrorMessage = "Seleccione una obra válida")]
     public int ObraId { get; set; }
 
-    public string? NotaCuratorial { get; set; }
-
     [ForeignKey("PortafolioId")]
     public virtual Portafolios? Portafolio { get; set; }
 

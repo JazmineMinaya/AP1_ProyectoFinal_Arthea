@@ -61,7 +61,6 @@ public class PortafoliosService(
         existente.ArtistaId = portafolio.ArtistaId;
         existente.Titulo = portafolio.Titulo;
         existente.Descripcion = portafolio.Descripcion;
-        existente.Estado = portafolio.Estado;
         existente.ImagenPortada = portafolio.ImagenPortada;
 
         // Reemplazar detalles anteriores por los actuales
@@ -73,7 +72,6 @@ public class PortafoliosService(
             {
                 PortafolioId = existente.PortafolioId,
                 ObraId = item.ObraId,
-                NotaCuratorial = item.NotaCuratorial
             });
         }
 

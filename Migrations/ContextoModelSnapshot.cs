@@ -16,7 +16,7 @@ partial class ContextoModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261123151625_AgregarPortafolios";
+    public override string LastMigrationId => "20261123175736_ActualizarPortafolios";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -298,10 +298,6 @@ partial class ContextoModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasColumnType("nvarchar(max)");
 
-                b.Property<string>("Estado")
-                    .IsRequired()
-                    .HasColumnType("nvarchar(max)");
-
                 b.Property<DateTime>("FechaCreacion")
                     .HasColumnType("datetime2");
 
@@ -326,9 +322,6 @@ partial class ContextoModelSnapshot : ModelSnapshot
                     .HasColumnType("int");
 
                 SqlServerPropertyBuilderExtensions.UseIdentityColumn(detalleId);
-
-                b.Property<string>("NotaCuratorial")
-                    .HasColumnType("nvarchar(max)");
 
                 b.Property<int>("ObraId")
                     .HasColumnType("int");

@@ -25,7 +25,7 @@
             position: absolute;
             bottom: -1px;
             left: 16px;
-            width: 230px;
+            width: 140px;
             height: 2px;
             background-color: #A68B64;
         }
@@ -41,7 +41,7 @@
     /* Cuerpo con textura de papel */
     .arthea-obra-create .card-body {
         background-color: #FBF7F0;
-        background-image: radial-gradient( rgba(111, 86, 59, 0.045) 0.7px, transparent 0.7px );
+        background-image: radial-gradient(rgba(111, 86, 59, 0.045) 0.7px, transparent 0.7px);
         background-size: 9px 9px;
     }
 
@@ -79,7 +79,7 @@
             color: #806B54;
         }
 
-        /* Opciones del estado */
+        /* Opciones */
         .arthea-obra-create ::deep .form-select option {
             background-color: #FFFCF8;
             color: #493827;
@@ -163,18 +163,4 @@
         color: #A34D43;
         font-family: Georgia, "Times New Roman", serif;
         font-size: 14px;
-    }
-
-/* Botón visualizar contraseña */
-.btn-password {
-    background-color: #FFFCF8;
-    color: #6F563B;
-    border: 1px solid #9C8060;
-}
-
-    .btn-password:hover,
-    .btn-password:focus {
-        background-color: #6F563B;
-        border-color: #6F563B;
-        color: white;
     }
