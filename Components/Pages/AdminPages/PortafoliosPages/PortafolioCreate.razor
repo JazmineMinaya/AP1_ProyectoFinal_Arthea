@@ -1,0 +1,332 @@
+@page "/Portafolios/Create"
+@using Microsoft.AspNetCore.Components.Authorization
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador,Artista")]
+
+@inject PortafoliosService portafoliosService
+@inject ArtistasService artistasService
+@inject ObrasService obrasService
+@inject AuthenticationStateProvider authStateProvider
+@inject UserManager<Usuarios> userManager
+@inject NavigationManager navigationManager
+@inject ToastService toastService
+@inject IWebHostEnvironment environment
+
+<PageTitle>Crear Portafolio</PageTitle>
+
+<EditForm Model="Portafolio" OnValidSubmit="Guardar" FormName="crearPortafolio">
+    <DataAnnotationsValidator />
+
+    <div class="container arthea-portafolio-create">
+        <div class="card shadow-lg">
+
+            <div class="card-header">
+                <h5 class="card-title">Crear Portafolio</h5>
+            </div>
+
+            <div class="card-body">
+
+                @* Portada *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Imagen de Portada (opcional)</strong></label>
+                    <div>
+                        <label for="imagen" class="cuadro-imagen">
+                            @if (string.IsNullOrEmpty(imagenPreview))
+                            {
+                                <i class="bi bi-plus-lg"></i>
+                            }
+                            else
+                            {
+                                <img src="@imagenPreview" alt="Portada" />
+                            }
+                        </label>
+                        <InputFile id="imagen" class="d-none" accept=".jpg,.jpeg,.png" OnChange="SeleccionarImagen" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label"><strong>PortafolioId</strong></label>
+                        <InputNumber class="form-control" @bind-Value="Portafolio.PortafolioId" readonly />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label"><strong>Fecha de Creación</strong></label>
+                        <InputDate class="form-control" @bind-Value="Portafolio.FechaCreacion" readonly />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label"><strong>Estado</strong></label>
+                        <InputSelect class="form-select" @bind-Value="Portafolio.Estado">
+                            <option value="Borrador">Borrador</option>
+                            <option value="Pendiente de aprobación">Pendiente de aprobación</option>
+                            <option value="Publicado">Publicado</option>
+                            <option value="Rechazado">Rechazado</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => Portafolio.Estado)" />
+                    </div>
+                </div>
+
+                @* Artista *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Artista</strong></label>
+                    <InputSelect class="form-select" @bind-Value="Portafolio.ArtistaId" @bind-Value:after="CargarObrasDelArtista" disabled="@EsSoloArtista">
+                        <option value="0">Seleccione un artista</option>
+                        @foreach (var artista in ListaArtistas)
+                        {
+                            <option value="@artista.ArtistaId">@($"{artista.Usuario?.Nombres} {artista.Usuario?.Apellidos} ({artista.Disciplina})")</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => Portafolio.ArtistaId)" />
+                </div>
+
+                @* Título *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Título del Portafolio</strong></label>
+                    <InputText class="form-control" @bind-Value="Portafolio.Titulo" placeholder="Ej. Colección Paisajes del Caribe" />
+                    <ValidationMessage For="@(() => Portafolio.Titulo)" />
+                </div>
+
+                @* Descripción *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Descripción</strong></label>
+                    <InputTextArea class="form-control" @bind-Value="Portafolio.Descripcion" rows="3" placeholder="Describa el concepto artístico de este portafolio" />
+                    <ValidationMessage For="@(() => Portafolio.Descripcion)" />
+                </div>
+
+                <hr class="my-4" />
+
+                @* SECCIÓN DETALLE DE OBRAS *@
+                <div class="border rounded p-3 mb-3" style="background-color: #F7F1E8; border-color: #D8C7AF !important;">
+                    <h6 class="mb-3" style="font-family: Georgia, serif;"><strong>Detalle de Obras del Portafolio</strong></h6>
+
+                    <div class="row g-2 align-items-end mb-3">
+                        <div class="col-md-5">
+                            <label class="form-label"><strong>Obra</strong></label>
+                            <InputSelect class="form-select" @bind-Value="DetalleActual.ObraId" disabled="@(Portafolio.ArtistaId == 0)">
+                                <option value="0">Seleccione una obra del artista</option>
+                                @foreach (var obra in ObrasDisponibles)
+                                {
+                                    <option value="@obra.ObraId">@($"{obra.Titulo} - {obra.Categoria} ({obra.Precio:C2})")</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="col-md-5">
+                            <label class="form-label"><strong>Nota Curatorial (opcional)</strong></label>
+                            <InputText class="form-control" @bind-Value="DetalleActual.NotaCuratorial" placeholder="Ej. Pieza central de la serie" />
+                        </div>
+
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-outline-primary w-100" @onclick="AgregarDetalle">
+                                <span class="bi bi-plus-circle"></span> Agregar
+                            </button>
+                        </div>
+                    </div>
+
+                    <table class="table table-hover table-sm">
+                        <thead>
+                            <tr>
+                                <th>ObraId</th>
+                                <th>Título</th>
+                                <th>Categoría</th>
+                                <th>Técnica</th>
+                                <th>Precio</th>
+                                <th>Nota Curatorial</th>
+                                <th class="text-center">Quitar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Portafolio.PortafoliosDetalle.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">No se han agregado obras a este portafolio.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Portafolio.PortafoliosDetalle)
+                                {
+                                    <tr>
+                                        <td>@item.ObraId</td>
+                                        <td>@item.Obra?.Titulo</td>
+                                        <td>@item.Obra?.Categoria</td>
+                                        <td>@item.Obra?.Tecnica</td>
+                                        <td>@item.Obra?.Precio.ToString("C2")</td>
+                                        <td>@(string.IsNullOrWhiteSpace(item.NotaCuratorial) ? "-" : item.NotaCuratorial)</td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-outline-danger bi bi-trash" @onclick="() => EliminarDetalle(item)"></button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <div class="card-footer text-center mt-2">
+                <a href="/Portafolios/Index" class="btn btn-secondary"><span class="bi bi-arrow-left"></span> Volver</a>
+                <button type="submit" class="btn btn-primary bi bi-floppy"> Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    public Portafolios Portafolio { get; set; } = new();
+    public PortafoliosDetalle DetalleActual { get; set; } = new();
+
+    public List<Artistas> ListaArtistas { get; set; } = new();
+    public List<Obras> ObrasDisponibles { get; set; } = new();
+
+    private bool EsSoloArtista { get; set; }
+    private IBrowserFile? imagenSeleccionada;
+    private string? imagenPreview;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var artistasRes = await artistasService.GetList(a => a.Usuario != null && a.Usuario.Estado);
+        ListaArtistas = artistasRes.Value ?? new();
+
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true && user.IsInRole("Artista") && !user.IsInRole("Administrador"))
+        {
+            var appUser = await userManager.GetUserAsync(user);
+            var artista = ListaArtistas.FirstOrDefault(a => a.UsuarioId == appUser?.Id);
+            if (artista is not null)
+            {
+                EsSoloArtista = true;
+                Portafolio.ArtistaId = artista.ArtistaId;
+                Portafolio.Estado = "Pendiente de aprobación";
+                await CargarObrasDelArtista();
+            }
+        }
+    }
+
+    private async Task CargarObrasDelArtista()
+    {
+        Portafolio.PortafoliosDetalle.Clear();
+        DetalleActual = new();
+
+        if (Portafolio.ArtistaId > 0)
+        {
+            var obrasRes = await obrasService.GetList(o => o.ArtistaId == Portafolio.ArtistaId);
+            ObrasDisponibles = obrasRes.Value ?? new();
+        }
+        else
+        {
+            ObrasDisponibles = new();
+        }
+    }
+
+    private void AgregarDetalle()
+    {
+        if (DetalleActual.ObraId <= 0)
+        {
+            toastService.ShowError("Seleccione una obra válida");
+            return;
+        }
+
+        if (Portafolio.PortafoliosDetalle.Any(d => d.ObraId == DetalleActual.ObraId))
+        {
+            toastService.ShowError("Esta obra ya está incluida en el portafolio");
+            return;
+        }
+
+        var obraSeleccionada = ObrasDisponibles.FirstOrDefault(o => o.ObraId == DetalleActual.ObraId);
+        if (obraSeleccionada is null)
+            return;
+
+        Portafolio.PortafoliosDetalle.Add(new PortafoliosDetalle
+        {
+            ObraId = obraSeleccionada.ObraId,
+            Obra = obraSeleccionada,
+            NotaCuratorial = DetalleActual.NotaCuratorial
+        });
+
+        DetalleActual = new();
+    }
+
+    private void EliminarDetalle(PortafoliosDetalle detalle)
+    {
+        Portafolio.PortafoliosDetalle.Remove(detalle);
+    }
+
+    private async Task SeleccionarImagen(InputFileChangeEventArgs archivoSeleccionado)
+    {
+        var imagen = archivoSeleccionado.File;
+        var formatos = new[] { "image/jpeg", "image/png" };
+
+        if (!formatos.Contains(imagen.ContentType.ToLowerInvariant()))
+        {
+            toastService.ShowError("Solo se permiten fotografías JPG, JPEG y PNG");
+            return;
+        }
+
+        if (imagen.Size > 5 * 1024 * 1024)
+        {
+            toastService.ShowError("La fotografía no puede superar los 5 MB");
+            return;
+        }
+
+        imagenSeleccionada = imagen;
+        using var memoria = new MemoryStream();
+        await imagen.OpenReadStream(5 * 1024 * 1024).CopyToAsync(memoria);
+        imagenPreview = $"data:{imagen.ContentType};base64,{Convert.ToBase64String(memoria.ToArray())}";
+    }
+
+    private async Task GuardarPortada()
+    {
+        if (imagenSeleccionada is null) return;
+
+        var carpeta = Path.Combine(environment.WebRootPath, "imagenes", "portafolios");
+        Directory.CreateDirectory(carpeta);
+
+        var extension = imagenSeleccionada.ContentType.ToLowerInvariant() switch
+        {
+            "image/jpeg" => ".jpg",
+            "image/png" => ".png",
+            _ => throw new InvalidOperationException("Formato no permitido")
+        };
+
+        var nombreArchivo = $"{Guid.NewGuid():N}{extension}";
+        var rutaArchivo = Path.Combine(carpeta, nombreArchivo);
+
+        await using var archivo = new FileStream(rutaArchivo, FileMode.CreateNew);
+        await imagenSeleccionada.OpenReadStream(5 * 1024 * 1024).CopyToAsync(archivo);
+
+        Portafolio.ImagenPortada = $"/imagenes/portafolios/{nombreArchivo}";
+    }
+
+    private async Task Guardar()
+    {
+        if (!Portafolio.PortafoliosDetalle.Any())
+        {
+            toastService.ShowError("Debe agregar al menos una obra al portafolio");
+            return;
+        }
+
+        try
+        {
+            await GuardarPortada();
+            var resultado = await portafoliosService.Guardar(Portafolio);
+
+            resultado.OnSuccess(() =>
+            {
+                toastService.ShowSuccess("Portafolio guardado correctamente");
+                navigationManager.NavigateTo("/Portafolios/Index");
+            });
+
+            resultado.OnFailure(() => toastService.ShowError("No se ha podido guardar el portafolio"));
+        }
+        catch
+        {
+            toastService.ShowError("No se ha podido guardar el portafolio");
+        }
+    }
+}
