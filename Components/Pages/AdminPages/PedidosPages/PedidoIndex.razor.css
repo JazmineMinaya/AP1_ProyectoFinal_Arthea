@@ -138,41 +138,6 @@
             vertical-align: middle;
         }
 
-    /* Estados */
-    .arthea-pedidos-index ::deep .estado-pedido,
-    .arthea-pedidos-index ::deep .estado-pago {
-        display: inline-block;
-        padding: 5px 10px;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
-    .arthea-pedidos-index ::deep .pendiente {
-        background-color: #F1E5CD;
-        color: #85612F;
-    }
-
-    .arthea-pedidos-index ::deep .aprobado,
-    .arthea-pedidos-index ::deep .pagado,
-    .arthea-pedidos-index ::deep .recibido {
-        background-color: #E0EBDD;
-        color: #476343;
-    }
-
-    .arthea-pedidos-index ::deep .en-preparación,
-    .arthea-pedidos-index ::deep .enviado {
-        background-color: #E5E6F0;
-        color: #555C82;
-    }
-
-    .arthea-pedidos-index ::deep .cancelado,
-    .arthea-pedidos-index ::deep .reembolsado {
-        background-color: #F1DDDA;
-        color: #924C44;
-    }
-
     /* Footer */
     .arthea-pedidos-index .card-footer {
         background-color: #F0E6D9;

@@ -11,9 +11,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddAuthorization();
-
 var ConStr = builder.Configuration.GetConnectionString("SqlConStr");
 
 builder.Services.AddDbContextFactory<Contexto>(o => o.UseSqlServer(ConStr));
@@ -23,7 +20,7 @@ builder.Services.AddScoped<ServiciosService>();
 builder.Services.AddScoped<ClientesService>();
 builder.Services.AddScoped<ObrasService>();
 builder.Services.AddScoped<PedidosService>();
-builder.Services.AddScoped<FacturasService>();
+builder.Services.AddScoped<PedidosService>();
 
 builder.Services.AddIdentity<Usuarios, IdentityRole>()
     .AddEntityFrameworkStores<Contexto>()

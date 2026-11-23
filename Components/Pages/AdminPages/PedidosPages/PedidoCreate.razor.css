@@ -160,15 +160,16 @@
 
     /* Botón Remover */
     .arthea-pedidos-create .btn-danger {
-        background-color: #A34D43;
-        border-color: #A34D43;
-        color: white;
+        background-color: #A65D50 !important;
+        border-color: #A65D50 !important;
+        color: white !important;
+        font-family: Georgia, "Times New Roman", serif;
     }
 
         .arthea-pedidos-create .btn-danger:hover {
-            background-color: #843A32;
-            border-color: #843A32;
-            color: white;
+            background-color: #854438 !important;
+            border-color: #854438 !important;
+            color: white !important;
         }
 
     /* Footer */

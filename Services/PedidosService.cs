@@ -73,9 +73,13 @@ public class PedidosService(
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
         return await contexto.Pedidos
-            .Include(a => a.PedidosDetalle)
+            .Include(p => p.Cliente)
+                .ThenInclude(c => c.Usuario)
+            .Include(p => p.Artista)
+                .ThenInclude(a => a.Usuario)
+            .Include(p => p.PedidosDetalle)
                 .ThenInclude(d => d.Servicio)
-            .FirstOrDefaultAsync(a => a.PedidoId == pedidoId);
+            .FirstOrDefaultAsync(p => p.PedidoId == pedidoId);
     }
 
     public async Task<Result> Eliminar(int pedidoId)
@@ -100,7 +104,11 @@ public class PedidosService(
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
         return await contexto.Pedidos
-            .Include(a => a.PedidosDetalle)
+            .Include(p => p.Cliente)
+                .ThenInclude(c => c.Usuario)
+            .Include(p => p.Artista)
+                .ThenInclude(a => a.Usuario)
+            .Include(p => p.PedidosDetalle)
                 .ThenInclude(d => d.Servicio)
             .Where(criterio)
             .AsNoTracking()
