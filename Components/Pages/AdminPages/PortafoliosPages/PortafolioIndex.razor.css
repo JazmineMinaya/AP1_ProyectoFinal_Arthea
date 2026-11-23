@@ -52,9 +52,11 @@
         letter-spacing: 0.2px;
     }
 
-    /* Campos y filtros */
+    /* Campos, filtros y selectores de fecha (Desde / Hasta) */
     .arthea-portafolio-index .form-control,
-    .arthea-portafolio-index ::deep .form-select {
+    .arthea-portafolio-index ::deep .form-control,
+    .arthea-portafolio-index ::deep .form-select,
+    .arthea-portafolio-index ::deep input[type="date"] {
         background-color: #FFFCF8;
         border: 1px solid #D9CBB9;
         border-radius: 6px;
@@ -63,18 +65,21 @@
         font-size: 16px;
     }
 
-        .arthea-portafolio-index ::deep .form-select option {
-            background-color: #FFFCF8;
-            color: #493827;
-            font-family: Georgia, "Times New Roman", serif;
-        }
+    /* Ícono del calendario en Desde y Hasta */
+    .arthea-portafolio-index ::deep input[type="date"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.75;
+        filter: sepia(60%) saturate(150%) hue-rotate(350deg) brightness(45%);
+    }
 
-        .arthea-portafolio-index .form-control:focus,
-        .arthea-portafolio-index ::deep .form-select:focus {
-            border-color: #9C8060;
-            box-shadow: 0 0 0 0.2rem rgba(156, 128, 96, 0.15);
-        }
-
+    /* Campos seleccionados (Focus) */
+    .arthea-portafolio-index .form-control:focus,
+    .arthea-portafolio-index ::deep .form-control:focus,
+    .arthea-portafolio-index ::deep .form-select:focus,
+    .arthea-portafolio-index ::deep input[type="date"]:focus {
+        border-color: #9C8060;
+        box-shadow: 0 0 0 0.2rem rgba(156, 128, 96, 0.15);
+    }
     /* Botón Crear */
     .arthea-portafolio-index .btn-primary {
         background-color: #6F563B;
