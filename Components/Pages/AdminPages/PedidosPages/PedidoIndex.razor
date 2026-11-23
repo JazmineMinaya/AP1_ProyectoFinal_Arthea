@@ -1,18 +1,19 @@
 ﻿@page "/Pedidos/Index"
 @rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador")]
 
-@inject PortafoliosService portafoliosService
+@inject PedidosService pedidosService
 @inject ToastService toastService
 
-<PageTitle>Portafolios</PageTitle>
+<PageTitle>Pedidos</PageTitle>
 
-<div class="container arthea-portafolio-index">
+<div class="container arthea-pedidos-index">
     <div class="card shadow-lg">
 
         @* Encabezado *@
         <div class="card-header d-flex justify-content-between align-content-center">
-            <h5 class="card-title">Registro de Portafolios</h5>
-            <a href="/Portafolios/Create" class="btn btn-primary"><span class="bi bi-plus-square mt-3"></span> Crear</a>
+            <h5 class="card-title">Registro de Pedidos</h5>
+            <a href="/Pedidos/Create" class="btn btn-primary"><span class="bi bi-plus-square mt-3"></span> Crear</a>
         </div>
 
         <div class="card-body">
@@ -38,8 +39,8 @@
                 <div class="col-3">
                     <InputSelect class="form-select" @bind-Value="Filtro">
                         <option value="" disabled>Elija una opción</option>
-                        <option value="PortafolioId">PortafolioId</option>
-                        <option value="Titulo">Título</option>
+                        <option value="PedidoId">PedidoId</option>
+                        <option value="Cliente">Cliente</option>
                         <option value="Artista">Artista</option>
                         <option value="Estado">Estado</option>
                         <option value="Fecha">Fecha</option>
@@ -77,23 +78,31 @@
 
                 @* QuickGrid *@
                 <div class="grid">
-                    <QuickGrid Items="ListaPortafolios.AsQueryable()" Class="table table-hover mt-3">
+                    <QuickGrid Items="ListaPedidos.AsQueryable()" Class="table table-hover mt-3">
 
-                        <PropertyColumn Property="p => p.PortafolioId" Title="PortafolioId" Sortable="true" />
-                        <PropertyColumn Property="p => p.Titulo" Title="Título" Sortable="true" />
+                        <PropertyColumn Property="p => p.PedidoId" Title="PedidoId" Sortable="true" />
+                        <PropertyColumn Property="p => p.Fecha" Title="Fecha" Format="dd/MM/yyyy" Sortable="true" />
 
-                        <TemplateColumn Title="Artista" Sortable="true" SortBy="GridSort<Portafolios>.ByAscending(p => p.Artista!.Usuario!.Nombres)">
+                        <TemplateColumn Title="Cliente" Sortable="true" SortBy="GridSort<Pedidos>.ByAscending(p => p.Cliente!.Usuario!.Nombres)">
+                            @($"{context.Cliente?.Usuario?.Nombres} {context.Cliente?.Usuario?.Apellidos}")
+                        </TemplateColumn>
+
+                        <TemplateColumn Title="Artista" Sortable="true" SortBy="GridSort<Pedidos>.ByAscending(p => p.Artista!.Usuario!.Nombres)">
                             @($"{context.Artista?.Usuario?.Nombres} {context.Artista?.Usuario?.Apellidos}")
                         </TemplateColumn>
 
-                        <TemplateColumn Title="Obras Incluidas" Align="Align.Center" Sortable="true" SortBy="GridSort<Portafolios>.ByAscending(p => p.PortafoliosDetalle.Count)">
-                            @context.PortafoliosDetalle.Count
+                        <PropertyColumn Property="p => p.Total" Title="Total" Sortable="true" />
+
+                        <TemplateColumn Title="Estado" Sortable="true" SortBy="GridSort<Pedidos>.ByAscending(p => p.Estado)">
+                            <span class="estado-pedido @context.Estado.ToLower().Replace(" ", "-")">@context.Estado</span>
                         </TemplateColumn>
 
-                        <PropertyColumn Property="p => p.FechaCreacion" Title="Fecha" Format="dd/MM/yyyy" Sortable="true" />
+                        <TemplateColumn Title="Estado de Pago" Sortable="true" SortBy="GridSort<Pedidos>.ByAscending(p => p.EstadoPago)">
+                            <span class="estado-pago @context.EstadoPago.ToLower()">@context.EstadoPago</span>
+                        </TemplateColumn>
 
                         <TemplateColumn Title="Opciones" Align="Align.Center">
-                            <a href="/Portafolios/Edit/@context.PortafolioId" class="btn btn-outline-primary bi bi-pencil-square"></a>
+                            <a href="/Pedidos/Edit/@context.PedidoId" class="btn btn-outline-primary bi bi-pencil-square"></a>
                         </TemplateColumn>
 
                     </QuickGrid>
@@ -103,7 +112,8 @@
 
         @* Footer *@
         <div class="card-footer d-flex justify-content-between align-items-center">
-            <label><strong>Cantidad: </strong> @ListaPortafolios.Count()</label>
+            <label><strong>Cantidad: </strong> @ListaPedidos.Count()</label>
+            <label><strong>Total: </strong> @ListaPedidos.Sum(p => p.Total).ToString("N2")</label>
         </div>
 
     </div>
@@ -113,41 +123,49 @@
     public string Filtro { get; set; } = string.Empty;
     public string ValorFiltro { get; set; } = string.Empty;
 
-    public List<Portafolios> ListaPortafolios { get; set; } = new();
+    public List<Pedidos> ListaPedidos { get; set; } = new();
 
     public DateTime? Desde { get; set; }
     public DateTime? Hasta { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        var resultado = await portafoliosService.GetList(p => p.PortafolioId > 0);
-        ListaPortafolios = resultado.Value ?? new();
+        var resultado = await pedidosService.GetList(p => p.PedidoId > 0);
+        ListaPedidos = resultado.Value ?? new();
     }
 
     private async Task Buscar()
     {
-        if (Filtro == "PortafolioId")
+        if (Filtro == "PedidoId")
         {
             var valor = ValorFiltro.Trim();
-            var resultado = await portafoliosService.GetList(p => p.PortafolioId.ToString() == valor);
+            var resultado = await pedidosService.GetList(p => p.PedidoId.ToString() == valor);
 
-            ListaPortafolios = resultado.Value ?? new();
+            ListaPedidos = resultado.Value ?? new();
         }
 
-        else if (Filtro == "Titulo")
+        else if (Filtro == "Cliente")
         {
             var valor = ValorFiltro.Trim().ToLower();
-            var resultado = await portafoliosService.GetList(p => p.Titulo.ToLower().Contains(valor));
+            var resultado = await pedidosService.GetList(p => p.Cliente != null && p.Cliente.Usuario != null && (p.Cliente.Usuario.Nombres + " " + p.Cliente.Usuario.Apellidos).ToLower().Contains(valor));
 
-            ListaPortafolios = resultado.Value ?? new();
+            ListaPedidos = resultado.Value ?? new();
         }
 
         else if (Filtro == "Artista")
         {
             var valor = ValorFiltro.Trim().ToLower();
-            var resultado = await portafoliosService.GetList(p => p.Artista != null && p.Artista.Usuario != null && (p.Artista.Usuario.Nombres + " " + p.Artista.Usuario.Apellidos).ToLower().Contains(valor));
+            var resultado = await pedidosService.GetList(p => p.Artista != null && p.Artista.Usuario != null && (p.Artista.Usuario.Nombres + " " + p.Artista.Usuario.Apellidos).ToLower().Contains(valor));
 
-            ListaPortafolios = resultado.Value ?? new();
+            ListaPedidos = resultado.Value ?? new();
+        }
+
+        else if (Filtro == "Estado")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await pedidosService.GetList(p => p.Estado.ToLower().Contains(valor));
+
+            ListaPedidos = resultado.Value ?? new();
         }
 
         else if (Filtro == "Fecha")
@@ -167,8 +185,8 @@
             var desde = Desde.Value.Date;
             var hasta = Hasta.Value.Date.AddDays(1);
 
-            var resultado = await portafoliosService.GetList(p => p.FechaCreacion >= desde && p.FechaCreacion < hasta);
-            ListaPortafolios = resultado.Value ?? new();
+            var resultado = await pedidosService.GetList(p => p.Fecha >= desde && p.Fecha < hasta);
+            ListaPedidos = resultado.Value ?? new();
         }
 
         else
@@ -179,8 +197,8 @@
 
     private async Task Reestablecer()
     {
-        var resultado = await portafoliosService.GetList(p => p.PortafolioId > 0);
-        ListaPortafolios = resultado.Value ?? new();
+        var resultado = await pedidosService.GetList(p => p.PedidoId > 0);
+        ListaPedidos = resultado.Value ?? new();
 
         Filtro = string.Empty;
         ValorFiltro = string.Empty;
