@@ -10,6 +10,7 @@
 <div class="container arthea-obra-index">
     <div class="card shadow-lg">
 
+        @* Encabezado *@
         <div class="card-header d-flex justify-content-between align-content-center">
             <h5 class="card-title">Registro de Obras</h5>
             <a href="/Obras/Create" class="btn btn-primary"><span class="bi bi-plus-square mt-3"></span> Crear</a>
@@ -17,28 +18,24 @@
 
         <div class="card-body">
 
-            @* Filtro por rango de fechas *@
-            <div class="row mb-2">
-                <div class="col-3">
-                    <label class="col-form-label"><strong>Desde</strong></label>
-                    <InputDate class="form-control" @bind-Value="FechaDesde" />
-                </div>
-                <div class="col-3">
-                    <label class="col-form-label"><strong>Hasta</strong></label>
-                    <InputDate class="form-control" @bind-Value="FechaHasta" />
-                </div>
-            </div>
-
+            @* Labels *@
             <div class="row">
+
+                @* Filtrar por *@
                 <div class="col-3">
                     <label class="col-form-label"><strong>Filtrar por</strong></label>
                 </div>
+
+                @* Búsqueda *@
                 <div class="col-4">
                     <label class="col-form-label"><strong>Búsqueda</strong></label>
                 </div>
             </div>
 
+            @* Filtros *@
             <div class="row align-items-end">
+
+                @* Filtrar por *@
                 <div class="col-3">
                     <InputSelect class="form-select" @bind-Value="Filtro">
                         <option value="" disabled>Elija una opción</option>
@@ -46,10 +43,13 @@
                         <option value="Titulo">Título</option>
                         <option value="Artista">Artista</option>
                         <option value="Categoria">Categoría</option>
+                        <option value="Tecnica">Técnica</option>
                         <option value="Estado">Estado</option>
+                        <option value="Fecha">Fecha</option>
                     </InputSelect>
                 </div>
 
+                @* Búsqueda *@
                 <div class="col-4">
                     <div class="input-group">
                         <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
@@ -57,12 +57,31 @@
                     </div>
                 </div>
 
+                @* Reestablecer *@
                 <div class="col-2">
                     <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Reestablecer"></button>
                 </div>
 
+                @* Filtro Fecha *@
+                <div class="row mt-3">
+
+                    @* Desde *@
+                    <div class="col-3">
+                        <label class="col-form-label"><strong>Desde</strong></label>
+                        <InputDate class="form-control" @bind-Value="Desde"></InputDate>
+                    </div>
+
+                    @* Hasta *@
+                    <div class="col-3">
+                        <label class="col-form-label"><strong>Hasta</strong></label>
+                        <InputDate class="form-control" @bind-Value="Hasta"></InputDate>
+                    </div>
+                </div>
+
+                @* QuickGrid *@
                 <div class="grid">
                     <QuickGrid Items="ListaObras.AsQueryable()" Class="table table-hover mt-3">
+
                         <PropertyColumn Property="o => o.ObraId" Title="ObraId" Sortable="true" />
                         <PropertyColumn Property="o => o.Titulo" Title="Título" Sortable="true" />
 
@@ -71,18 +90,22 @@
                         </TemplateColumn>
 
                         <PropertyColumn Property="o => o.Categoria" Title="Categoría" Sortable="true" />
+                        <PropertyColumn Property="o => o.Tecnica" Title="Técnica" Sortable="true" />
                         <PropertyColumn Property="o => o.Precio" Title="Precio" Format="C2" Sortable="true" />
+                        <PropertyColumn Property="o => o.Cantidad" Title="Cantidad" Sortable="true" />
                         <PropertyColumn Property="o => o.FechaPublicacion" Title="Fecha" Format="dd/MM/yyyy" Sortable="true" />
                         <PropertyColumn Property="o => o.Estado" Title="Estado" Sortable="true" />
 
                         <TemplateColumn Title="Opciones" Align="Align.Center">
                             <a href="/Obras/Edit/@context.ObraId" class="btn btn-outline-primary bi bi-pencil-square"></a>
                         </TemplateColumn>
+
                     </QuickGrid>
                 </div>
             </div>
         </div>
 
+        @* Footer *@
         <div class="card-footer d-flex justify-content-between align-items-center">
             <label><strong>Cantidad: </strong> @ListaObras.Count()</label>
         </div>
@@ -93,46 +116,93 @@
 @code {
     public string Filtro { get; set; } = string.Empty;
     public string ValorFiltro { get; set; } = string.Empty;
-    public DateTime? FechaDesde { get; set; }
-    public DateTime? FechaHasta { get; set; }
 
     public List<Obras> ListaObras { get; set; } = new();
 
+    public DateTime? Desde { get; set; }
+    public DateTime? Hasta { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
-        await Reestablecer();
+        var resultado = await obrasService.GetList(o => o.ObraId > 0);
+        ListaObras = resultado.Value ?? new();
     }
 
     private async Task Buscar()
     {
-        var resultado = await obrasService.GetList(o =>
-            (!FechaDesde.HasValue || o.FechaPublicacion.Date >= FechaDesde.Value.Date) &&
-            (!FechaHasta.HasValue || o.FechaPublicacion.Date <= FechaHasta.Value.Date)
-        );
+        if (Filtro == "ObraId")
+        {
+            var valor = ValorFiltro.Trim();
+            var resultado = await obrasService.GetList(o => o.ObraId.ToString() == valor);
 
-        var lista = resultado.Value ?? new();
+            ListaObras = resultado.Value ?? new();
+        }
 
-        if (!string.IsNullOrWhiteSpace(Filtro) && !string.IsNullOrWhiteSpace(ValorFiltro))
+        else if (Filtro == "Titulo")
         {
             var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await obrasService.GetList(o => o.Titulo.ToLower().Contains(valor));
 
-            lista = Filtro switch
-            {
-                "ObraId" => lista.Where(o => o.ObraId.ToString() == valor).ToList(),
-                "Titulo" => lista.Where(o => o.Titulo.ToLower().Contains(valor)).ToList(),
-                "Artista" => lista.Where(o => o.Artista?.Usuario != null && $"{o.Artista.Usuario.Nombres} {o.Artista.Usuario.Apellidos}".ToLower().Contains(valor)).ToList(),
-                "Categoria" => lista.Where(o => o.Categoria.ToLower().Contains(valor)).ToList(),
-                "Estado" => lista.Where(o => o.Estado.ToLower().Contains(valor)).ToList(),
-                _ => lista
-            };
+            ListaObras = resultado.Value ?? new();
         }
-        else if (string.IsNullOrWhiteSpace(Filtro) && !string.IsNullOrWhiteSpace(ValorFiltro))
+
+        else if (Filtro == "Artista")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await obrasService.GetList(o => o.Artista != null && o.Artista.Usuario != null && (o.Artista.Usuario.Nombres + " " + o.Artista.Usuario.Apellidos).ToLower().Contains(valor));
+
+            ListaObras = resultado.Value ?? new();
+        }
+
+        else if (Filtro == "Categoria")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await obrasService.GetList(o => o.Categoria.ToLower().Contains(valor));
+
+            ListaObras = resultado.Value ?? new();
+        }
+
+        else if (Filtro == "Tecnica")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await obrasService.GetList(o => o.Tecnica.ToLower().Contains(valor));
+
+            ListaObras = resultado.Value ?? new();
+        }
+
+        else if (Filtro == "Estado")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await obrasService.GetList(o => o.Estado.ToLower().Contains(valor));
+
+            ListaObras = resultado.Value ?? new();
+        }
+
+        else if (Filtro == "Fecha")
+        {
+            if (Desde == null || Hasta == null)
+            {
+                toastService.ShowError("Seleccione las fechas Desde y Hasta");
+                return;
+            }
+
+            if (Desde > Hasta)
+            {
+                toastService.ShowError("Seleccione un rango de fechas válido");
+                return;
+            }
+
+            var desde = Desde.Value.Date;
+            var hasta = Hasta.Value.Date.AddDays(1);
+
+            var resultado = await obrasService.GetList(o => o.FechaPublicacion >= desde && o.FechaPublicacion < hasta);
+            ListaObras = resultado.Value ?? new();
+        }
+
+        else
         {
             toastService.ShowError("Seleccione un filtro");
-            return;
         }
-
-        ListaObras = lista;
     }
 
     private async Task Reestablecer()
@@ -142,7 +212,7 @@
 
         Filtro = string.Empty;
         ValorFiltro = string.Empty;
-        FechaDesde = null;
-        FechaHasta = null;
+        Desde = null;
+        Hasta = null;
     }
 }

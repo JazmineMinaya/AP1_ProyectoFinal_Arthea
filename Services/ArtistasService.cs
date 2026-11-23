@@ -50,6 +50,7 @@ public class ArtistasService(
         existente.Telefono = artista.Telefono;
         existente.Disciplina = artista.Disciplina;
         existente.Biografia = artista.Biografia;
+        existente.FotoPerfil = artista.FotoPerfil;
 
         return await contexto.SaveChangesAsync() > 0;
     }

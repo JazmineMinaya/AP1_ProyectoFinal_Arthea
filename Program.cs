@@ -19,6 +19,9 @@ builder.Services.AddScoped<ArtistasService>();
 builder.Services.AddScoped<ServiciosService>();
 builder.Services.AddScoped<ClientesService>();
 builder.Services.AddScoped<ObrasService>();
+builder.Services.AddScoped<PedidosService>();
+builder.Services.AddScoped<PedidosService>();
+builder.Services.AddScoped<PortafoliosService>();
 
 builder.Services.AddIdentity<Usuarios, IdentityRole>()
     .AddEntityFrameworkStores<Contexto>()

@@ -14,7 +14,7 @@
     <DataAnnotationsValidator />
 
     <div class="container arthea-obra-edit">
-        <div class="card shadow-lg">
+        <div class="card shadow-lg"> 
 
             <div class="card-header">
                 <h5 class="card-title">Modificar Obra</h5>
@@ -81,6 +81,12 @@
                     <label class="form-label"><strong>Precio</strong></label>
                     <InputNumber class="form-control" @bind-Value="Obra.Precio" />
                     <ValidationMessage For="@(() => Obra.Precio)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Cantidad</strong></label>
+                    <InputNumber class="form-control" @bind-Value="Obra.Cantidad" />
+                    <ValidationMessage For="@(() => Obra.Cantidad)" />
                 </div>
 
                 <div class="mb-3">
