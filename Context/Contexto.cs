@@ -13,4 +13,7 @@ public class Contexto : IdentityDbContext<Usuarios>
     public DbSet<Servicios> Servicios { get; set; }
     public DbSet<Clientes> Clientes { get; set; }
     public DbSet<Obras> Obras { get; set; }
+    public DbSet<Pedidos> Pedidos { get; set; }
+    public DbSet<PedidosDetalle> PedidosDetalles { get; set; }
+    public DbSet<Facturas> Facturas { get; set; }
 }
