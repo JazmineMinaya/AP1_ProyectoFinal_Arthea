@@ -1,0 +1,236 @@
+@page "/Portafolios/Index"
+@using Microsoft.AspNetCore.Components.Authorization
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador,Artista")]
+
+@inject PortafoliosService portafoliosService
+@inject ArtistasService artistasService
+@inject AuthenticationStateProvider authStateProvider
+@inject UserManager<Usuarios> userManager
+@inject ToastService toastService
+
+<PageTitle>Portafolios</PageTitle>
+
+<div class="container arthea-portafolio-index">
+    <div class="card shadow-lg">
+
+        @* Encabezado *@
+        <div class="card-header d-flex justify-content-between align-content-center">
+            <h5 class="card-title">Registro de Portafolios</h5>
+            <a href="/Portafolios/Create" class="btn btn-primary"><span class="bi bi-plus-square mt-3"></span> Crear</a>
+        </div>
+
+        <div class="card-body">
+
+            @* Labels *@
+            <div class="row">
+
+                @* Filtrar por *@
+                <div class="col-3">
+                    <label class="col-form-label"><strong>Filtrar por</strong></label>
+                </div>
+
+                @* Búsqueda *@
+                <div class="col-4">
+                    <label class="col-form-label"><strong>Búsqueda</strong></label>
+                </div>
+            </div>
+
+            @* Filtros *@
+            <div class="row align-items-end">
+
+                @* Filtrar por *@
+                <div class="col-3">
+                    <InputSelect class="form-select" @bind-Value="Filtro">
+                        <option value="" disabled>Elija una opción</option>
+                        <option value="PortafolioId">PortafolioId</option>
+                        <option value="Titulo">Título</option>
+                        <option value="Artista">Artista</option>
+                        <option value="Estado">Estado</option>
+                        <option value="Fecha">Fecha</option>
+                    </InputSelect>
+                </div>
+
+                @* Búsqueda *@
+                <div class="col-4">
+                    <div class="input-group">
+                        <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
+                        <button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
+                    </div>
+                </div>
+
+                @* Reestablecer *@
+                <div class="col-2">
+                    <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Reestablecer"></button>
+                </div>
+
+                @* Filtro Fecha *@
+                <div class="row mt-3">
+
+                    @* Desde *@
+                    <div class="col-3">
+                        <label class="col-form-label"><strong>Desde</strong></label>
+                        <InputDate class="form-control" @bind-Value="Desde"></InputDate>
+                    </div>
+
+                    @* Hasta *@
+                    <div class="col-3">
+                        <label class="col-form-label"><strong>Hasta</strong></label>
+                        <InputDate class="form-control" @bind-Value="Hasta"></InputDate>
+                    </div>
+                </div>
+
+                @* QuickGrid *@
+                <div class="grid">
+                    <QuickGrid Items="ListaPortafolios.AsQueryable()" Class="table table-hover mt-3">
+
+                        <PropertyColumn Property="p => p.PortafolioId" Title="PortafolioId" Sortable="true" />
+                        <PropertyColumn Property="p => p.Titulo" Title="Título" Sortable="true" />
+
+                        <TemplateColumn Title="Artista" Sortable="true" SortBy="GridSort<Portafolios>.ByAscending(p => p.Artista!.Usuario!.Nombres)">
+                            @($"{context.Artista?.Usuario?.Nombres} {context.Artista?.Usuario?.Apellidos}")
+                        </TemplateColumn>
+
+                        <TemplateColumn Title="Obras Incluidas" Align="Align.Center" Sortable="true" SortBy="GridSort<Portafolios>.ByAscending(p => p.PortafoliosDetalle.Count)">
+                            @context.PortafoliosDetalle.Count
+                        </TemplateColumn>
+
+                        <PropertyColumn Property="p => p.FechaCreacion" Title="Fecha" Format="dd/MM/yyyy" Sortable="true" />
+                        <PropertyColumn Property="p => p.Estado" Title="Estado" Sortable="true" />
+
+                        <TemplateColumn Title="Opciones" Align="Align.Center">
+                            <a href="/Portafolios/Edit/@context.PortafolioId" class="btn btn-outline-primary bi bi-pencil-square"></a>
+                        </TemplateColumn>
+
+                    </QuickGrid>
+                </div>
+            </div>
+        </div>
+
+        @* Footer *@
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <label><strong>Cantidad: </strong> @ListaPortafolios.Count()</label>
+        </div>
+
+    </div>
+</div>
+
+@code {
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+
+    public List<Portafolios> ListaPortafolios { get; set; } = new();
+
+    public DateTime? Desde { get; set; }
+    public DateTime? Hasta { get; set; }
+
+    private int? ArtistaLogueadoId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await IdentificarArtistaSiAplica();
+        await Reestablecer();
+    }
+
+    private async Task IdentificarArtistaSiAplica()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true && user.IsInRole("Artista") && !user.IsInRole("Administrador"))
+        {
+            var appUser = await userManager.GetUserAsync(user);
+            if (appUser is not null)
+            {
+                var artistaRes = await artistasService.GetList(a => a.UsuarioId == appUser.Id);
+                ArtistaLogueadoId = artistaRes.Value?.FirstOrDefault()?.ArtistaId;
+            }
+        }
+    }
+
+    private async Task Buscar()
+    {
+        if (Filtro == "PortafolioId")
+        {
+            var valor = ValorFiltro.Trim();
+            var resultado = await portafoliosService.GetList(p =>
+                (!ArtistaLogueadoId.HasValue || p.ArtistaId == ArtistaLogueadoId.Value) &&
+                p.PortafolioId.ToString() == valor);
+
+            ListaPortafolios = resultado.Value ?? new();
+        }
+
+        else if (Filtro == "Titulo")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await portafoliosService.GetList(p =>
+                (!ArtistaLogueadoId.HasValue || p.ArtistaId == ArtistaLogueadoId.Value) &&
+                p.Titulo.ToLower().Contains(valor));
+
+            ListaPortafolios = resultado.Value ?? new();
+        }
+
+        else if (Filtro == "Artista")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await portafoliosService.GetList(p =>
+                (!ArtistaLogueadoId.HasValue || p.ArtistaId == ArtistaLogueadoId.Value) &&
+                p.Artista != null && p.Artista.Usuario != null &&
+                (p.Artista.Usuario.Nombres + " " + p.Artista.Usuario.Apellidos).ToLower().Contains(valor));
+
+            ListaPortafolios = resultado.Value ?? new();
+        }
+
+        else if (Filtro == "Estado")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await portafoliosService.GetList(p =>
+                (!ArtistaLogueadoId.HasValue || p.ArtistaId == ArtistaLogueadoId.Value) &&
+                p.Estado.ToLower().Contains(valor));
+
+            ListaPortafolios = resultado.Value ?? new();
+        }
+
+        else if (Filtro == "Fecha")
+        {
+            if (Desde == null || Hasta == null)
+            {
+                toastService.ShowError("Seleccione las fechas Desde y Hasta");
+                return;
+            }
+
+            if (Desde > Hasta)
+            {
+                toastService.ShowError("Seleccione un rango de fechas válido");
+                return;
+            }
+
+            var desde = Desde.Value.Date;
+            var hasta = Hasta.Value.Date.AddDays(1);
+
+            var resultado = await portafoliosService.GetList(p =>
+                (!ArtistaLogueadoId.HasValue || p.ArtistaId == ArtistaLogueadoId.Value) &&
+                p.FechaCreacion >= desde && p.FechaCreacion < hasta);
+
+            ListaPortafolios = resultado.Value ?? new();
+        }
+
+        else
+        {
+            toastService.ShowError("Seleccione un filtro");
+        }
+    }
+
+    private async Task Reestablecer()
+    {
+        var resultado = await portafoliosService.GetList(p =>
+            !ArtistaLogueadoId.HasValue || p.ArtistaId == ArtistaLogueadoId.Value);
+
+        ListaPortafolios = resultado.Value ?? new();
+
+        Filtro = string.Empty;
+        ValorFiltro = string.Empty;
+        Desde = null;
+        Hasta = null;
+    }
+}

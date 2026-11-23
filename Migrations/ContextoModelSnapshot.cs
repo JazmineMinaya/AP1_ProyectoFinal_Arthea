@@ -16,7 +16,7 @@ partial class ContextoModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261123002019_Pedidos";
+    public override string LastMigrationId => "20261123151625_AgregarPortafolios";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -281,6 +281,68 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.HasIndex("ServicioId");
 
                 b.ToTable("PedidosDetalles");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Portafolios", b =>
+            {
+                var portafolioId = b.Property<int>("PortafolioId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(portafolioId);
+
+                b.Property<int>("ArtistaId")
+                    .HasColumnType("int");
+
+                b.Property<string>("Descripcion")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Estado")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<DateTime>("FechaCreacion")
+                    .HasColumnType("datetime2");
+
+                b.Property<string>("ImagenPortada")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Titulo")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.HasKey("PortafolioId");
+
+                b.HasIndex("ArtistaId");
+
+                b.ToTable("Portafolios");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.PortafoliosDetalle", b =>
+            {
+                var detalleId = b.Property<int>("DetalleId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(detalleId);
+
+                b.Property<string>("NotaCuratorial")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<int>("ObraId")
+                    .HasColumnType("int");
+
+                b.Property<int>("PortafolioId")
+                    .HasColumnType("int");
+
+                b.HasKey("DetalleId");
+
+                b.HasIndex("ObraId");
+
+                b.HasIndex("PortafolioId");
+
+                b.ToTable("PortafoliosDetalle");
             });
 
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Servicios", b =>
@@ -640,6 +702,36 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.Navigation("Servicio");
             });
 
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Portafolios", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Artistas", "Artista")
+                    .WithMany()
+                    .HasForeignKey("ArtistaId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Artista");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.PortafoliosDetalle", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Obras", "Obra")
+                    .WithMany()
+                    .HasForeignKey("ObraId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Portafolios", "Portafolio")
+                    .WithMany("PortafoliosDetalle")
+                    .HasForeignKey("PortafolioId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Obra");
+
+                b.Navigation("Portafolio");
+            });
+
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Servicios", b =>
             {
                 b.HasOne("AP1_ProyectoFinal_Arthea.Models.Artistas", "Artista")
@@ -707,6 +799,11 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.Navigation("Factura");
 
                 b.Navigation("PedidosDetalle");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Portafolios", b =>
+            {
+                b.Navigation("PortafoliosDetalle");
             });
 #pragma warning restore 612, 618
     }

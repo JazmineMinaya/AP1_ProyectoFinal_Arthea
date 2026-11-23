@@ -1,0 +1,180 @@
+/* Contenedor principal */
+.arthea-portafolio-create {
+    color: #493827;
+}
+
+    /* Tarjeta principal */
+    .arthea-portafolio-create .card {
+        background-color: #F7F1E8;
+        border: 1px solid #D8C7AF;
+        border-radius: 8px;
+        box-shadow: 0 12px 30px rgba(61, 44, 29, 0.13) !important;
+    }
+
+    /* Encabezado */
+    .arthea-portafolio-create .card-header {
+        background-color: #F7F1E8;
+        border-bottom: 1px solid #D8C7AF;
+        color: #493827;
+        position: relative;
+    }
+
+        /* Línea decorativa del encabezado */
+        .arthea-portafolio-create .card-header::after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            left: 16px;
+            width: 230px;
+            height: 2px;
+            background-color: #A68B64;
+        }
+
+    /* Título */
+    .arthea-portafolio-create .card-title {
+        font-family: Georgia, "Times New Roman", serif;
+        font-variant: small-caps;
+        letter-spacing: 0.6px;
+        color: #493827;
+    }
+
+    /* Cuerpo con textura de papel */
+    .arthea-portafolio-create .card-body {
+        background-color: #FBF7F0;
+        background-image: radial-gradient( rgba(111, 86, 59, 0.045) 0.7px, transparent 0.7px );
+        background-size: 9px 9px;
+    }
+
+    /* Etiquetas */
+    .arthea-portafolio-create .form-label {
+        font-family: Georgia, "Times New Roman", serif;
+        color: #493827;
+        font-size: 17px;
+        letter-spacing: 0.2px;
+    }
+
+    /* Campos del formulario */
+    .arthea-portafolio-create .form-control,
+    .arthea-portafolio-create ::deep .form-control,
+    .arthea-portafolio-create ::deep .form-select {
+        background-color: #FFFCF8;
+        border: 1px solid #D9CBB9;
+        border-radius: 6px;
+        color: #493827;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 16px;
+    }
+
+        /* Campos seleccionados */
+        .arthea-portafolio-create .form-control:focus,
+        .arthea-portafolio-create ::deep .form-control:focus,
+        .arthea-portafolio-create ::deep .form-select:focus {
+            border-color: #9C8060;
+            box-shadow: 0 0 0 0.2rem rgba(156, 128, 96, 0.15);
+        }
+
+        /* Campos de solo lectura */
+        .arthea-portafolio-create ::deep .form-control[readonly] {
+            background-color: #F1E8DC;
+            color: #806B54;
+        }
+
+        /* Opciones del estado */
+        .arthea-portafolio-create ::deep .form-select option {
+            background-color: #FFFCF8;
+            color: #493827;
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+    /* Contenedor de fotografía */
+    .arthea-portafolio-create .cuadro-imagen {
+        width: 110px;
+        height: 110px;
+        border: 2px dashed #B9A58B;
+        border-radius: 8px;
+        background-color: #F7F1E8;
+        color: #795D43;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        overflow: hidden;
+        transition: background-color 0.2s, border-color 0.2s;
+    }
+
+        /* Símbolo para agregar fotografía */
+        .arthea-portafolio-create .cuadro-imagen i {
+            font-size: 28px;
+        }
+
+        /* Fotografía seleccionada */
+        .arthea-portafolio-create .cuadro-imagen img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Efecto al pasar el cursor */
+        .arthea-portafolio-create .cuadro-imagen:hover {
+            background-color: #EEE3D4;
+            border-color: #9C8060;
+        }
+
+    /* Footer */
+    .arthea-portafolio-create .card-footer {
+        background-color: #F0E6D9;
+        border-top: 1px solid #D8C7AF;
+        color: #493827;
+        font-family: Georgia, "Times New Roman", serif;
+    }
+
+    /* Botón Guardar */
+    .arthea-portafolio-create .btn-primary {
+        background-color: #6F563B;
+        border-color: #6F563B;
+        color: white;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 16px;
+    }
+
+        .arthea-portafolio-create .btn-primary:hover {
+            background-color: #493827;
+            border-color: #493827;
+            color: white;
+        }
+
+    /* Botón Volver */
+    .arthea-portafolio-create .btn-secondary {
+        background-color: transparent;
+        border-color: #B9AA98;
+        color: #806B54;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 16px;
+    }
+
+        .arthea-portafolio-create .btn-secondary:hover {
+            background-color: #806B54;
+            border-color: #806B54;
+            color: white;
+        }
+
+    /* Mensajes de validación */
+    .arthea-portafolio-create ::deep .validation-message {
+        color: #A34D43;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 14px;
+    }
+
+/* Botón visualizar contraseña */
+.btn-password {
+    background-color: #FFFCF8;
+    color: #6F563B;
+    border: 1px solid #9C8060;
+}
+
+    .btn-password:hover,
+    .btn-password:focus {
+        background-color: #6F563B;
+        border-color: #6F563B;
+        color: white;
+    }
