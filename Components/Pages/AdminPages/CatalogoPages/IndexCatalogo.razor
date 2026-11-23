@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 
 @inject ArtistasService artistasService
+@inject ServiciosService serviciosService
 
 <PageTitle>Catálogo Artístico</PageTitle>
 
@@ -11,7 +12,7 @@
         @* Encabezado *@
         <div class="card-header catalogo-encabezado">
             <h2>Catálogo Artístico</h2>
-            <p>Descubre el talento y la historia de nuestros artistas</p>
+            <p>Descubre el talento, las obras y los servicios de nuestros artistas</p>
         </div>
 
         <div class="card-body">
@@ -24,17 +25,14 @@
                 <button type="button" class="categoria-btn @(categoriaSeleccionada == "Servicios" ? "activo" : "")" @onclick='() => CambiarCategoria("Servicios")'>Servicios</button>
             </div>
 
-            @if (categoriaSeleccionada == "Artistas")
+            @if (categoriaSeleccionada == "Artistas" || categoriaSeleccionada == "Servicios")
             {
                 @* Labels *@
                 <div class="row">
-
-                    @* Filtrar por *@
                     <div class="col-3">
                         <label class="col-form-label"><strong>Filtrar por</strong></label>
                     </div>
 
-                    @* Búsqueda *@
                     <div class="col-4">
                         <label class="col-form-label"><strong>Búsqueda</strong></label>
                     </div>
@@ -47,8 +45,18 @@
                     <div class="col-3">
                         <select class="form-select" @bind="Filtro">
                             <option value="" disabled>Elija una opción</option>
-                            <option value="Nombre">Nombre</option>
-                            <option value="Disciplina">Disciplina</option>
+
+                            @if (categoriaSeleccionada == "Artistas")
+                            {
+                                <option value="Nombre">Nombre</option>
+                                <option value="Disciplina">Disciplina</option>
+                            }
+                            else
+                            {
+                                <option value="Nombre">Nombre</option>
+                                <option value="Categoria">Categoría</option>
+                                <option value="Artista">Artista</option>
+                            }
                         </select>
                     </div>
 
@@ -60,64 +68,93 @@
                         </div>
                     </div>
 
-                    @* Reestablecer *@
+                    @* Restablecer *@
                     <div class="col-2">
                         <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" title="Restablecer" @onclick="Reestablecer"></button>
                     </div>
                 </div>
 
-                @* Artistas *@
                 @if (cargando)
                 {
-                    <div class="catalogo-mensaje">Cargando artistas...</div>
+                    <div class="catalogo-mensaje">Cargando @categoriaSeleccionada.ToLower()...</div>
                 }
                 else if (!string.IsNullOrEmpty(error))
                 {
                     <div class="catalogo-mensaje">@error</div>
                 }
-                else if (!ListaArtistas.Any())
+                else if (categoriaSeleccionada == "Artistas")
                 {
-                    <div class="catalogo-mensaje">No se encontraron artistas</div>
+                    @* Artistas *@
+                    @if (!ListaArtistas.Any())
+                    {
+                        <div class="catalogo-mensaje">No se encontraron artistas</div>
+                    }
+                    else
+                    {
+                        <div class="catalogo-grid">
+                            @foreach (var artista in ListaArtistas)
+                            {
+                                <div class="artista-card" @key="artista.ArtistaId">
+                                    <div class="artista-imagen">
+                                        <img src="@ObtenerFoto(artista.FotoPerfil)" alt="Fotografía de @ObtenerNombre(artista)" />
+                                    </div>
+
+                                    <div class="artista-informacion">
+                                        <h5>@ObtenerNombre(artista)</h5>
+                                        <p class="artista-disciplina">@artista.Disciplina</p>
+
+                                        <button type="button" class="btn-detalles" @onclick="() => MostrarDetalles(artista)">Ver detalles <i class="bi bi-arrow-up-right"></i></button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
                 }
                 else
                 {
-                    <div class="catalogo-grid">
-                        @foreach (var artista in ListaArtistas)
-                        {
-                            <div class="artista-card" @key="artista.ArtistaId">
-                                <div class="artista-imagen">
-                                    <img src="@ObtenerFoto(artista.FotoPerfil)" alt="Fotografía de @ObtenerNombre(artista)" />
-                                </div>
+                    @* Servicios *@
+                    @if (!ListaServicios.Any())
+                    {
+                        <div class="catalogo-mensaje">No se encontraron servicios</div>
+                    }
+                    else
+                    {
+                        <div class="catalogo-grid">
+                            @foreach (var servicio in ListaServicios)
+                            {
+                                <div class="artista-card servicio-card" @key="servicio.ServicioId">
+                                    <div class="artista-imagen">
+                                        <img src="@ObtenerFoto(servicio.Imagen1)" alt="Imagen de @servicio.Nombre" />
+                                    </div>
 
-                                <div class="artista-informacion">
-                                    <h5>@ObtenerNombre(artista)</h5>
-                                    <p class="artista-disciplina">@artista.Disciplina</p>
+                                    <div class="artista-informacion">
+                                        <h5>@servicio.Nombre</h5>
+                                        <p class="artista-disciplina">@servicio.Categoria</p>
+                                        <p class="servicio-artista">Por @ObtenerNombre(servicio.Artista)</p>
+                                        <p class="servicio-precio">@servicio.Precio.ToString("C", CulturaRD)</p>
 
-                                    <button type="button" class="btn-detalles" @onclick="() => MostrarDetalles(artista)">Ver detalles <i class="bi bi-arrow-up-right"></i></button>
+                                        <button type="button" class="btn-detalles" @onclick="() => MostrarDetalles(servicio)">Ver detalles <i class="bi bi-arrow-up-right"></i></button>
+                                    </div>
                                 </div>
-                            </div>
-                        }
-                    </div>
+                            }
+                        </div>
+                    }
                 }
             }
             else
             {
-                <div class="catalogo-mensaje">
-                    Próximamente estará disponible el catálogo de @categoriaSeleccionada.ToLower()
-                </div>
+                <div class="catalogo-mensaje">Próximamente estará disponible el catálogo de @categoriaSeleccionada.ToLower()</div>
             }
 
         </div>
     </div>
 
-    @* Modal de detalles *@
+    @* Modal de artistas *@
     @if (artistaSeleccionado is not null)
     {
         <div class="catalogo-modal-fondo" @onclick="CerrarDetalles">
             <div class="catalogo-modal" role="dialog" aria-modal="true" aria-label="Detalles del artista" @onclick:stopPropagation="true">
-                <button type="button" class="modal-cerrar" aria-label="Cerrar" @onclick="CerrarDetalles">
-                    <i class="bi bi-x-lg"></i>
-                </button>
+                <button type="button" class="modal-cerrar" aria-label="Cerrar" @onclick="CerrarDetalles"><i class="bi bi-x-lg"></i></button>
 
                 <div class="modal-artista">
                     <div class="modal-imagen">
@@ -138,18 +175,80 @@
             </div>
         </div>
     }
+
+    @* Modal de servicios *@
+    @if (servicioSeleccionado is not null)
+    {
+        <div class="catalogo-modal-fondo" @onclick="CerrarDetalles">
+            <div class="catalogo-modal catalogo-modal-servicio" role="dialog" aria-modal="true" aria-label="Detalles del servicio" @onclick:stopPropagation="true">
+                <button type="button" class="modal-cerrar" aria-label="Cerrar" @onclick="CerrarDetalles"><i class="bi bi-x-lg"></i></button>
+
+                <div class="modal-servicio">
+
+                    @* Galería de imágenes *@
+                    <div class="servicio-galeria">
+                        <div class="servicio-galeria-imagen">
+                            @if (imagenesServicio.Count > 0)
+                            {
+                                <img src="@ObtenerFoto(imagenesServicio[indiceImagen])" alt="Imagen @(indiceImagen + 1) de @servicioSeleccionado.Nombre" />
+                            }
+
+                            @if (imagenesServicio.Count > 1)
+                            {
+                                <button type="button" class="galeria-anterior" title="Imagen anterior" @onclick="ImagenAnterior"><i class="bi bi-chevron-left"></i></button>
+                                <button type="button" class="galeria-siguiente" title="Imagen siguiente" @onclick="ImagenSiguiente"><i class="bi bi-chevron-right"></i></button>
+                            }
+                        </div>
+
+                        @if (imagenesServicio.Count > 1)
+                        {
+                            <div class="galeria-contador">@(indiceImagen + 1) de @imagenesServicio.Count</div>
+                            <div class="galeria-indicadores">
+                                @for (int i = 0; i < imagenesServicio.Count; i++)
+                                {
+                                    var posicion = i;
+                                    <button type="button" class="galeria-punto @(indiceImagen == posicion ? "activo" : "")" title="Imagen @(posicion + 1)" @onclick="() => CambiarImagen(posicion)"></button>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    @* Información del servicio *@
+                    <div class="modal-informacion">
+                        <h3>@servicioSeleccionado.Nombre</h3>
+                        <p class="modal-disciplina">@servicioSeleccionado.Categoria</p>
+
+                        <h5>Artista</h5>
+                        <p class="servicio-modal-texto">@ObtenerNombre(servicioSeleccionado.Artista)</p>
+
+                        <h5>Descripción</h5>
+                        <p class="modal-biografia">@servicioSeleccionado.Descripcion</p>
+
+                        <h5>Precio</h5>
+                        <p class="servicio-modal-precio">@servicioSeleccionado.Precio.ToString("C", CulturaRD)</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @code {
     public string Filtro { get; set; } = string.Empty;
     public string ValorFiltro { get; set; } = string.Empty;
     public List<Artistas> ListaArtistas { get; set; } = new();
+    public List<Servicios> ListaServicios { get; set; } = new();
 
     private Artistas? artistaSeleccionado;
+    private Servicios? servicioSeleccionado;
     private string categoriaSeleccionada = "Artistas";
     private string? error;
     private bool cargando = true;
     private long versionImagen = DateTime.UtcNow.Ticks;
+    private List<string> imagenesServicio = new();
+    private int indiceImagen = 0;
+    private static readonly System.Globalization.CultureInfo CulturaRD = System.Globalization.CultureInfo.GetCultureInfo("es-DO");
 
     protected override async Task OnInitializedAsync()
     {
@@ -165,19 +264,40 @@
         {
             var valor = ValorFiltro.Trim().ToLower();
 
-            if (Filtro == "Nombre")
+            if (categoriaSeleccionada == "Artistas")
             {
-                var resultado = await artistasService.GetList(a => a.Usuario != null && (a.Usuario.Nombres + " " + a.Usuario.Apellidos).ToLower().Contains(valor));
-                ListaArtistas = resultado.Value ?? new();
+                if (Filtro == "Nombre")
+                {
+                    var resultado = await artistasService.GetList(a => a.Usuario != null && (a.Usuario.Nombres + " " + a.Usuario.Apellidos).ToLower().Contains(valor));
+                    ListaArtistas = resultado.Value ?? new();
+                }
+                else if (Filtro == "Disciplina")
+                {
+                    var resultado = await artistasService.GetList(a => a.Disciplina.ToLower().Contains(valor));
+                    ListaArtistas = resultado.Value ?? new();
+                }
+                else
+                    error = "Seleccione un filtro para realizar la búsqueda";
             }
-            else if (Filtro == "Disciplina")
+            else if (categoriaSeleccionada == "Servicios")
             {
-                var resultado = await artistasService.GetList(a => a.Disciplina.ToLower().Contains(valor));
-                ListaArtistas = resultado.Value ?? new();
-            }
-            else
-            {
-                error = "Seleccione un filtro para realizar la búsqueda";
+                if (Filtro == "Nombre")
+                {
+                    var resultado = await serviciosService.GetList(s => s.Estado && s.Nombre.ToLower().Contains(valor));
+                    ListaServicios = resultado.Value ?? new();
+                }
+                else if (Filtro == "Categoria")
+                {
+                    var resultado = await serviciosService.GetList(s => s.Estado && s.Categoria.ToLower().Contains(valor));
+                    ListaServicios = resultado.Value ?? new();
+                }
+                else if (Filtro == "Artista")
+                {
+                    var resultado = await serviciosService.GetList(s => s.Estado && s.Artista != null && s.Artista.Usuario != null && (s.Artista.Usuario.Nombres + " " + s.Artista.Usuario.Apellidos).ToLower().Contains(valor));
+                    ListaServicios = resultado.Value ?? new();
+                }
+                else
+                    error = "Seleccione un filtro para realizar la búsqueda";
             }
 
             versionImagen = DateTime.UtcNow.Ticks;
@@ -199,15 +319,24 @@
 
         try
         {
-            var resultado = await artistasService.GetList(a => a.ArtistaId > 0);
-            ListaArtistas = resultado.Value ?? new();
+            if (categoriaSeleccionada == "Artistas")
+            {
+                var resultado = await artistasService.GetList(a => a.ArtistaId > 0);
+                ListaArtistas = resultado.Value ?? new();
+            }
+            else if (categoriaSeleccionada == "Servicios")
+            {
+                var resultado = await serviciosService.GetList(s => s.ServicioId > 0 && s.Estado);
+                ListaServicios = resultado.Value ?? new();
+            }
+
             Filtro = string.Empty;
             ValorFiltro = string.Empty;
             versionImagen = DateTime.UtcNow.Ticks;
         }
         catch
         {
-            error = "No fue posible cargar los artistas";
+            error = "No fue posible cargar los registros";
         }
         finally
         {
@@ -219,14 +348,15 @@
     {
         categoriaSeleccionada = categoria;
         artistaSeleccionado = null;
+        servicioSeleccionado = null;
 
-        if (categoria == "Artistas")
+        if (categoria == "Artistas" || categoria == "Servicios")
             await Reestablecer();
     }
 
-    private static string ObtenerNombre(Artistas artista)
+    private static string ObtenerNombre(Artistas? artista)
     {
-        var nombre = $"{artista.Usuario?.Nombres} {artista.Usuario?.Apellidos}".Trim();
+        var nombre = $"{artista?.Usuario?.Nombres} {artista?.Usuario?.Apellidos}".Trim();
         return string.IsNullOrWhiteSpace(nombre) ? "Artista" : nombre;
     }
 
@@ -244,11 +374,45 @@
 
     private void MostrarDetalles(Artistas artista)
     {
+        servicioSeleccionado = null;
         artistaSeleccionado = artista;
+    }
+
+    private void MostrarDetalles(Servicios servicio)
+    {
+        artistaSeleccionado = null;
+        servicioSeleccionado = servicio;
+        indiceImagen = 0;
+
+        imagenesServicio = new[] { servicio.Imagen1, servicio.Imagen2, servicio.Imagen3, servicio.Imagen4, servicio.Imagen5 }
+            .Where(imagen => !string.IsNullOrWhiteSpace(imagen))
+            .Select(imagen => imagen!)
+            .ToList();
+    }
+
+    private void ImagenAnterior()
+    {
+        if (imagenesServicio.Count > 1)
+            indiceImagen = (indiceImagen - 1 + imagenesServicio.Count) % imagenesServicio.Count;
+    }
+
+    private void ImagenSiguiente()
+    {
+        if (imagenesServicio.Count > 1)
+            indiceImagen = (indiceImagen + 1) % imagenesServicio.Count;
+    }
+
+    private void CambiarImagen(int posicion)
+    {
+        if (posicion >= 0 && posicion < imagenesServicio.Count)
+            indiceImagen = posicion;
     }
 
     private void CerrarDetalles()
     {
         artistaSeleccionado = null;
+        servicioSeleccionado = null;
+        imagenesServicio.Clear();
+        indiceImagen = 0;
     }
 }

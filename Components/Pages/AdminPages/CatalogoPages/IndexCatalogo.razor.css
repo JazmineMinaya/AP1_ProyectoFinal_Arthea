@@ -470,3 +470,140 @@
         color: #A68B64;
         margin-right: 7px;
     }
+
+
+/* Artista que ofrece el servicio */
+.servicio-artista {
+    color: #80694B;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+/* Precio en las tarjetas */
+.servicio-precio {
+    color: #493827;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 19px;
+    margin-bottom: 20px;
+}
+
+/* Modal de servicios */
+.catalogo-modal-servicio {
+    max-width: 900px;
+}
+
+/* Distribución del modal */
+.modal-servicio {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 30px;
+    align-items: start;
+}
+
+/* Galería */
+.servicio-galeria {
+    min-width: 0;
+}
+
+.servicio-galeria-imagen {
+    position: relative;
+    width: 100%;
+    height: 350px;
+    overflow: hidden;
+    border: 1px solid #E2D4C0;
+    border-radius: 6px;
+    background-color: #EADBC4;
+}
+
+    .servicio-galeria-imagen img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+/* Flechas de navegación */
+.galeria-anterior,
+.galeria-siguiente {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    background-color: rgba(251, 247, 240, 0.92);
+    color: #6F563B;
+    border: 1px solid #D8C7AF;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.galeria-anterior {
+    left: 12px;
+}
+
+.galeria-siguiente {
+    right: 12px;
+}
+
+    .galeria-anterior:hover,
+    .galeria-siguiente:hover {
+        background-color: #6F563B;
+        color: #FFFFFF;
+    }
+
+/* Contador de imágenes */
+.galeria-contador {
+    margin-top: 12px;
+    text-align: center;
+    color: #80694B;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 13px;
+}
+
+/* Indicadores de imágenes */
+.galeria-indicadores {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.galeria-punto {
+    width: 9px;
+    height: 9px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background-color: #D8C7AF;
+    cursor: pointer;
+}
+
+    .galeria-punto:hover {
+        background-color: #A68B64;
+    }
+
+    .galeria-punto.activo {
+        background-color: #6F563B;
+    }
+
+/* Información del servicio */
+.servicio-modal-texto {
+    color: #6F563B;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 15px;
+    margin-bottom: 22px;
+}
+
+.servicio-modal-precio {
+    color: #493827;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 22px;
+    margin-bottom: 0;
+}
+
