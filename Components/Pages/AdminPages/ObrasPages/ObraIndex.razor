@@ -83,6 +83,11 @@
                     <QuickGrid Items="ListaObras.AsQueryable()" Class="table table-hover mt-3">
 
                         <PropertyColumn Property="o => o.ObraId" Title="ObraId" Sortable="true" />
+
+                        <TemplateColumn Title="Portada">
+                            <img src="@context.ImagenUrl" class="portada-obra" alt="Portada de la obra" />
+                        </TemplateColumn>
+
                         <PropertyColumn Property="o => o.Titulo" Title="Título" Sortable="true" />
 
                         <TemplateColumn Title="Artista" Sortable="true" SortBy="GridSort<Obras>.ByAscending(o => o.Artista!.Usuario!.Nombres)">
@@ -90,9 +95,7 @@
                         </TemplateColumn>
 
                         <PropertyColumn Property="o => o.Categoria" Title="Categoría" Sortable="true" />
-                        <PropertyColumn Property="o => o.Tecnica" Title="Técnica" Sortable="true" />
                         <PropertyColumn Property="o => o.Precio" Title="Precio" Format="C2" Sortable="true" />
-                        <PropertyColumn Property="o => o.Cantidad" Title="Cantidad" Sortable="true" />
                         <PropertyColumn Property="o => o.FechaPublicacion" Title="Fecha" Format="dd/MM/yyyy" Sortable="true" />
                         <PropertyColumn Property="o => o.Estado" Title="Estado" Sortable="true" />
 
