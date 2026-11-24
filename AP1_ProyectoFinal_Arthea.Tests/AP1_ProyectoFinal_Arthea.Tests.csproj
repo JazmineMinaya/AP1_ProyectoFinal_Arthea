@@ -17,11 +17,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AP1_ProyectoFinal_Arthea\AP1_ProyectoFinal_Arthea.csproj" />
+    <Using Include="Xunit" />
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Xunit" />
+    <ProjectReference Include="..\AP1_ProyectoFinal_Arthea.csproj" />
   </ItemGroup>
 
 </Project>

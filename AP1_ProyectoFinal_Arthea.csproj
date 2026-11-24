@@ -9,6 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="AP1_ProyectoFinal_Arthea.Tests\**" />
+    <Content Remove="AP1_ProyectoFinal_Arthea.Tests\**" />
+    <EmbeddedResource Remove="AP1_ProyectoFinal_Arthea.Tests\**" />
+    <None Remove="AP1_ProyectoFinal_Arthea.Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Aplicada1.Core" Version="1.1.0" />
     <PackageReference Include="Blazor.Bootstrap" Version="4.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="11.0.0" />
