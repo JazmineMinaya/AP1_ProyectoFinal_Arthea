@@ -10,8 +10,7 @@ public class PortafoliosDetalle
 
     public int PortafolioId { get; set; }
 
-    [Required(ErrorMessage = "Seleccione una obra")]
-    [Range(1, int.MaxValue, ErrorMessage = "Seleccione una obra válida")]
+    [Range(1, int.MaxValue, ErrorMessage = "Seleccione una obra")]
     public int ObraId { get; set; }
 
     [ForeignKey("PortafolioId")]

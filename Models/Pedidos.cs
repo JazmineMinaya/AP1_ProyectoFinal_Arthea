@@ -8,19 +8,18 @@ public partial class Pedidos
     [Key]
     public int PedidoId { get; set; }
 
-    [Required(ErrorMessage = "Este campo es requerido")]
     public DateTime Fecha { get; set; } = DateTime.Now;
 
-    [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un cliente")]
+    [Range(1, int.MaxValue, ErrorMessage = "Seleccione un cliente")]
     public int ClienteId { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un artista")]
+    [Range(1, int.MaxValue, ErrorMessage = "Seleccione un artista")]
     public int ArtistaId { get; set; }
 
-    [Required(ErrorMessage = "Este campo es requerido")]
+    [Required(ErrorMessage = "Ingrese la dirección de entrega")]
     public string DireccionEntrega { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Este campo es requerido")]
+    [Required(ErrorMessage = "Seleccione el estado del pedido")]
     public string Estado { get; set; } = "Pendiente";
 
     public string EstadoPago { get; set; } = "Pendiente";

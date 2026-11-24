@@ -8,17 +8,16 @@ public class Portafolios
     [Key]
     public int PortafolioId { get; set; }
 
-    [Required(ErrorMessage = "Seleccione un artista")]
-    [Range(1, int.MaxValue, ErrorMessage = "Seleccione un artista válido")]
+    [Range(1, int.MaxValue, ErrorMessage = "Seleccione un artista")]
     public int ArtistaId { get; set; }
 
     [ForeignKey("ArtistaId")]
     public Artistas? Artista { get; set; }
 
-    [Required(ErrorMessage = "El título del portafolio es requerido")]
+    [Required(ErrorMessage = "Ingrese el título del portafolio")]
     public string Titulo { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "La descripción es requerida")]
+    [Required(ErrorMessage = "Ingrese la descripción del portafolio")]
     public string Descripcion { get; set; } = string.Empty;
 
     public DateTime FechaCreacion { get; set; } = DateTime.Now;

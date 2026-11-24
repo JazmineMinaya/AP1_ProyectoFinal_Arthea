@@ -7,7 +7,7 @@ public class Administradores
     [Key]
     public int AdministradorId { get; set; }
 
-    [Required(ErrorMessage = "Este campo es requerido")]
+    [Required(ErrorMessage = "Seleccione un usuario")]
     public string UsuarioId { get; set; } = string.Empty;
 
     public Usuarios? Usuario { get; set; }

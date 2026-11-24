@@ -8,25 +8,25 @@ public class Servicios
     [Key]
     public int ServicioId { get; set; }
 
-    [Required(ErrorMessage = "Seleccione un artista")]
+    [Range(1, int.MaxValue, ErrorMessage = "Seleccione un artista")]
     public int ArtistaId { get; set; }
 
     public Artistas? Artista { get; set; }
 
-    [Required(ErrorMessage = "Este campo es requerido")]
+    [Required(ErrorMessage = "Ingrese el nombre del servicio")]
     public string Nombre { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Seleccione una categoría")]
     public string Categoria { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Este campo es requerido")]
+    [Required(ErrorMessage = "Ingrese la descripción del servicio")]
     public string Descripcion { get; set; } = string.Empty;
 
     [Range(0.01, double.MaxValue, ErrorMessage = "Ingrese un precio válido")]
     [Column(TypeName = "decimal(18,2)")]
     public decimal Precio { get; set; }
 
-    [Required(ErrorMessage = "Debe agregar al menos una imagen")]
+    [Required(ErrorMessage = "Seleccione una imagen de portada para el servicio")]
     public string Imagen1 { get; set; } = string.Empty;
 
     public string? Imagen2 { get; set; }
