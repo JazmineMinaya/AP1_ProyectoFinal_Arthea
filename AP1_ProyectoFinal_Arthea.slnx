@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="AP1_ProyectoFinal_Arthea.csproj" />
+  <Project Path="AP1_ProyectoFinal_Arthea.Tests/AP1_ProyectoFinal_Arthea.Tests.csproj" />
+</Solution>

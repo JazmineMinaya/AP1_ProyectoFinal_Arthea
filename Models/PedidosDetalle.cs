@@ -8,16 +8,16 @@ public partial class PedidosDetalle
     [Key]
     public int DetalleId { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un pedido")]
+    [Range(1, int.MaxValue, ErrorMessage = "Seleccione un pedido")]
     public int PedidoId { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un servicio")]
+    [Range(1, int.MaxValue, ErrorMessage = "Seleccione un servicio")]
     public int ServicioId { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor que cero")]
+    [Range(1, int.MaxValue, ErrorMessage = "Ingrese una cantidad válida")]
     public int Cantidad { get; set; } = 1;
 
-    [Range(1, double.MaxValue, ErrorMessage = "El precio debe ser mayor que cero")]
+    [Range(0.01, double.MaxValue, ErrorMessage = "Ingrese un precio válido")]
     public double Precio { get; set; }
 
     [NotMapped]
