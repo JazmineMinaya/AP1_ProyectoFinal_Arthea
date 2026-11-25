@@ -1,20 +1,17 @@
 @page "/Portafolios/Create"
-@using Microsoft.AspNetCore.Components.Authorization
 @rendermode InteractiveServer
-@attribute [Authorize(Roles = "Administrador,Artista")]
+@attribute [Authorize(Roles = "Administrador")]
 
 @inject PortafoliosService portafoliosService
 @inject ArtistasService artistasService
 @inject ObrasService obrasService
-@inject AuthenticationStateProvider authStateProvider
-@inject UserManager<Usuarios> userManager
 @inject NavigationManager navigationManager
 @inject ToastService toastService
 @inject IWebHostEnvironment environment
 
 <PageTitle>Crear Portafolio</PageTitle>
 
-<EditForm Model="Portafolio" OnValidSubmit="Guardar" FormName="crearPortafolio">
+<EditForm Model="Portafolio" OnValidSubmit="Guardar" FormName="crearPortafolio" Context="formContext">
     <DataAnnotationsValidator />
 
     <div class="container arthea-portafolio-create">
@@ -27,7 +24,7 @@
 
             <div class="card-body">
 
-                @* Imagen de Portada (Obligatoria) *@
+                @* Imagen de Portada *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Imagen de Portada</strong></label>
                     <div>
@@ -45,23 +42,23 @@
                     </div>
                 </div>
 
-                @* PortafolioId (Label separado) *@
+                @* PortafolioId *@
                 <div class="mb-3">
                     <label class="form-label"><strong>PortafolioId</strong></label>
                     <InputNumber class="form-control" @bind-Value="Portafolio.PortafolioId" readonly />
                 </div>
 
-                @* Fecha de Creación (Label separado) *@
+                @* Fecha de Creación *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Fecha de Creación</strong></label>
                     <InputDate class="form-control" @bind-Value="Portafolio.FechaCreacion" readonly />
                 </div>
 
-                @* Artista (Label separado) *@
+                @* Artista *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Artista</strong></label>
-                    <InputSelect class="form-select" @bind-Value="Portafolio.ArtistaId" @bind-Value:after="CargarObrasDelArtista" disabled="@EsSoloArtista">
-                        <option value="0">Seleccione un artista</option>
+                    <InputSelect class="form-select" @bind-Value="Portafolio.ArtistaId" @bind-Value:after="CargarObrasDelArtista">
+                        <option value="0">-- Seleccione un artista --</option>
                         @foreach (var artista in ListaArtistas)
                         {
                             <option value="@artista.ArtistaId">@($"{artista.Usuario?.Nombres} {artista.Usuario?.Apellidos} ({artista.Disciplina})")</option>
@@ -84,19 +81,21 @@
                     <ValidationMessage For="@(() => Portafolio.Descripcion)" />
                 </div>
 
-                @* DETALLES (Estilo idéntico a Pedidos) *@
+                @* Detalles *@
                 <div class="detalle-box mt-4">
                     <h5 class="detalle-titulo">Detalles</h5>
 
-                    <div class="input-group mb-3">
+                    <div class="input-group">
                         <span class="input-group-text">Seleccione:</span>
+
                         <InputSelect class="form-select" @bind-Value="ObraSeleccionadaId" disabled="@(Portafolio.ArtistaId == 0)">
                             <option value="0">-- Seleccione una obra --</option>
                             @foreach (var obra in ObrasDisponibles)
                             {
-                                <option value="@obra.ObraId">@($"{obra.Titulo} ({obra.Categoria})")</option>
+                                <option value="@obra.ObraId">@obra.Titulo</option>
                             }
                         </InputSelect>
+
                         <button type="button" class="btn btn-agregar" @onclick="AgregarDetalle">
                             <span class="bi bi-plus"></span> Agregar
                         </button>
@@ -108,7 +107,9 @@
                         <thead>
                             <tr>
                                 <th>Obra</th>
+                                <th>Título</th>
                                 <th>Categoría</th>
+                                <th>Técnica</th>
                                 <th class="text-center">Remover</th>
                             </tr>
                         </thead>
@@ -116,10 +117,21 @@
                             @foreach (var item in Portafolio.PortafoliosDetalle)
                             {
                                 <tr>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(item.Obra?.ImagenUrl))
+                                        {
+                                            <img src="@item.Obra.ImagenUrl" alt="@item.Obra.Titulo" class="imagen-obra-detalle" />
+                                        }
+                                        else
+                                        {
+                                            <span>Sin imagen</span>
+                                        }
+                                    </td>
                                     <td>@item.Obra?.Titulo</td>
                                     <td>@item.Obra?.Categoria</td>
+                                    <td>@item.Obra?.Tecnica</td>
                                     <td class="text-center">
-                                        <button type="button" class="btn btn-sm btn-outline-danger bi bi-trash" @onclick="() => EliminarDetalle(item)"></button>
+                                        <button type="button" class="btn btn-danger bi bi-trash" @onclick="() => EliminarDetalle(item)"></button>
                                     </td>
                                 </tr>
                             }
@@ -146,29 +158,13 @@
     public List<Artistas> ListaArtistas { get; set; } = new();
     public List<Obras> ObrasDisponibles { get; set; } = new();
 
-    private bool EsSoloArtista { get; set; }
     private IBrowserFile? imagenSeleccionada;
     private string? imagenPreview;
 
     protected override async Task OnInitializedAsync()
     {
-        var artistasRes = await artistasService.GetList(a => a.Usuario != null && a.Usuario.Estado);
-        ListaArtistas = artistasRes.Value ?? new();
-
-        var authState = await authStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        if (user.Identity?.IsAuthenticated == true && user.IsInRole("Artista") && !user.IsInRole("Administrador"))
-        {
-            var appUser = await userManager.GetUserAsync(user);
-            var artista = ListaArtistas.FirstOrDefault(a => a.UsuarioId == appUser?.Id);
-            if (artista is not null)
-            {
-                EsSoloArtista = true;
-                Portafolio.ArtistaId = artista.ArtistaId;
-                await CargarObrasDelArtista();
-            }
-        }
+        var artistas = await artistasService.GetList(a => a.ArtistaId > 0);
+        ListaArtistas = artistas.Value ?? new();
     }
 
     private async Task CargarObrasDelArtista()
@@ -178,8 +174,8 @@
 
         if (Portafolio.ArtistaId > 0)
         {
-            var obrasRes = await obrasService.GetList(o => o.ArtistaId == Portafolio.ArtistaId);
-            ObrasDisponibles = obrasRes.Value ?? new();
+            var obras = await obrasService.GetList(o => o.ArtistaId == Portafolio.ArtistaId);
+            ObrasDisponibles = obras.Value ?? new();
         }
         else
         {
@@ -189,7 +185,9 @@
 
     private void AgregarDetalle()
     {
-        if (ObraSeleccionadaId <= 0)
+        var obra = ObrasDisponibles.FirstOrDefault(o => o.ObraId == ObraSeleccionadaId && o.ArtistaId == Portafolio.ArtistaId);
+
+        if (obra == null)
         {
             toastService.ShowError("Seleccione una obra válida");
             return;
@@ -197,18 +195,14 @@
 
         if (Portafolio.PortafoliosDetalle.Any(d => d.ObraId == ObraSeleccionadaId))
         {
-            toastService.ShowError("Esta obra ya está incluida en el portafolio");
+            toastService.ShowError("Esta obra ya fue agregada");
             return;
         }
 
-        var obraSeleccionada = ObrasDisponibles.FirstOrDefault(o => o.ObraId == ObraSeleccionadaId);
-        if (obraSeleccionada is null)
-            return;
-
         Portafolio.PortafoliosDetalle.Add(new PortafoliosDetalle
         {
-            ObraId = obraSeleccionada.ObraId,
-            Obra = obraSeleccionada
+            ObraId = ObraSeleccionadaId,
+            Obra = obra
         });
 
         ObraSeleccionadaId = 0;
@@ -273,7 +267,7 @@
             return;
         }
 
-        if (!Portafolio.PortafoliosDetalle.Any())
+        if (Portafolio.PortafoliosDetalle.Count == 0)
         {
             toastService.ShowError("Debe agregar al menos una obra al portafolio");
             return;
@@ -283,14 +277,26 @@
         {
             await GuardarPortada();
             var resultado = await portafoliosService.Guardar(Portafolio);
+            bool guardado = false;
 
             resultado.OnSuccess(() =>
             {
-                toastService.ShowSuccess("Portafolio guardado correctamente");
-                navigationManager.NavigateTo("/Portafolios/Index");
+                guardado = true;
             });
 
-            resultado.OnFailure(() => toastService.ShowError("No se ha podido guardar el portafolio"));
+            resultado.OnFailure(() =>
+            {
+                guardado = false;
+            });
+
+            if (!guardado)
+            {
+                toastService.ShowError("No se ha podido guardar el portafolio");
+                return;
+            }
+
+            toastService.ShowSuccess("Portafolio guardado correctamente");
+            navigationManager.NavigateTo("/Portafolios/Index");
         }
         catch
         {

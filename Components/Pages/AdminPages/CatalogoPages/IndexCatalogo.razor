@@ -173,7 +173,7 @@
 
                                 <div class="artista-informacion">
                                     <h5>@portafolio.Titulo</h5>
-                                    <p class="artista-disciplina">@portafolio.PortafoliosDetalle.Count obra(s)</p>
+                                    <p class="artista-disciplina">@portafolio.PortafoliosDetalle.Count obras</p>
                                     <p class="servicio-artista">Por @ObtenerNombre(portafolio.Artista)</p>
 
                                     <button type="button" class="btn-detalles" @onclick="() => MostrarDetalles(portafolio)">Ver detalles <i class="bi bi-arrow-up-right"></i></button>
@@ -390,7 +390,7 @@
                     @* Información del portafolio *@
                     <div class="modal-informacion">
                         <h3>@portafolioSeleccionado.Titulo</h3>
-                        <p class="modal-disciplina">@portafolioSeleccionado.PortafoliosDetalle.Count obra(s) en colección</p>
+                        <p class="modal-disciplina">@portafolioSeleccionado.PortafoliosDetalle.Count obras en colección</p>
 
                         <h5>Artista</h5>
                         <p class="servicio-modal-texto">@ObtenerNombre(portafolioSeleccionado.Artista)</p>
@@ -506,7 +506,7 @@
             {
                 if (Filtro == "Titulo")
                 {
-                    var resultado = await portafoliosService.GetList(p => p.Titulo == "Publicado" && p.Titulo.ToLower().Contains(valor));
+                    var resultado = await portafoliosService.GetList(p => p.Titulo.ToLower().Contains(valor));
                     ListaPortafolios = resultado.Value ?? new();
                 }
                 else if (Filtro == "Artista")
@@ -649,11 +649,7 @@
 
     private string ObtenerPortadaPortafolio(Portafolios portafolio)
     {
-        var primeraImagen = portafolio.PortafoliosDetalle
-            .Select(d => d.Obra?.ImagenUrl)
-            .FirstOrDefault(url => !string.IsNullOrWhiteSpace(url));
-
-        return ObtenerFoto(primeraImagen);
+        return ObtenerFoto(portafolio.ImagenPortada);
     }
 
     private void MostrarDetalles(Obras obra)

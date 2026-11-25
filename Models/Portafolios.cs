@@ -22,7 +22,8 @@ public class Portafolios
 
     public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
-    public string? ImagenPortada { get; set; }
+    [Required(ErrorMessage = "Seleccione una imagen de portada")]
+    public string ImagenPortada { get; set; } = string.Empty;
 
     public virtual ICollection<PortafoliosDetalle> PortafoliosDetalle { get; set; } = new List<PortafoliosDetalle>();
 }

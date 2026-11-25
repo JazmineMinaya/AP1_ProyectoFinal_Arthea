@@ -216,3 +216,25 @@
         font-family: Georgia, "Times New Roman", serif;
         font-size: 14px;
     }
+
+.imagen-obra-detalle {
+    width: 65px;
+    height: 65px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #D8C7AF;
+}
+
+/* Botón Remover */
+.arthea-portafolio-create .btn-danger {
+    background-color: #A65D50 !important;
+    border-color: #A65D50 !important;
+    color: white !important;
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+    .arthea-portafolio-create .btn-danger:hover {
+        background-color: #854438 !important;
+        border-color: #854438 !important;
+        color: white !important;
+    }
