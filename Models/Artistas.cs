@@ -7,12 +7,12 @@ public class Artistas
     [Key]
     public int ArtistaId { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Seleccione un usuario")]
     public string UsuarioId { get; set; } = string.Empty;
 
     public Usuarios? Usuario { get; set; }
 
-    [Required(ErrorMessage = "Este campo es requerido")]
+    [Required(ErrorMessage = "Ingrese su número de teléfono")]
     [Phone(ErrorMessage = "Ingrese un teléfono válido")]
     public string Telefono { get; set; } = string.Empty;
 

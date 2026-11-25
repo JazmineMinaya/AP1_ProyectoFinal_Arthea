@@ -91,7 +91,7 @@
                     @* Categoría *@
                     <div class="mb-3">
                         <label class="form-label"><strong>Categoría</strong></label>
-                        <InputSelect class="form-select" @bind-Value="Servicio.Categoria">
+                        <InputSelect class="form-select" @bind-Value="Servicio.Categoria" @bind-Value:after="OnCategoriaChanged">
                             <option value="">Seleccione una categoría</option>
                             <option value="Pintura">Pintura</option>
                             <option value="Escultura">Escultura</option>
@@ -103,6 +103,19 @@
                             <option value="Artesanía">Artesanía</option>
                         </InputSelect>
                         <ValidationMessage For="@(() => Servicio.Categoria)" />
+                    </div>
+
+                    @* Técnica *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Técnica</strong></label>
+                        <InputSelect class="form-select" @bind-Value="Servicio.Tecnica" disabled="@string.IsNullOrEmpty(Servicio.Categoria)">
+                            <option value="">Seleccione una técnica</option>
+                            @foreach (var tecnica in TecnicasDisponibles)
+                            {
+                                <option value="@tecnica">@tecnica</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => Servicio.Tecnica)" />
                     </div>
 
                     @* Descripción *@
@@ -360,5 +373,27 @@
         {
             toastService.ShowError("No se ha podido eliminar el servicio");
         });
+    }
+
+    private static readonly Dictionary<string, List<string>> TecnicasPorCategoria = new()
+    {
+        ["Pintura"] = new() { "Óleo", "Acrílico", "Acuarela", "Gouache", "Pastel", "Fresco", "Aerografía", "Pintura digital", "Técnica mixta" },
+        ["Escultura"] = new() { "Modelado", "Tallado", "Fundición", "Ensamblaje", "Cerámica", "Relieve", "Forja", "Escultura digital" },
+        ["Fotografía"] = new() { "Digital", "Analógica", "Larga exposición", "Doble exposición", "Macro", "HDR", "Panorámica", "Infrarroja" },
+        ["Música"] = new() { "Canto", "Composición", "Improvisación", "Interpretación instrumental", "Arreglos musicales", "Producción musical", "Mezcla musical" },
+        ["Ilustración"] = new() { "Grafito", "Carboncillo", "Tinta", "Lápices de colores", "Acuarela", "Ilustración digital", "Ilustración vectorial", "Collage" },
+        ["Danza"] = new() { "Ballet", "Contemporánea", "Jazz", "Hip-hop", "Salsa", "Bachata", "Merengue", "Flamenco" },
+        ["Diseño Gráfico"] = new() { "Diseño vectorial", "Fotomontaje", "Lettering", "Ilustración digital", "Tipografía", "Animación 2D", "Modelado 3D" },
+        ["Artesanía"] = new() { "Alambrismo", "Macramé", "Crochet", "Bordado", "Tejido", "Cerámica", "Bisutería", "Tallado", "Decoupage", "Resina" }
+    };
+
+    private List<string> TecnicasDisponibles =>
+        !string.IsNullOrEmpty(Servicio.Categoria) && TecnicasPorCategoria.TryGetValue(Servicio.Categoria, out var lista)
+            ? lista
+            : new List<string>();
+
+    private void OnCategoriaChanged()
+    {
+        Servicio.Tecnica = string.Empty;
     }
 }

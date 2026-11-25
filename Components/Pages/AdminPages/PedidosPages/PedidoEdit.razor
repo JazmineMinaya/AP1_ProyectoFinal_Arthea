@@ -2,10 +2,8 @@
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = "Administrador")]
 
-@using Microsoft.AspNetCore.Authorization
 @inject PedidosService pedidosService
 @inject ClientesService clientesService
-@inject ArtistasService artistasService
 @inject ServiciosService serviciosService
 @inject NavigationManager navigationManager
 @inject ToastService toastService
@@ -33,13 +31,6 @@
                         <InputNumber class="form-control" @bind-Value="Pedido.PedidoId" readonly />
                     </div>
 
-                    @* Fecha *@
-                    <div class="mb-3">
-                        <label class="form-label"><strong>Fecha</strong></label>
-                        <InputDate class="form-control" @bind-Value="Pedido.Fecha" />
-                        <ValidationMessage For="@(() => Pedido.Fecha)" />
-                    </div>
-
                     @* Cliente *@
                     <div class="mb-3">
                         <label class="form-label"><strong>Cliente</strong></label>
@@ -53,17 +44,11 @@
                         <ValidationMessage For="@(() => Pedido.ClienteId)" />
                     </div>
 
-                    @* Artista *@
+                    @* Fecha *@
                     <div class="mb-3">
-                        <label class="form-label"><strong>Artista</strong></label>
-                        <InputSelect class="form-select" @bind-Value="Pedido.ArtistaId">
-                            <option value="0">-- Seleccione un artista --</option>
-                            @foreach (var artista in ListaArtistas)
-                            {
-                                <option value="@artista.ArtistaId">@artista.Usuario?.Nombres @artista.Usuario?.Apellidos</option>
-                            }
-                        </InputSelect>
-                        <ValidationMessage For="@(() => Pedido.ArtistaId)" />
+                        <label class="form-label"><strong>Fecha</strong></label>
+                        <InputDate class="form-control" @bind-Value="Pedido.Fecha" />
+                        <ValidationMessage For="@(() => Pedido.Fecha)" />
                     </div>
 
                     @* Dirección de entrega *@
@@ -88,17 +73,14 @@
 
                             <InputSelect class="form-select" @bind-Value="ServicioId">
                                 <option value="0">-- Seleccione un servicio --</option>
-                                @foreach (var servicio in ListaServicios.Where(s => s.ArtistaId == Pedido.ArtistaId))
+                                @foreach (var servicio in ListaServicios)
                                 {
                                     <option value="@servicio.ServicioId">@servicio.Nombre</option>
                                 }
                             </InputSelect>
 
                             <span class="input-group-text">Precio:</span>
-                            <label class="form-control">@(ListaServicios.FirstOrDefault(s => s.ServicioId == ServicioId)?.Precio ?? 0)</label>
-
-                            <span class="input-group-text">Cantidad:</span>
-                            <InputNumber class="form-control" @bind-Value="Cantidad" />
+                            <label class="form-control">@(ListaServicios.FirstOrDefault(s => s.ServicioId == ServicioId)?.Precio.ToString("N2") ?? "0.00")</label>
 
                             <button type="button" class="btn btn-outline-primary" @onclick="AgregarServicio">+ Agregar</button>
                         </div>
@@ -106,24 +88,24 @@
                         @* Tabla para el detalle *@
                         <hr />
 
-                        <table class="table table-light">
+                        <table class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>Servicio</th>
-                                    <th>Cantidad</th>
+                                    <th>Artista</th>
                                     <th>Precio</th>
-                                    <th>Subtotal</th>
                                     <th>Remover</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var detalle in Pedido.PedidosDetalle)
                                 {
+                                    var servicio = ListaServicios.FirstOrDefault(s => s.ServicioId == detalle.ServicioId) ?? detalle.Servicio;
+
                                     <tr>
-                                        <td>@ListaServicios.FirstOrDefault(s => s.ServicioId == detalle.ServicioId)?.Nombre</td>
-                                        <td>@detalle.Cantidad</td>
-                                        <td>@detalle.Precio</td>
-                                        <td>@(detalle.Cantidad * detalle.Precio)</td>
+                                        <td>@servicio?.Nombre</td>
+                                        <td>@servicio?.Artista?.Usuario?.Nombres @servicio?.Artista?.Usuario?.Apellidos</td>
+                                        <td>@detalle.Precio.ToString("N2")</td>
                                         <td>
                                             <button type="button" class="btn btn-danger bi bi-trash" @onclick="() => QuitarServicio(detalle)"></button>
                                         </td>
@@ -131,7 +113,6 @@
                                 }
                             </tbody>
                         </table>
-                        <hr />
                     </div>
                 </div>
 
@@ -171,16 +152,13 @@
 </div>
 
 @code {
-    [Parameter]
-    public int PedidoId { get; set; }
+    [Parameter] public int PedidoId { get; set; }
 
     public Pedidos? Pedido;
     public List<Clientes> ListaClientes { get; set; } = new();
-    public List<Artistas> ListaArtistas { get; set; } = new();
     public List<Servicios> ListaServicios { get; set; } = new();
 
     public int ServicioId { get; set; }
-    public int Cantidad { get; set; } = 1;
 
     protected override async Task OnInitializedAsync()
     {
@@ -198,19 +176,15 @@
         var clientes = await clientesService.GetList(c => c.ClienteId > 0);
         ListaClientes = clientes.Value ?? new();
 
-        var artistas = await artistasService.GetList(a => a.ArtistaId > 0);
-        ListaArtistas = artistas.Value ?? new();
-
-        var servicios = await serviciosService.GetList(s => s.ServicioId > 0);
+        var servicios = await serviciosService.GetList(s => s.Estado);
         ListaServicios = servicios.Value ?? new();
     }
 
     private void AgregarServicio()
     {
-        if (Pedido is null)
-            return;
+        if (Pedido is null) return;
 
-        var servicio = ListaServicios.FirstOrDefault(s => s.ServicioId == ServicioId && s.ArtistaId == Pedido.ArtistaId);
+        var servicio = ListaServicios.FirstOrDefault(s => s.ServicioId == ServicioId);
 
         if (servicio is null)
         {
@@ -218,37 +192,26 @@
             return;
         }
 
-        if (Cantidad <= 0)
+        if (Pedido.PedidosDetalle.Any(d => d.ServicioId == ServicioId))
         {
-            toastService.ShowError("Ingrese una cantidad válida");
+            toastService.ShowError("Este servicio ya fue agregado");
             return;
         }
 
-        var detalle = Pedido.PedidosDetalle.FirstOrDefault(d => d.ServicioId == ServicioId);
-
-        if (detalle is not null)
+        Pedido.PedidosDetalle.Add(new PedidosDetalle
         {
-            detalle.Cantidad += Cantidad;
-        }
-        else
-        {
-            Pedido.PedidosDetalle.Add(new PedidosDetalle
-            {
-                ServicioId = ServicioId,
-                Cantidad = Cantidad,
-                Precio = Convert.ToDouble(servicio.Precio)
-            });
-        }
+            ServicioId = ServicioId,
+            Cantidad = 1,
+            Precio = Convert.ToDouble(servicio.Precio)
+        });
 
         CalcularTotal();
         ServicioId = 0;
-        Cantidad = 1;
     }
 
     private void QuitarServicio(PedidosDetalle detalle)
     {
-        if (Pedido is null)
-            return;
+        if (Pedido is null) return;
 
         Pedido.PedidosDetalle.Remove(detalle);
         CalcularTotal();
@@ -256,16 +219,13 @@
 
     private void CalcularTotal()
     {
-        if (Pedido is null)
-            return;
-
-        Pedido.Total = Pedido.PedidosDetalle.Sum(d => d.Cantidad * d.Precio);
+        if (Pedido is null) return;
+        Pedido.Total = Pedido.PedidosDetalle.Sum(d => d.Precio);
     }
 
     private async Task Modificar()
     {
-        if (Pedido is null)
-            return;
+        if (Pedido is null) return;
 
         if (Pedido.PedidosDetalle.Count == 0)
         {
@@ -273,44 +233,41 @@
             return;
         }
 
-        if (Pedido.PedidosDetalle.Any(d => !ListaServicios.Any(s => s.ServicioId == d.ServicioId && s.ArtistaId == Pedido.ArtistaId)))
-        {
-            toastService.ShowError("Todos los servicios deben pertenecer al artista seleccionado");
-            return;
-        }
-
         CalcularTotal();
 
         var resultado = await pedidosService.Guardar(Pedido);
+        bool guardado = false;
 
-        resultado.OnSuccess(() =>
-        {
-            toastService.ShowSuccess("Pedido modificado correctamente");
-            navigationManager.NavigateTo("/Pedidos/Index");
-        });
+        resultado.OnSuccess(() => { guardado = true; });
+        resultado.OnFailure(() => { guardado = false; });
 
-        resultado.OnFailure(() =>
+        if (!guardado)
         {
             toastService.ShowError("No se ha podido modificar el pedido");
-        });
+            return;
+        }
+
+        toastService.ShowSuccess("Pedido modificado correctamente");
+        navigationManager.NavigateTo("/Pedidos/Index");
     }
 
     private async Task Eliminar()
     {
-        if (Pedido is null)
-            return;
+        if (Pedido is null) return;
 
         var resultado = await pedidosService.Eliminar(Pedido.PedidoId);
+        bool eliminado = false;
 
-        resultado.OnSuccess(() =>
-        {
-            toastService.ShowSuccess("Pedido eliminado correctamente");
-            navigationManager.NavigateTo("/Pedidos/Index");
-        });
+        resultado.OnSuccess(() => { eliminado = true; });
+        resultado.OnFailure(() => { eliminado = false; });
 
-        resultado.OnFailure(() =>
+        if (!eliminado)
         {
             toastService.ShowError("No se ha podido eliminar el pedido");
-        });
+            return;
+        }
+
+        toastService.ShowSuccess("Pedido eliminado correctamente");
+        navigationManager.NavigateTo("/Pedidos/Index");
     }
 }

@@ -85,13 +85,25 @@
                     <QuickGrid Items="ListaPortafolios.AsQueryable()" Class="table table-hover mt-3">
 
                         <PropertyColumn Property="p => p.PortafolioId" Title="PortafolioId" Sortable="true" />
+
+                        <TemplateColumn Title="Portada" Align="Align.Center">
+                            @if (!string.IsNullOrWhiteSpace(context.ImagenPortada))
+                            {
+                                <img src="@context.ImagenPortada" alt="Portada de @context.Titulo" class="imagen-portada-index" />
+                            }
+                            else
+                            {
+                                <span>Sin portada</span>
+                            }
+                        </TemplateColumn>
+
                         <PropertyColumn Property="p => p.Titulo" Title="Título" Sortable="true" />
 
                         <TemplateColumn Title="Artista" Sortable="true" SortBy="GridSort<Portafolios>.ByAscending(p => p.Artista!.Usuario!.Nombres)">
                             @($"{context.Artista?.Usuario?.Nombres} {context.Artista?.Usuario?.Apellidos}")
                         </TemplateColumn>
 
-                        <TemplateColumn Title="Obras Incluidas" Align="Align.Center" Sortable="true" SortBy="GridSort<Portafolios>.ByAscending(p => p.PortafoliosDetalle.Count)">
+                        <TemplateColumn Title="Cantidad de Obras" Align="Align.Center" Sortable="true" SortBy="GridSort<Portafolios>.ByAscending(p => p.PortafoliosDetalle.Count)">
                             @context.PortafoliosDetalle.Count
                         </TemplateColumn>
 

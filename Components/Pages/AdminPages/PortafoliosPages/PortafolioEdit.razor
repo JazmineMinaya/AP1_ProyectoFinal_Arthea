@@ -1,34 +1,32 @@
 @page "/Portafolios/Edit/{PortafolioId:int}"
-@using Microsoft.AspNetCore.Components.Authorization
 @rendermode InteractiveServer
-@attribute [Authorize(Roles = "Administrador,Artista")]
+@attribute [Authorize(Roles = "Administrador")]
 
 @inject PortafoliosService portafoliosService
 @inject ArtistasService artistasService
 @inject ObrasService obrasService
-@inject AuthenticationStateProvider authStateProvider
-@inject UserManager<Usuarios> userManager
 @inject NavigationManager navigationManager
 @inject ToastService toastService
 @inject IWebHostEnvironment environment
 
 <PageTitle>Modificar Portafolio</PageTitle>
 
-<EditForm Model="Portafolio" OnValidSubmit="Modificar" FormName="editarPortafolio">
+<EditForm Model="Portafolio" OnValidSubmit="Modificar" FormName="editarPortafolio" Context="formContext">
     <DataAnnotationsValidator />
 
     <div class="container arthea-portafolio-edit">
         <div class="card shadow-lg">
 
+            @* Encabezado *@
             <div class="card-header">
                 <h5 class="card-title">Modificar Portafolio</h5>
             </div>
 
             <div class="card-body">
 
-                @* Portada *@
+                @* Imagen de Portada *@
                 <div class="mb-3">
-                    <label class="form-label"><strong>Imagen de Portada (opcional)</strong></label>
+                    <label class="form-label"><strong>Imagen de Portada</strong></label>
                     <div>
                         <label for="imagen" class="cuadro-imagen">
                             @if (string.IsNullOrEmpty(imagenPreview))
@@ -44,23 +42,23 @@
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label"><strong>PortafolioId</strong></label>
-                        <InputNumber class="form-control" @bind-Value="Portafolio.PortafolioId" readonly />
-                    </div>
+                @* PortafolioId *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>PortafolioId</strong></label>
+                    <InputNumber class="form-control" @bind-Value="Portafolio.PortafolioId" readonly />
+                </div>
 
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label"><strong>Fecha de Creación</strong></label>
-                        <InputDate class="form-control" @bind-Value="Portafolio.FechaCreacion" readonly />
-                    </div>
+                @* Fecha de Creación *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Fecha de Creación</strong></label>
+                    <InputDate class="form-control" @bind-Value="Portafolio.FechaCreacion" readonly />
                 </div>
 
                 @* Artista *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Artista</strong></label>
                     <InputSelect class="form-select" @bind-Value="Portafolio.ArtistaId" disabled>
-                        <option value="0">Seleccione un artista</option>
+                        <option value="0">-- Seleccione un artista --</option>
                         @foreach (var artista in ListaArtistas)
                         {
                             <option value="@artista.ArtistaId">@($"{artista.Usuario?.Nombres} {artista.Usuario?.Apellidos} ({artista.Disciplina})")</option>
@@ -82,48 +80,43 @@
                     <ValidationMessage For="@(() => Portafolio.Descripcion)" />
                 </div>
 
-                <hr class="my-4" />
+                @* Detalles *@
+                <div class="detalle-box mt-4">
+                    <h5 class="detalle-titulo">Detalle de Obras del Portafolio</h5>
 
-                @* SECCIÓN DETALLE DE OBRAS *@
-                <div class="border rounded p-3 mb-3" style="background-color: #F7F1E8; border-color: #D8C7AF !important;">
-                    <h6 class="mb-3" style="font-family: Georgia, serif;"><strong>Detalle de Obras del Portafolio</strong></h6>
+                    <div class="input-group">
+                        <span class="input-group-text">Seleccione:</span>
 
-                    <div class="row g-2 align-items-end mb-3">
-                        <div class="col-md-5">
-                            <label class="form-label"><strong>Obra</strong></label>
-                            <InputSelect class="form-select" @bind-Value="DetalleActual.ObraId">
-                                <option value="0">Seleccione una obra del artista</option>
-                                @foreach (var obra in ObrasDisponibles)
-                                {
-                                    <option value="@obra.ObraId">@($"{obra.Titulo} - {obra.Categoria} ({obra.Precio:C2})")</option>
-                                }
-                            </InputSelect>
-                        </div>
+                        <InputSelect class="form-select" @bind-Value="DetalleActual.ObraId">
+                            <option value="0">-- Seleccione una obra --</option>
+                            @foreach (var obra in ObrasDisponibles)
+                            {
+                                <option value="@obra.ObraId">@obra.Titulo</option>
+                            }
+                        </InputSelect>
 
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-outline-primary w-100" @onclick="AgregarDetalle">
-                                <span class="bi bi-plus-circle"></span> Agregar
-                            </button>
-                        </div>
+                        <button type="button" class="btn btn-agregar" @onclick="AgregarDetalle">
+                            <span class="bi bi-plus"></span> Agregar
+                        </button>
                     </div>
 
-                    <table class="table table-hover table-sm">
+                    <hr class="detalle-separador" />
+
+                    <table class="table table-hover tabla-detalle">
                         <thead>
                             <tr>
-                                <th>ObraId</th>
+                                <th>Obra</th>
                                 <th>Título</th>
                                 <th>Categoría</th>
                                 <th>Técnica</th>
-                                <th>Precio</th>
-                                <th>Nota Curatorial</th>
-                                <th class="text-center">Quitar</th>
+                                <th class="text-center">Remover</th>
                             </tr>
                         </thead>
                         <tbody>
                             @if (!Portafolio.PortafoliosDetalle.Any())
                             {
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted">No se han agregado obras a este portafolio.</td>
+                                    <td colspan="5" class="text-center text-muted">No se han agregado obras a este portafolio.</td>
                                 </tr>
                             }
                             else
@@ -131,13 +124,21 @@
                                 @foreach (var item in Portafolio.PortafoliosDetalle)
                                 {
                                     <tr>
-                                        <td>@item.ObraId</td>
+                                        <td>
+                                            @if (!string.IsNullOrWhiteSpace(item.Obra?.ImagenUrl))
+                                            {
+                                                <img src="@item.Obra.ImagenUrl" alt="@item.Obra.Titulo" class="imagen-obra-detalle" />
+                                            }
+                                            else
+                                            {
+                                                <span>Sin imagen</span>
+                                            }
+                                        </td>
                                         <td>@item.Obra?.Titulo</td>
                                         <td>@item.Obra?.Categoria</td>
                                         <td>@item.Obra?.Tecnica</td>
-                                        <td>@item.Obra?.Precio.ToString("C2")</td>
                                         <td class="text-center">
-                                            <button type="button" class="btn btn-sm btn-outline-danger bi bi-trash" @onclick="() => EliminarDetalle(item)"></button>
+                                            <button type="button" class="btn btn-danger bi bi-trash" @onclick="() => EliminarDetalle(item)"></button>
                                         </td>
                                     </tr>
                                 }
@@ -148,6 +149,7 @@
 
             </div>
 
+            @* Footer *@
             <div class="card-footer text-center mt-2">
                 <a href="/Portafolios/Index" class="btn btn-secondary"><span class="bi bi-arrow-left"></span> Volver</a>
                 <button type="submit" class="btn btn-primary bi bi-floppy"> Modificar</button>
@@ -191,10 +193,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var artistasRes = await artistasService.GetList(a => a.ArtistaId > 0);
-        ListaArtistas = artistasRes.Value ?? new();
+        var artistas = await artistasService.GetList(a => a.ArtistaId > 0);
+        ListaArtistas = artistas.Value ?? new();
 
         var resultado = await portafoliosService.Buscar(PortafolioId);
+
         if (resultado.Value is null)
         {
             toastService.ShowError("Portafolio no encontrado");
@@ -202,32 +205,20 @@
             return;
         }
 
-        // Si es Artista, validar que solo edite su propio portafolio
-        var authState = await authStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        if (user.Identity?.IsAuthenticated == true && user.IsInRole("Artista") && !user.IsInRole("Administrador"))
-        {
-            var appUser = await userManager.GetUserAsync(user);
-            var artistaLogueado = ListaArtistas.FirstOrDefault(a => a.UsuarioId == appUser?.Id);
-            if (artistaLogueado is null || resultado.Value.ArtistaId != artistaLogueado.ArtistaId)
-            {
-                toastService.ShowError("No tiene permisos para editar este portafolio");
-                navigationManager.NavigateTo("/Portafolios/Index");
-                return;
-            }
-        }
-
         Portafolio = resultado.Value;
+
         imagenPreview = !string.IsNullOrWhiteSpace(Portafolio.ImagenPortada)
             && Portafolio.ImagenPortada.StartsWith("/imagenes/portafolios/") ? Portafolio.ImagenPortada : null;
 
-        var obrasRes = await obrasService.GetList(o => o.ArtistaId == Portafolio.ArtistaId);
-        ObrasDisponibles = obrasRes.Value ?? new();
+        var obras = await obrasService.GetList(o => o.ArtistaId == Portafolio.ArtistaId);
+        ObrasDisponibles = obras.Value ?? new();
     }
 
     private void AgregarDetalle()
     {
-        if (DetalleActual.ObraId <= 0)
+        var obra = ObrasDisponibles.FirstOrDefault(o => o.ObraId == DetalleActual.ObraId && o.ArtistaId == Portafolio.ArtistaId);
+
+        if (obra == null)
         {
             toastService.ShowError("Seleccione una obra válida");
             return;
@@ -235,19 +226,15 @@
 
         if (Portafolio.PortafoliosDetalle.Any(d => d.ObraId == DetalleActual.ObraId))
         {
-            toastService.ShowError("Esta obra ya está incluida en el portafolio");
+            toastService.ShowError("Esta obra ya fue agregada");
             return;
         }
-
-        var obraSeleccionada = ObrasDisponibles.FirstOrDefault(o => o.ObraId == DetalleActual.ObraId);
-        if (obraSeleccionada is null)
-            return;
 
         Portafolio.PortafoliosDetalle.Add(new PortafoliosDetalle
         {
             PortafolioId = Portafolio.PortafolioId,
-            ObraId = obraSeleccionada.ObraId,
-            Obra = obraSeleccionada,
+            ObraId = DetalleActual.ObraId,
+            Obra = obra
         });
 
         DetalleActual = new();
@@ -306,7 +293,7 @@
 
     private async Task Modificar()
     {
-        if (!Portafolio.PortafoliosDetalle.Any())
+        if (Portafolio.PortafoliosDetalle.Count == 0)
         {
             toastService.ShowError("Debe agregar al menos una obra al portafolio");
             return;
@@ -316,14 +303,26 @@
         {
             await GuardarPortada();
             var resultado = await portafoliosService.Guardar(Portafolio);
+            bool guardado = false;
 
             resultado.OnSuccess(() =>
             {
-                toastService.ShowSuccess("Portafolio modificado correctamente");
-                navigationManager.NavigateTo("/Portafolios/Index");
+                guardado = true;
             });
 
-            resultado.OnFailure(() => toastService.ShowError("No se ha podido modificar el portafolio"));
+            resultado.OnFailure(() =>
+            {
+                guardado = false;
+            });
+
+            if (!guardado)
+            {
+                toastService.ShowError("No se ha podido modificar el portafolio");
+                return;
+            }
+
+            toastService.ShowSuccess("Portafolio modificado correctamente");
+            navigationManager.NavigateTo("/Portafolios/Index");
         }
         catch
         {
@@ -334,13 +333,25 @@
     private async Task Eliminar()
     {
         var resultado = await portafoliosService.Eliminar(Portafolio.PortafolioId);
+        bool eliminado = false;
 
         resultado.OnSuccess(() =>
         {
-            toastService.ShowSuccess("Portafolio eliminado correctamente");
-            navigationManager.NavigateTo("/Portafolios/Index");
+            eliminado = true;
         });
 
-        resultado.OnFailure(() => toastService.ShowError("No se ha podido eliminar el portafolio"));
+        resultado.OnFailure(() =>
+        {
+            eliminado = false;
+        });
+
+        if (!eliminado)
+        {
+            toastService.ShowError("No se ha podido eliminar el portafolio");
+            return;
+        }
+
+        toastService.ShowSuccess("Portafolio eliminado correctamente");
+        navigationManager.NavigateTo("/Portafolios/Index");
     }
 }

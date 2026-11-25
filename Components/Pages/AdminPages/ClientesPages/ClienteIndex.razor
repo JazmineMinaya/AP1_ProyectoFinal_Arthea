@@ -18,18 +18,6 @@
 
         <div class="card-body">
 
-            @* Filtro por rango de fechas *@
-            <div class="row mb-2">
-                <div class="col-3">
-                    <label class="col-form-label"><strong>Desde</strong></label>
-                    <InputDate class="form-control" @bind-Value="FechaDesde" />
-                </div>
-                <div class="col-3">
-                    <label class="col-form-label"><strong>Hasta</strong></label>
-                    <InputDate class="form-control" @bind-Value="FechaHasta" />
-                </div>
-            </div>
-
             @* Labels *@
             <div class="row">
                 <div class="col-3">
@@ -75,7 +63,6 @@
                         <PropertyColumn Property="c => c.Usuario!.Email" Title="Correo" Sortable="true" />
                         <PropertyColumn Property="c => c.Telefono" Title="Teléfono" Sortable="true" />
                         <PropertyColumn Property="c => c.Direccion" Title="Dirección" Sortable="true" />
-                        <PropertyColumn Property="c => c.Usuario!.FechaRegistro" Title="Fecha Registro" Format="dd/MM/yyyy" Sortable="true" />
 
                         <TemplateColumn Title="Estado" Sortable="true" SortBy="GridSort<Clientes>.ByAscending(c => c.Usuario!.Estado)">
                             @(context.Usuario?.Estado == true ? "Activo" : "Inactivo")
@@ -101,8 +88,6 @@
 @code {
     public string Filtro { get; set; } = string.Empty;
     public string ValorFiltro { get; set; } = string.Empty;
-    public DateTime? FechaDesde { get; set; }
-    public DateTime? FechaHasta { get; set; }
 
     public List<Clientes> ListaClientes { get; set; } = new();
 
@@ -113,10 +98,7 @@
 
     private async Task Buscar()
     {
-        var resultado = await clientesService.GetList(c =>
-            (!FechaDesde.HasValue || (c.Usuario != null && c.Usuario.FechaRegistro.Date >= FechaDesde.Value.Date)) &&
-            (!FechaHasta.HasValue || (c.Usuario != null && c.Usuario.FechaRegistro.Date <= FechaHasta.Value.Date))
-        );
+        var resultado = await clientesService.GetList(c => c.ClienteId > 0);
 
         var lista = resultado.Value ?? new();
 
@@ -149,7 +131,5 @@
 
         Filtro = string.Empty;
         ValorFiltro = string.Empty;
-        FechaDesde = null;
-        FechaHasta = null;
     }
 }

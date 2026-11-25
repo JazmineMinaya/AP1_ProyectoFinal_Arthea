@@ -15,25 +15,23 @@ public class Obras
     [ForeignKey("ArtistaId")]
     public Artistas? Artista { get; set; }
 
-    [Required(ErrorMessage = "El título es requerido")]
+    [Required(ErrorMessage = "Ingrese el título de la obra")]
     public string Titulo { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "La categoría es requerida")]
+    [Required(ErrorMessage = "Seleccione una categoría")]
     public string Categoria { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "La técnica es obligatoria.")]
+    [Required(ErrorMessage = "Seleccione una técnica")]
     public string Tecnica { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "La descripción es requerida")]
+    [Required(ErrorMessage = "Ingrese la descripción de la obra")]
     public string Descripcion { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "El precio es requerido")]
-    [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0")]
+    [Range(0.01, double.MaxValue, ErrorMessage = "Ingrese un precio válido")]
     [Column(TypeName = "decimal(18,2)")]
     public decimal Precio { get; set; }
 
-    [Required(ErrorMessage = "La cantidad es obligatoria.")]
-    [Range(0, int.MaxValue, ErrorMessage = "La cantidad no puede ser negativa.")]
+    [Range(0, int.MaxValue, ErrorMessage = "Ingrese una cantidad válida")]
     public int Cantidad { get; set; } = 1;
 
     public DateTime FechaPublicacion { get; set; } = DateTime.Now;
