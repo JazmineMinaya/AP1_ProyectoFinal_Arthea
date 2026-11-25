@@ -19,6 +19,9 @@ public class Servicios
     [Required(ErrorMessage = "Seleccione una categoría")]
     public string Categoria { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Seleccione una técnica")]
+    public string Tecnica { get; set; } = string.Empty;
+
     [Required(ErrorMessage = "Ingrese la descripción del servicio")]
     public string Descripcion { get; set; } = string.Empty;
 

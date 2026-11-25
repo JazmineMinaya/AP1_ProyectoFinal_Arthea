@@ -16,9 +16,9 @@ public class Contexto : IdentityDbContext<Usuarios>
     public DbSet<Pedidos> Pedidos { get; set; }
     public DbSet<PedidosDetalle> PedidosDetalles { get; set; }
     public DbSet<Facturas> Facturas { get; set; }
-
     public DbSet<Portafolios> Portafolios { get; set; }
     public DbSet<PortafoliosDetalle> PortafoliosDetalle { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -29,17 +29,11 @@ public class Contexto : IdentityDbContext<Usuarios>
             .HasForeignKey(p => p.ClienteId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        modelBuilder.Entity<Pedidos>()
-            .HasOne(p => p.Artista)
-            .WithMany()
-            .HasForeignKey(p => p.ArtistaId)
-            .OnDelete(DeleteBehavior.NoAction);
-
         modelBuilder.Entity<PortafoliosDetalle>()
-        .HasOne(d => d.Obra)
-        .WithMany()
-        .HasForeignKey(d => d.ObraId)
-        .OnDelete(DeleteBehavior.Restrict);
+            .HasOne(d => d.Obra)
+            .WithMany()
+            .HasForeignKey(d => d.ObraId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<PortafoliosDetalle>()
             .HasOne(d => d.Portafolio)

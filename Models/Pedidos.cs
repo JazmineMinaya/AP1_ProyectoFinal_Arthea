@@ -13,9 +13,6 @@ public partial class Pedidos
     [Range(1, int.MaxValue, ErrorMessage = "Seleccione un cliente")]
     public int ClienteId { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "Seleccione un artista")]
-    public int ArtistaId { get; set; }
-
     [Required(ErrorMessage = "Ingrese la dirección de entrega")]
     public string DireccionEntrega { get; set; } = string.Empty;
 
@@ -40,9 +37,6 @@ public partial class Pedidos
 
     [ForeignKey("ClienteId")]
     public virtual Clientes? Cliente { get; set; }
-
-    [ForeignKey("ArtistaId")]
-    public virtual Artistas? Artista { get; set; }
 
     public virtual ICollection<PedidosDetalle> PedidosDetalle { get; set; } = new List<PedidosDetalle>();
 

@@ -42,6 +42,7 @@
                         <option value="AdministradorId">AdministradorId</option>
                         <option value="Nombres">Nombres</option>
                         <option value="Correo">Correo</option>
+                        <option value="Fecha">Fecha</option>
                     </InputSelect>
                 </div>
 
@@ -58,9 +59,26 @@
                     <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Reestablecer"></button>
                 </div>
 
+                @* Filtro Fecha *@
+                <div class="row mt-3">
+
+                    @* Desde *@
+                    <div class="col-3">
+                        <label class="col-form-label"><strong>Desde</strong></label>
+                        <InputDate class="form-control" @bind-Value="Desde"></InputDate>
+                    </div>
+
+                    @* Hasta *@
+                    <div class="col-3">
+                        <label class="col-form-label"><strong>Hasta</strong></label>
+                        <InputDate class="form-control" @bind-Value="Hasta"></InputDate>
+                    </div>
+                </div>
+
                 @* QuickGrid *@
                 <div class="grid">
                     <QuickGrid Items="ListaAdministradores.AsQueryable()" Class="table table-hover mt-3">
+
                         <PropertyColumn Property="a => a.AdministradorId" Title="AdministradorId" Sortable="true" />
 
                         <TemplateColumn Title="Nombres" Sortable="true" SortBy="GridSort<Administradores>.ByAscending(a => a.Usuario!.Nombres)">
@@ -97,6 +115,9 @@
 
     public List<Administradores> ListaAdministradores { get; set; } = new();
 
+    public DateTime? Desde { get; set; }
+    public DateTime? Hasta { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         await Reestablecer();
@@ -128,6 +149,27 @@
             ListaAdministradores = resultado.Value ?? new();
         }
 
+        else if (Filtro == "Fecha")
+        {
+            if (Desde == null || Hasta == null)
+            {
+                toastService.ShowError("Seleccione las fechas Desde y Hasta");
+                return;
+            }
+
+            if (Desde > Hasta)
+            {
+                toastService.ShowError("Seleccione un rango de fechas válido");
+                return;
+            }
+
+            var desde = Desde.Value.Date;
+            var hasta = Hasta.Value.Date.AddDays(1);
+
+            var resultado = await administradoresService.GetList(a => a.Usuario != null && a.Usuario.FechaRegistro >= desde && a.Usuario.FechaRegistro < hasta);
+            ListaAdministradores = resultado.Value ?? new();
+        }
+
         else
         {
             toastService.ShowError("Seleccione un filtro");
@@ -141,5 +183,7 @@
 
         Filtro = string.Empty;
         ValorFiltro = string.Empty;
+        Desde = null;
+        Hasta = null;
     }
 }

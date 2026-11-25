@@ -53,7 +53,6 @@ public class PedidosService(
 
         pedidoInicial.Fecha = pedido.Fecha;
         pedidoInicial.ClienteId = pedido.ClienteId;
-        pedidoInicial.ArtistaId = pedido.ArtistaId;
         pedidoInicial.DireccionEntrega = pedido.DireccionEntrega;
         pedidoInicial.Total = pedido.Total;
         pedidoInicial.PedidosDetalle = pedido.PedidosDetalle
@@ -75,10 +74,10 @@ public class PedidosService(
         return await contexto.Pedidos
             .Include(p => p.Cliente)
                 .ThenInclude(c => c.Usuario)
-            .Include(p => p.Artista)
-                .ThenInclude(a => a.Usuario)
             .Include(p => p.PedidosDetalle)
                 .ThenInclude(d => d.Servicio)
+                    .ThenInclude(s => s!.Artista)
+                        .ThenInclude(a => a!.Usuario)
             .FirstOrDefaultAsync(p => p.PedidoId == pedidoId);
     }
 
@@ -106,10 +105,10 @@ public class PedidosService(
         return await contexto.Pedidos
             .Include(p => p.Cliente)
                 .ThenInclude(c => c.Usuario)
-            .Include(p => p.Artista)
-                .ThenInclude(a => a.Usuario)
             .Include(p => p.PedidosDetalle)
                 .ThenInclude(d => d.Servicio)
+                    .ThenInclude(s => s!.Artista)
+                        .ThenInclude(a => a!.Usuario)
             .Where(criterio)
             .AsNoTracking()
             .ToListAsync();

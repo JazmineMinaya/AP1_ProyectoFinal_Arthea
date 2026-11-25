@@ -16,7 +16,7 @@ partial class ContextoModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261124234555_ActualizarPortafolio";
+    public override string LastMigrationId => "20261125063752_EliminarArtistaDePedidos";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -203,9 +203,6 @@ partial class ContextoModelSnapshot : ModelSnapshot
 
                 SqlServerPropertyBuilderExtensions.UseIdentityColumn(pedidoId);
 
-                b.Property<int>("ArtistaId")
-                    .HasColumnType("int");
-
                 b.Property<int>("ClienteId")
                     .HasColumnType("int");
 
@@ -246,8 +243,6 @@ partial class ContextoModelSnapshot : ModelSnapshot
                     .HasColumnType("float");
 
                 b.HasKey("PedidoId");
-
-                b.HasIndex("ArtistaId");
 
                 b.HasIndex("ClienteId");
 
@@ -383,6 +378,10 @@ partial class ContextoModelSnapshot : ModelSnapshot
 
                 b.Property<decimal>("Precio")
                     .HasColumnType("decimal(18,2)");
+
+                b.Property<string>("Tecnica")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
                 b.HasKey("ServicioId");
 
@@ -660,19 +659,11 @@ partial class ContextoModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Pedidos", b =>
             {
-                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Artistas", "Artista")
-                    .WithMany()
-                    .HasForeignKey("ArtistaId")
-                    .OnDelete(DeleteBehavior.NoAction)
-                    .IsRequired();
-
                 b.HasOne("AP1_ProyectoFinal_Arthea.Models.Clientes", "Cliente")
                     .WithMany()
                     .HasForeignKey("ClienteId")
                     .OnDelete(DeleteBehavior.NoAction)
                     .IsRequired();
-
-                b.Navigation("Artista");
 
                 b.Navigation("Cliente");
             });

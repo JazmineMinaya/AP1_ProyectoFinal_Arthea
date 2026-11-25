@@ -21,7 +21,7 @@ public class Obras
     [Required(ErrorMessage = "Seleccione una categoría")]
     public string Categoria { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Ingrese la técnica utilizada")]
+    [Required(ErrorMessage = "Seleccione una técnica")]
     public string Tecnica { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Ingrese la descripción de la obra")]
