@@ -126,6 +126,24 @@
                         <ValidationMessage For="@(() => Servicio.Descripcion)" />
                     </div>
 
+                    @* Guía de Requerimientos *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Guía de Requerimientos</strong></label>
+                        <InputTextArea class="form-control" @bind-Value="Servicio.GuiaRequerimientos" rows="3" placeholder="Indique qué información debe proporcionar el cliente al contratar este servicio" />
+                        <ValidationMessage For="@(() => Servicio.GuiaRequerimientos)" />
+                    </div>
+
+                    @* Modalidad de Entrega *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Modalidad de Entrega</strong></label>
+                        <InputSelect class="form-select" @bind-Value="Servicio.ModalidadEntrega">
+                            <option value="">Seleccione una modalidad</option>
+                            <option value="Digital">Digital</option>
+                            <option value="Presencial">Presencial</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => Servicio.ModalidadEntrega)" />
+                    </div>
+
                     @* Precio *@
                     <div class="mb-3">
                         <label class="form-label"><strong>Precio (RD$)</strong></label>

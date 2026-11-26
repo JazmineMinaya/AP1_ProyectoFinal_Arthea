@@ -16,7 +16,7 @@ partial class ContextoModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261125063752_EliminarArtistaDePedidos";
+    public override string LastMigrationId => "20261126225519_ActualizarServiciosCarrito";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -356,6 +356,10 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.Property<bool>("Estado")
                     .HasColumnType("bit");
 
+                b.Property<string>("GuiaRequerimientos")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
                 b.Property<string>("Imagen1")
                     .IsRequired()
                     .HasColumnType("nvarchar(max)");
@@ -370,6 +374,10 @@ partial class ContextoModelSnapshot : ModelSnapshot
                     .HasColumnType("nvarchar(max)");
 
                 b.Property<string>("Imagen5")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("ModalidadEntrega")
+                    .IsRequired()
                     .HasColumnType("nvarchar(max)");
 
                 b.Property<string>("Nombre")
