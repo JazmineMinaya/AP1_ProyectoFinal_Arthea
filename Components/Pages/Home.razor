@@ -1,7 +1,347 @@
-﻿@page "/"
+@page "/"
+@rendermode InteractiveServer
 
-<PageTitle>Home</PageTitle>
+@inject ObrasService obrasService
+@inject ArtistasService artistasService
+@inject ServiciosService serviciosService
+@inject NavigationManager navigationManager
 
-<h1>Hello, world!</h1>
+<PageTitle>Inicio – Arthea</PageTitle>
 
-Welcome to your new app.
+<div class="container arthea-inicio">
+
+    @* 1. HERO / PRESENTACIÓN PRINCIPAL *@
+    <section class="inicio-hero">
+        <div class="hero-contenido">
+            <img src="/imagenes/logo-arthea.png" alt="Logo Arthea" class="hero-logo" />
+            <span class="hero-etiqueta">Galería &amp; Mercado de Arte</span>
+            <h1 class="hero-titulo">El Encuentro de la Tradición y el Arte Contemporáneo</h1>
+            <p class="hero-subtitulo">
+                Explora obras originales, portafolios curados, artistas destacados y servicios creativos en un solo lugar.
+            </p>
+
+            <div class="hero-buscador">
+                <input type="text"
+                       class="form-control"
+                       placeholder="Buscar obras, técnicas, categorías o artistas..."
+                       @bind="TerminoBusqueda"
+                       @onkeydown="ManejarTeclaBusqueda" />
+                <button type="button" class="btn-primario" @onclick="IrACatalogo">
+                    <i class="bi bi-search"></i> Explorar
+                </button>
+            </div>
+
+            <div class="hero-acciones">
+                <a href="/Catalogo/Index" class="btn-primario">Explorar Catálogo</a>
+                <a href="#seccion-obras" class="btn-secundario">Obras Destacadas</a>
+                <a href="#seccion-artistas" class="btn-secundario">Artistas</a>
+            </div>
+        </div>
+    </section>
+
+    @* 2. OBRAS DESTACADAS (SCROLL) *@
+    <section id="seccion-obras" class="inicio-seccion">
+        <div class="seccion-encabezado">
+            <div>
+                <span class="seccion-kicker">Curaduría de la Semana</span>
+                <h2>Obras Destacadas</h2>
+            </div>
+            <a href="/Catalogo/Index" class="seccion-enlace">Ver catálogo completo <i class="bi bi-arrow-right"></i></a>
+        </div>
+
+        @if (cargando)
+        {
+            <div class="inicio-mensaje">Cargando obras destacadas...</div>
+        }
+        else if (!ObrasDestacadas.Any())
+        {
+            <div class="inicio-mensaje">Aún no hay obras registradas para mostrar.</div>
+        }
+        else
+        {
+            <div class="inicio-grid">
+                @foreach (var obra in ObrasDestacadas)
+                {
+                    <div class="pieza-card" @key="obra.ObraId">
+                        <div class="pieza-imagen">
+                            <img src="@ObtenerImagen(obra.ImagenUrl)" alt="@obra.Titulo" />
+                            <span class="pieza-badge">@obra.Estado</span>
+                        </div>
+                        <div class="pieza-cuerpo">
+                            <span class="pieza-meta">@obra.Categoria · @obra.Tecnica</span>
+                            <h5>@obra.Titulo</h5>
+                            <p class="pieza-artista">Por @ObtenerNombreArtista(obra.Artista)</p>
+                            <p class="pieza-precio">@obra.Precio.ToString("C", CulturaRD)</p>
+                            <div class="pieza-botones">
+                                <button type="button" class="btn-detalle" @onclick="() => AbrirModalObra(obra)">
+                                    Ver detalles <i class="bi bi-arrow-up-right"></i>
+                                </button>
+                                <a href="/Pedidos/Create" class="btn-carrito-mini" title="Ir a pedidos / carrito">
+                                    <i class="bi bi-bag-plus"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    @* 3. ARTISTAS DESTACADOS (SCROLL) *@
+    <section id="seccion-artistas" class="inicio-seccion">
+        <div class="seccion-encabezado">
+            <div>
+                <span class="seccion-kicker">Talento Verificado</span>
+                <h2>Artistas Destacados</h2>
+            </div>
+            <a href="/Catalogo/Index" class="seccion-enlace">Ver todos los artistas <i class="bi bi-arrow-right"></i></a>
+        </div>
+
+        @if (cargando)
+        {
+            <div class="inicio-mensaje">Cargando artistas...</div>
+        }
+        else if (!ArtistasDestacados.Any())
+        {
+            <div class="inicio-mensaje">Aún no hay artistas registrados para mostrar.</div>
+        }
+        else
+        {
+            <div class="inicio-grid">
+                @foreach (var artista in ArtistasDestacados)
+                {
+                    <div class="pieza-card artista-destacado-card" @key="artista.ArtistaId">
+                        <div class="artista-cabecera-marco">
+                            <div class="artista-avatar-wrap">
+                                <img src="@ObtenerImagen(artista.FotoPerfil)" alt="@ObtenerNombreArtista(artista)" />
+                            </div>
+                        </div>
+                        <div class="pieza-cuerpo">
+                            <h5>@ObtenerNombreArtista(artista)</h5>
+                            <span class="pieza-meta">@artista.Disciplina</span>
+                            <p class="artista-bio-resumen">
+                                @(string.IsNullOrWhiteSpace(artista.Biografia)
+                                    ? "Creador integrante de la comunidad artística de Arthea."
+                                    : (artista.Biografia.Length > 105 ? artista.Biografia[..105] + "..." : artista.Biografia))
+                            </p>
+                            <button type="button" class="btn-detalle" @onclick="() => AbrirModalArtista(artista)">
+                                Ver perfil <i class="bi bi-arrow-up-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    @* 4. SERVICIOS ARTÍSTICOS (SCROLL) *@
+    <section id="seccion-servicios" class="inicio-seccion">
+        <div class="seccion-encabezado">
+            <div>
+                <span class="seccion-kicker">Encargos &amp; Restauración</span>
+                <h2>Servicios Artísticos</h2>
+            </div>
+            <a href="/Catalogo/Index" class="seccion-enlace">Explorar servicios <i class="bi bi-arrow-right"></i></a>
+        </div>
+
+        @if (cargando)
+        {
+            <div class="inicio-mensaje">Cargando servicios...</div>
+        }
+        else if (!ServiciosDestacados.Any())
+        {
+            <div class="inicio-mensaje">Aún no hay servicios activos para mostrar.</div>
+        }
+        else
+        {
+            <div class="inicio-grid">
+                @foreach (var servicio in ServiciosDestacados)
+                {
+                    <div class="pieza-card" @key="servicio.ServicioId">
+                        <div class="pieza-imagen">
+                            <img src="@ObtenerImagen(servicio.Imagen1)" alt="@servicio.Nombre" />
+                        </div>
+                        <div class="pieza-cuerpo">
+                            <span class="pieza-meta">@servicio.Categoria</span>
+                            <h5>@servicio.Nombre</h5>
+                            <p class="pieza-artista">Por @ObtenerNombreArtista(servicio.Artista)</p>
+                            <p class="pieza-precio">@servicio.Precio.ToString("C", CulturaRD)</p>
+                            <button type="button" class="btn-detalle" @onclick="() => AbrirModalServicio(servicio)">
+                                Ver detalles <i class="bi bi-arrow-up-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    @* MODAL DETALLE DE OBRA *@
+    @if (obraSeleccionada is not null)
+    {
+        <div class="inicio-modal-fondo" @onclick="CerrarModales">
+            <div class="inicio-modal" role="dialog" aria-modal="true" @onclick:stopPropagation="true">
+                <button type="button" class="modal-cerrar" @onclick="CerrarModales"><i class="bi bi-x-lg"></i></button>
+                <div class="modal-grid">
+                    <div class="modal-foto">
+                        <img src="@ObtenerImagen(obraSeleccionada.ImagenUrl)" alt="@obraSeleccionada.Titulo" />
+                    </div>
+                    <div class="modal-info">
+                        <h3>@obraSeleccionada.Titulo</h3>
+                        <p class="modal-sub">@obraSeleccionada.Categoria · @obraSeleccionada.Tecnica</p>
+                        <h6>Artista</h6>
+                        <p>@ObtenerNombreArtista(obraSeleccionada.Artista)</p>
+                        <h6>Descripción</h6>
+                        <p>@obraSeleccionada.Descripcion</p>
+                        <h6>Disponibilidad y Precio</h6>
+                        <p class="modal-precio">@obraSeleccionada.Precio.ToString("C", CulturaRD) · <small>@obraSeleccionada.Estado</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* MODAL DETALLE DE ARTISTA *@
+    @if (artistaSeleccionado is not null)
+    {
+        <div class="inicio-modal-fondo" @onclick="CerrarModales">
+            <div class="inicio-modal" role="dialog" aria-modal="true" @onclick:stopPropagation="true">
+                <button type="button" class="modal-cerrar" @onclick="CerrarModales"><i class="bi bi-x-lg"></i></button>
+                <div class="modal-grid">
+                    <div class="modal-foto">
+                        <img src="@ObtenerImagen(artistaSeleccionado.FotoPerfil)" alt="@ObtenerNombreArtista(artistaSeleccionado)" />
+                    </div>
+                    <div class="modal-info">
+                        <h3>@ObtenerNombreArtista(artistaSeleccionado)</h3>
+                        <p class="modal-sub">@artistaSeleccionado.Disciplina</p>
+                        <h6>Biografía</h6>
+                        <p>@(string.IsNullOrWhiteSpace(artistaSeleccionado.Biografia) ? "Sin biografía registrada." : artistaSeleccionado.Biografia)</p>
+                        <h6>Teléfono</h6>
+                        <p>@artistaSeleccionado.Telefono</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* MODAL DETALLE DE SERVICIO *@
+    @if (servicioSeleccionado is not null)
+    {
+        <div class="inicio-modal-fondo" @onclick="CerrarModales">
+            <div class="inicio-modal" role="dialog" aria-modal="true" @onclick:stopPropagation="true">
+                <button type="button" class="modal-cerrar" @onclick="CerrarModales"><i class="bi bi-x-lg"></i></button>
+                <div class="modal-grid">
+                    <div class="modal-foto">
+                        <img src="@ObtenerImagen(servicioSeleccionado.Imagen1)" alt="@servicioSeleccionado.Nombre" />
+                    </div>
+                    <div class="modal-info">
+                        <h3>@servicioSeleccionado.Nombre</h3>
+                        <p class="modal-sub">@servicioSeleccionado.Categoria</p>
+                        <h6>Artista</h6>
+                        <p>@ObtenerNombreArtista(servicioSeleccionado.Artista)</p>
+                        <h6>Descripción</h6>
+                        <p>@servicioSeleccionado.Descripcion</p>
+                        <h6>Precio</h6>
+                        <p class="modal-precio">@servicioSeleccionado.Precio.ToString("C", CulturaRD)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool cargando = true;
+    private string TerminoBusqueda { get; set; } = string.Empty;
+    private long versionImagen = DateTime.UtcNow.Ticks;
+
+    private List<Obras> ObrasDestacadas { get; set; } = new();
+    private List<Artistas> ArtistasDestacados { get; set; } = new();
+    private List<Servicios> ServiciosDestacados { get; set; } = new();
+
+    private Obras? obraSeleccionada;
+    private Artistas? artistaSeleccionado;
+    private Servicios? servicioSeleccionado;
+
+    private static readonly System.Globalization.CultureInfo CulturaRD =
+        System.Globalization.CultureInfo.GetCultureInfo("es-DO");
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+        try
+        {
+            var resObras = await obrasService.GetList(o => o.ObraId > 0);
+            ObrasDestacadas = (resObras.Value ?? new()).Take(3).ToList();
+
+            var resArtistas = await artistasService.GetList(a => a.ArtistaId > 0);
+            ArtistasDestacados = (resArtistas.Value ?? new()).Take(3).ToList();
+
+            var resServicios = await serviciosService.GetList(s => s.ServicioId > 0 && s.Estado);
+            ServiciosDestacados = (resServicios.Value ?? new()).Take(3).ToList();
+
+            versionImagen = DateTime.UtcNow.Ticks;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void IrACatalogo()
+    {
+        navigationManager.NavigateTo("/Catalogo/Index");
+    }
+
+    private void ManejarTeclaBusqueda(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            IrACatalogo();
+        }
+    }
+
+    private static string ObtenerNombreArtista(Artistas? artista)
+    {
+        var nombre = $"{artista?.Usuario?.Nombres} {artista?.Usuario?.Apellidos}".Trim();
+        return string.IsNullOrWhiteSpace(nombre) ? "Artista" : nombre;
+    }
+
+    private string ObtenerImagen(string? ruta)
+    {
+        if (string.IsNullOrWhiteSpace(ruta))
+            return "/imagenes/artista-default.png";
+
+        var normalizada = ruta.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                          ruta.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+            ? ruta
+            : "/" + ruta.TrimStart('/');
+
+        return normalizada + (normalizada.Contains('?') ? "&" : "?") + "v=" + versionImagen;
+    }
+
+    private void AbrirModalObra(Obras obra)
+    {
+        CerrarModales();
+        obraSeleccionada = obra;
+    }
+
+    private void AbrirModalArtista(Artistas artista)
+    {
+        CerrarModales();
+        artistaSeleccionado = artista;
+    }
+
+    private void AbrirModalServicio(Servicios servicio)
+    {
+        CerrarModales();
+        servicioSeleccionado = servicio;
+    }
+
+    private void CerrarModales()
+    {
+        obraSeleccionada = null;
+        artistaSeleccionado = null;
+        servicioSeleccionado = null;
+    }
+}
