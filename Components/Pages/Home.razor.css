@@ -191,6 +191,20 @@
     text-decoration: underline;
 }
 
+.seccion-enlace:hover {
+    color: #493827;
+    text-decoration: underline;
+}
+
+.subseccion-titulo {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 16px;
+    color: #6F563B;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed #D8C7AF;
+}
+
 /* Grid de 3 tarjetas */
 .inicio-grid {
     display: grid;

@@ -4,7 +4,6 @@
 @inject ObrasService obrasService
 @inject ArtistasService artistasService
 @inject ServiciosService serviciosService
-@inject NavigationManager navigationManager
 
 <PageTitle>Inicio – Arthea</PageTitle>
 
@@ -13,31 +12,141 @@
     @* 1. HERO / PRESENTACIÓN PRINCIPAL *@
     <section class="inicio-hero">
         <div class="hero-contenido">
-            <img src="/imagenes/logo-arthea.png" alt="Logo Arthea" class="hero-logo" />
+            <img src="/imagenes/logo-arthea-normal.png" alt="Logo Arthea" class="hero-logo" />
             <span class="hero-etiqueta">Galería &amp; Mercado de Arte</span>
             <h1 class="hero-titulo">El Encuentro de la Tradición y el Arte Contemporáneo</h1>
             <p class="hero-subtitulo">
-                Explora obras originales, portafolios curados, artistas destacados y servicios creativos en un solo lugar.
+                Explora obras originales, artistas destacados y servicios creativos en un solo lugar.
             </p>
 
             <div class="hero-buscador">
                 <input type="text"
                        class="form-control"
-                       placeholder="Buscar obras, técnicas, categorías o artistas..."
+                       placeholder="Buscar obras, técnicas, categorías, artistas o servicios..."
                        @bind="TerminoBusqueda"
+                       @bind:event="oninput"
                        @onkeydown="ManejarTeclaBusqueda" />
-                <button type="button" class="btn-primario" @onclick="IrACatalogo">
+                <button type="button" class="btn-primario" @onclick="ExplorarEnPagina">
                     <i class="bi bi-search"></i> Explorar
                 </button>
+                @if (mostrandoResultados)
+                {
+                    <button type="button" class="btn-secundario" @onclick="LimpiarExploracion">
+                        Limpiar
+                    </button>
+                }
             </div>
 
             <div class="hero-acciones">
-                <a href="/Catalogo/Index" class="btn-primario">Explorar Catálogo</a>
                 <a href="#seccion-obras" class="btn-secundario">Obras Destacadas</a>
                 <a href="#seccion-artistas" class="btn-secundario">Artistas</a>
+                <a href="#seccion-servicios" class="btn-secundario">Servicios</a>
             </div>
         </div>
     </section>
+
+    @* RESULTADOS DE EXPLORAR (EN LA MISMA PÁGINA) *@
+    @if (mostrandoResultados)
+    {
+        <section id="seccion-resultados" class="inicio-seccion">
+            <div class="seccion-encabezado">
+                <div>
+                    <span class="seccion-kicker">Resultados en Inicio</span>
+                    <h2>Coincidencias para "@TerminoActivo"</h2>
+                </div>
+                <button type="button" class="btn-secundario" @onclick="LimpiarExploracion">
+                    Cerrar resultados
+                </button>
+            </div>
+
+            @if (!ObrasFiltradas.Any() && !ArtistasFiltrados.Any() && !ServiciosFiltrados.Any())
+            {
+                <div class="inicio-mensaje">
+                    No se encontraron obras, artistas ni servicios que coincidan con "@TerminoActivo".
+                </div>
+            }
+            else
+            {
+                @if (ObrasFiltradas.Any())
+                {
+                    <h5 class="subseccion-titulo">Obras (@ObrasFiltradas.Count)</h5>
+                    <div class="inicio-grid mb-4">
+                        @foreach (var obra in ObrasFiltradas)
+                        {
+                            <div class="pieza-card" @key="obra.ObraId">
+                                <div class="pieza-imagen">
+                                    <img src="@ObtenerImagen(obra.ImagenUrl)" alt="@obra.Titulo" />
+                                    <span class="pieza-badge">@obra.Estado</span>
+                                </div>
+                                <div class="pieza-cuerpo">
+                                    <span class="pieza-meta">@obra.Categoria · @obra.Tecnica</span>
+                                    <h5>@obra.Titulo</h5>
+                                    <p class="pieza-artista">Por @ObtenerNombreArtista(obra.Artista)</p>
+                                    <p class="pieza-precio">@obra.Precio.ToString("C", CulturaRD)</p>
+                                    <button type="button" class="btn-detalle" @onclick="() => AbrirModalObra(obra)">
+                                        Ver detalles <i class="bi bi-arrow-up-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (ArtistasFiltrados.Any())
+                {
+                    <h5 class="subseccion-titulo">Artistas (@ArtistasFiltrados.Count)</h5>
+                    <div class="inicio-grid mb-4">
+                        @foreach (var artista in ArtistasFiltrados)
+                        {
+                            <div class="pieza-card artista-destacado-card" @key="artista.ArtistaId">
+                                <div class="artista-cabecera-marco">
+                                    <div class="artista-avatar-wrap">
+                                        <img src="@ObtenerImagen(artista.FotoPerfil)" alt="@ObtenerNombreArtista(artista)" />
+                                    </div>
+                                </div>
+                                <div class="pieza-cuerpo">
+                                    <h5>@ObtenerNombreArtista(artista)</h5>
+                                    <span class="pieza-meta">@artista.Disciplina</span>
+                                    <p class="artista-bio-resumen">
+                                        @(string.IsNullOrWhiteSpace(artista.Biografia)
+                                            ? "Creador integrante de la comunidad artística de Arthea."
+                                            : (artista.Biografia.Length > 105 ? artista.Biografia[..105] + "..." : artista.Biografia))
+                                    </p>
+                                    <button type="button" class="btn-detalle" @onclick="() => AbrirModalArtista(artista)">
+                                        Ver perfil <i class="bi bi-arrow-up-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (ServiciosFiltrados.Any())
+                {
+                    <h5 class="subseccion-titulo">Servicios (@ServiciosFiltrados.Count)</h5>
+                    <div class="inicio-grid">
+                        @foreach (var servicio in ServiciosFiltrados)
+                        {
+                            <div class="pieza-card" @key="servicio.ServicioId">
+                                <div class="pieza-imagen">
+                                    <img src="@ObtenerImagen(servicio.Imagen1)" alt="@servicio.Nombre" />
+                                </div>
+                                <div class="pieza-cuerpo">
+                                    <span class="pieza-meta">@servicio.Categoria</span>
+                                    <h5>@servicio.Nombre</h5>
+                                    <p class="pieza-artista">Por @ObtenerNombreArtista(servicio.Artista)</p>
+                                    <p class="pieza-precio">@servicio.Precio.ToString("C", CulturaRD)</p>
+                                    <button type="button" class="btn-detalle" @onclick="() => AbrirModalServicio(servicio)">
+                                        Ver detalles <i class="bi bi-arrow-up-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </section>
+    }
 
     @* 2. OBRAS DESTACADAS (SCROLL) *@
     <section id="seccion-obras" class="inicio-seccion">
@@ -46,7 +155,6 @@
                 <span class="seccion-kicker">Curaduría de la Semana</span>
                 <h2>Obras Destacadas</h2>
             </div>
-            <a href="/Catalogo/Index" class="seccion-enlace">Ver catálogo completo <i class="bi bi-arrow-right"></i></a>
         </div>
 
         @if (cargando)
@@ -72,14 +180,9 @@
                             <h5>@obra.Titulo</h5>
                             <p class="pieza-artista">Por @ObtenerNombreArtista(obra.Artista)</p>
                             <p class="pieza-precio">@obra.Precio.ToString("C", CulturaRD)</p>
-                            <div class="pieza-botones">
-                                <button type="button" class="btn-detalle" @onclick="() => AbrirModalObra(obra)">
-                                    Ver detalles <i class="bi bi-arrow-up-right"></i>
-                                </button>
-                                <a href="/Pedidos/Create" class="btn-carrito-mini" title="Ir a pedidos / carrito">
-                                    <i class="bi bi-bag-plus"></i>
-                                </a>
-                            </div>
+                            <button type="button" class="btn-detalle" @onclick="() => AbrirModalObra(obra)">
+                                Ver detalles <i class="bi bi-arrow-up-right"></i>
+                            </button>
                         </div>
                     </div>
                 }
@@ -94,7 +197,6 @@
                 <span class="seccion-kicker">Talento Verificado</span>
                 <h2>Artistas Destacados</h2>
             </div>
-            <a href="/Catalogo/Index" class="seccion-enlace">Ver todos los artistas <i class="bi bi-arrow-right"></i></a>
         </div>
 
         @if (cargando)
@@ -141,7 +243,6 @@
                 <span class="seccion-kicker">Encargos &amp; Restauración</span>
                 <h2>Servicios Artísticos</h2>
             </div>
-            <a href="/Catalogo/Index" class="seccion-enlace">Explorar servicios <i class="bi bi-arrow-right"></i></a>
         </div>
 
         @if (cargando)
@@ -181,7 +282,7 @@
     {
         <div class="inicio-modal-fondo" @onclick="CerrarModales">
             <div class="inicio-modal" role="dialog" aria-modal="true" @onclick:stopPropagation="true">
-                <button type="button" class="modal-cerrar" @onclick="CerrarModales"><i class="bi bi-x-lg"></i></button>
+                <button type="button" class="modal-cerrar" aria-label="Cerrar" @onclick="CerrarModales"><i class="bi bi-x-lg"></i></button>
                 <div class="modal-grid">
                     <div class="modal-foto">
                         <img src="@ObtenerImagen(obraSeleccionada.ImagenUrl)" alt="@obraSeleccionada.Titulo" />
@@ -194,7 +295,7 @@
                         <h6>Descripción</h6>
                         <p>@obraSeleccionada.Descripcion</p>
                         <h6>Disponibilidad y Precio</h6>
-                        <p class="modal-precio">@obraSeleccionada.Precio.ToString("C", CulturaRD) · <small>@obraSeleccionada.Estado</small></p>
+                        <p class="modal-precio">@obraSeleccionada.Precio.ToString("C", CulturaRD) · <small>@obraSeleccionada.Estado (@obraSeleccionada.Cantidad)</small></p>
                     </div>
                 </div>
             </div>
@@ -206,7 +307,7 @@
     {
         <div class="inicio-modal-fondo" @onclick="CerrarModales">
             <div class="inicio-modal" role="dialog" aria-modal="true" @onclick:stopPropagation="true">
-                <button type="button" class="modal-cerrar" @onclick="CerrarModales"><i class="bi bi-x-lg"></i></button>
+                <button type="button" class="modal-cerrar" aria-label="Cerrar" @onclick="CerrarModales"><i class="bi bi-x-lg"></i></button>
                 <div class="modal-grid">
                     <div class="modal-foto">
                         <img src="@ObtenerImagen(artistaSeleccionado.FotoPerfil)" alt="@ObtenerNombreArtista(artistaSeleccionado)" />
@@ -217,7 +318,7 @@
                         <h6>Biografía</h6>
                         <p>@(string.IsNullOrWhiteSpace(artistaSeleccionado.Biografia) ? "Sin biografía registrada." : artistaSeleccionado.Biografia)</p>
                         <h6>Teléfono</h6>
-                        <p>@artistaSeleccionado.Telefono</p>
+                        <p><i class="bi bi-telephone"></i> @artistaSeleccionado.Telefono</p>
                     </div>
                 </div>
             </div>
@@ -229,7 +330,7 @@
     {
         <div class="inicio-modal-fondo" @onclick="CerrarModales">
             <div class="inicio-modal" role="dialog" aria-modal="true" @onclick:stopPropagation="true">
-                <button type="button" class="modal-cerrar" @onclick="CerrarModales"><i class="bi bi-x-lg"></i></button>
+                <button type="button" class="modal-cerrar" aria-label="Cerrar" @onclick="CerrarModales"><i class="bi bi-x-lg"></i></button>
                 <div class="modal-grid">
                     <div class="modal-foto">
                         <img src="@ObtenerImagen(servicioSeleccionado.Imagen1)" alt="@servicioSeleccionado.Nombre" />
@@ -252,12 +353,22 @@
 
 @code {
     private bool cargando = true;
+    private bool mostrandoResultados = false;
     private string TerminoBusqueda { get; set; } = string.Empty;
+    private string TerminoActivo { get; set; } = string.Empty;
     private long versionImagen = DateTime.UtcNow.Ticks;
+
+    private List<Obras> TodasLasObras { get; set; } = new();
+    private List<Artistas> TodosLosArtistas { get; set; } = new();
+    private List<Servicios> TodosLosServicios { get; set; } = new();
 
     private List<Obras> ObrasDestacadas { get; set; } = new();
     private List<Artistas> ArtistasDestacados { get; set; } = new();
     private List<Servicios> ServiciosDestacados { get; set; } = new();
+
+    private List<Obras> ObrasFiltradas { get; set; } = new();
+    private List<Artistas> ArtistasFiltrados { get; set; } = new();
+    private List<Servicios> ServiciosFiltrados { get; set; } = new();
 
     private Obras? obraSeleccionada;
     private Artistas? artistaSeleccionado;
@@ -272,13 +383,16 @@
         try
         {
             var resObras = await obrasService.GetList(o => o.ObraId > 0);
-            ObrasDestacadas = (resObras.Value ?? new()).Take(3).ToList();
+            TodasLasObras = resObras.Value ?? new();
+            ObrasDestacadas = TodasLasObras.Take(3).ToList();
 
             var resArtistas = await artistasService.GetList(a => a.ArtistaId > 0);
-            ArtistasDestacados = (resArtistas.Value ?? new()).Take(3).ToList();
+            TodosLosArtistas = resArtistas.Value ?? new();
+            ArtistasDestacados = TodosLosArtistas.Take(3).ToList();
 
             var resServicios = await serviciosService.GetList(s => s.ServicioId > 0 && s.Estado);
-            ServiciosDestacados = (resServicios.Value ?? new()).Take(3).ToList();
+            TodosLosServicios = resServicios.Value ?? new();
+            ServiciosDestacados = TodosLosServicios.Take(3).ToList();
 
             versionImagen = DateTime.UtcNow.Ticks;
         }
@@ -288,16 +402,57 @@
         }
     }
 
-    private void IrACatalogo()
+    private void ExplorarEnPagina()
     {
-        navigationManager.NavigateTo("/Catalogo/Index");
+        var consulta = TerminoBusqueda.Trim();
+        if (string.IsNullOrWhiteSpace(consulta))
+        {
+            LimpiarExploracion();
+            return;
+        }
+
+        TerminoActivo = consulta;
+        var q = consulta.ToLower();
+
+        ObrasFiltradas = TodasLasObras
+            .Where(o =>
+                o.Titulo.ToLower().Contains(q) ||
+                o.Categoria.ToLower().Contains(q) ||
+                o.Tecnica.ToLower().Contains(q) ||
+                ObtenerNombreArtista(o.Artista).ToLower().Contains(q))
+            .ToList();
+
+        ArtistasFiltrados = TodosLosArtistas
+            .Where(a =>
+                ObtenerNombreArtista(a).ToLower().Contains(q) ||
+                a.Disciplina.ToLower().Contains(q))
+            .ToList();
+
+        ServiciosFiltrados = TodosLosServicios
+            .Where(s =>
+                s.Nombre.ToLower().Contains(q) ||
+                s.Categoria.ToLower().Contains(q) ||
+                ObtenerNombreArtista(s.Artista).ToLower().Contains(q))
+            .ToList();
+
+        mostrandoResultados = true;
+    }
+
+    private void LimpiarExploracion()
+    {
+        TerminoBusqueda = string.Empty;
+        TerminoActivo = string.Empty;
+        ObrasFiltradas.Clear();
+        ArtistasFiltrados.Clear();
+        ServiciosFiltrados.Clear();
+        mostrandoResultados = false;
     }
 
     private void ManejarTeclaBusqueda(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
-            IrACatalogo();
+            ExplorarEnPagina();
         }
     }
 
