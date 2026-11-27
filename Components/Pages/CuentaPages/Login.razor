@@ -1,0 +1,488 @@
+﻿@page "/login"
+@rendermode InteractiveServer
+
+@inject NavigationManager navigationManager
+@inject ToastService toastService
+@inject RegistroService registroService
+
+@layout LoginLayout
+
+<PageTitle>Iniciar Sesión</PageTitle>
+
+<div class="container arthea-login">
+
+    <div class="card shadow-lg">
+
+        <div class="card-body">
+
+            @* Logo *@
+            <div class="text-center mb-4">
+                <img src="/imagenes/logo-arthea-normal.png" alt="Arthea" class="logo-login" />
+                <p>Cada expresión, una historia. Cada historia, arte</p>
+            </div>
+
+            @if (VistaActual == "Login")
+            {
+                @* Inicio de Sesión *@
+
+                <form method="post" action="/auth/login" autocomplete="on">
+                    <AntiforgeryToken />
+
+                    <div class="mb-3">
+                        <label for="loginCorreo" class="form-label"><strong>Correo electrónico</strong></label>
+                        <input id="loginCorreo" type="email" name="Correo" class="form-control" @bind="Correo" autocomplete="username" placeholder="Ingrese su correo" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="loginPassword" class="form-label"><strong>Contraseña</strong></label>
+
+                        <div class="input-group">
+                            <input id="loginPassword" type="@(MostrarPassword ? "text" : "password")" name="Password" class="form-control" @bind="Password" autocomplete="current-password" placeholder="Ingrese su contraseña" required />
+                            <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadPassword" aria-label="Mostrar u ocultar contraseña"><i class="bi @(MostrarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(ErrorLogin))
+                    {
+                        <div class="alert alert-danger">@MensajeError</div>
+                    }
+
+                    <button type="submit" class="btn btn-primary w-100">Iniciar Sesión</button>
+                </form>
+
+                <div class="text-center mt-3">
+                    <span>¿No tienes una cuenta?</span>
+                    <button type="button" class="btn btn-link" @onclick="MostrarRegistro">Regístrate aquí</button>
+                </div>
+
+                <hr />
+
+                @* Acceso como visitante *@
+                <button type="button" class="btn btn-outline-secondary w-100" @onclick="EntrarComoVisitante"><i class="bi bi-eye"></i> Explorar como visitante</button>
+            }
+
+            else if (VistaActual == "SeleccionRegistro")
+            {
+                @* Selección del tipo de usuario *@
+
+                <h5 class="text-center mb-3">Forma parte de Arthea</h5>
+                <p class="text-center">¿Cómo deseas participar en nuestra comunidad artística?</p>
+
+                <div class="row">
+
+                    @* Cliente *@
+                    <div class="col-6">
+                        <button type="button" class="btn btn-outline-primary w-100" @onclick="MostrarRegistroCliente">
+                            <i class="bi bi-person fs-2"></i>
+                            <div><strong>Cliente</strong></div>
+                            <small>Descubre obras y contrata servicios artísticos.</small>
+                        </button>
+                    </div>
+
+                    @* Artista *@
+                    <div class="col-6">
+                        <button type="button" class="btn btn-outline-primary w-100" @onclick="MostrarRegistroArtista">
+                            <i class="bi bi-palette fs-2"></i>
+                            <div><strong>Artista</strong></div>
+                            <small>Comparte tus obras y ofrece tus servicios.</small>
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="text-center mt-3">
+                    <button type="button" class="btn btn-secondary" @onclick="VolverLogin"><i class="bi bi-arrow-left"></i> Volver</button>
+                </div>
+            }
+
+            else if (VistaActual == "RegistroCliente")
+            {
+                @* Registro de Cliente *@
+
+                <h5 class="text-center mb-3">Registro de Cliente</h5>
+
+                @* Foto de Perfil *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Foto de Perfil (opcional)</strong></label>
+                    <div>
+                        <label for="imagenCliente" class="cuadro-imagen">
+                            @if (string.IsNullOrEmpty(imagenPreview))
+                            {
+                                <i class="bi bi-plus-lg"></i>
+                            }
+                            else
+                            {
+                                <img src="@imagenPreview" alt="Foto de perfil" />
+                            }
+                        </label>
+                        <InputFile id="imagenCliente" class="d-none" accept=".jpg,.jpeg,.png" OnChange="SeleccionarImagen" />
+                    </div>
+                </div>
+
+                @* Nombres *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Nombres</strong></label>
+                    <input class="form-control" @bind="Nombres" autocomplete="given-name" placeholder="Ingrese sus nombres" />
+                </div>
+
+                @* Apellidos *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Apellidos</strong></label>
+                    <input class="form-control" @bind="Apellidos" autocomplete="family-name" placeholder="Ingrese sus apellidos" />
+                </div>
+
+                @* Correo *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Correo</strong></label>
+                    <input type="email" class="form-control" @bind="Correo" autocomplete="email" placeholder="Ingrese su correo" />
+                </div>
+
+                @* Teléfono *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Teléfono</strong></label>
+                    <input type="tel" class="form-control" @bind="Telefono" autocomplete="tel" placeholder="Ingrese su teléfono" />
+                </div>
+
+                @* Dirección *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Dirección</strong></label>
+                    <input class="form-control" @bind="Direccion" autocomplete="street-address" placeholder="Ingrese su dirección" />
+                </div>
+
+                @* Contraseña *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Contraseña</strong></label>
+
+                    <div class="input-group">
+                        <input type="@(MostrarPassword ? "text" : "password")" class="form-control" @bind="Password" autocomplete="new-password" placeholder="Ingrese una contraseña" />
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadPassword"><i class="bi @(MostrarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
+                    </div>
+                </div>
+
+                @* Confirmar contraseña *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Confirmar contraseña</strong></label>
+
+                    <div class="input-group">
+                        <input type="@(MostrarConfirmarPassword ? "text" : "password")" class="form-control" @bind="ConfirmarPassword" autocomplete="new-password" placeholder="Confirme su contraseña" />
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadConfirmarPassword"><i class="bi @(MostrarConfirmarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
+                    </div>
+                </div>
+
+                @* Botones *@
+                <button type="button" class="btn btn-primary w-100" @onclick="RegistrarCliente" disabled="@registrando">@(registrando ? "Registrando..." : "Registrarme")</button>
+
+                <div class="text-center mt-3">
+                    <button type="button" class="btn btn-secondary" @onclick="MostrarRegistro" disabled="@registrando"><i class="bi bi-arrow-left"></i> Volver</button>
+                </div>
+            }
+
+            else if (VistaActual == "RegistroArtista")
+            {
+                @* Registro de Artista *@
+
+                <h5 class="text-center mb-3">Registro de Artista</h5>
+
+                @* Foto de Perfil *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Foto de Perfil (opcional)</strong></label>
+                    <div>
+                        <label for="imagenArtista" class="cuadro-imagen">
+                            @if (string.IsNullOrEmpty(imagenPreview))
+                            {
+                                <i class="bi bi-plus-lg"></i>
+                            }
+                            else
+                            {
+                                <img src="@imagenPreview" alt="Foto de perfil" />
+                            }
+                        </label>
+                        <InputFile id="imagenArtista" class="d-none" accept=".jpg,.jpeg,.png" OnChange="SeleccionarImagen" />
+                    </div>
+                </div>
+
+                @* Nombres *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Nombres</strong></label>
+                    <input class="form-control" @bind="Nombres" autocomplete="given-name" placeholder="Ingrese sus nombres" />
+                </div>
+
+                @* Apellidos *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Apellidos</strong></label>
+                    <input class="form-control" @bind="Apellidos" autocomplete="family-name" placeholder="Ingrese sus apellidos" />
+                </div>
+
+                @* Correo *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Correo</strong></label>
+                    <input type="email" class="form-control" @bind="Correo" autocomplete="email" placeholder="Ingrese su correo" />
+                </div>
+
+                @* Teléfono *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Teléfono</strong></label>
+                    <input type="tel" class="form-control" @bind="Telefono" autocomplete="tel" placeholder="Ingrese su teléfono" />
+                </div>
+
+                @* Disciplina artística *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Disciplina artística</strong></label>
+
+                    <select class="form-select" @bind="Disciplina">
+                        <option value="">Seleccione una disciplina</option>
+                        <option value="Pintura">Pintura</option>
+                        <option value="Escultura">Escultura</option>
+                        <option value="Fotografía">Fotografía</option>
+                        <option value="Música">Música</option>
+                        <option value="Ilustración">Ilustración</option>
+                        <option value="Danza">Danza</option>
+                        <option value="Diseño Gráfico">Diseño Gráfico</option>
+                        <option value="Artesanía">Artesanía</option>
+                    </select>
+                </div>
+
+                @* Biografía *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Biografía (opcional)</strong></label>
+                    <textarea class="form-control" @bind="Biografia" rows="3" placeholder="Cuéntanos sobre tu trayectoria y experiencia artística"></textarea>
+                </div>
+
+                @* Contraseña *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Contraseña</strong></label>
+
+                    <div class="input-group">
+                        <input type="@(MostrarPassword ? "text" : "password")" class="form-control" @bind="Password" autocomplete="new-password" placeholder="Ingrese una contraseña" />
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadPassword"><i class="bi @(MostrarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
+                    </div>
+                </div>
+
+                @* Confirmar contraseña *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Confirmar contraseña</strong></label>
+
+                    <div class="input-group">
+                        <input type="@(MostrarConfirmarPassword ? "text" : "password")" class="form-control" @bind="ConfirmarPassword" autocomplete="new-password" placeholder="Confirme su contraseña" />
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadConfirmarPassword"><i class="bi @(MostrarConfirmarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
+                    </div>
+                </div>
+
+                @* Botones *@
+                <button type="button" class="btn btn-primary w-100" @onclick="RegistrarArtista" disabled="@registrando">@(registrando ? "Registrando..." : "Registrarme")</button>
+
+                <div class="text-center mt-3">
+                    <button type="button" class="btn btn-secondary" @onclick="MostrarRegistro" disabled="@registrando"><i class="bi bi-arrow-left"></i> Volver</button>
+                </div>
+            }
+
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? ErrorLogin { get; set; }
+
+    private string MensajeError => ErrorLogin switch
+    {
+        "campos" => "Ingrese su correo y contraseña.",
+        "bloqueado" => "La cuenta está bloqueada temporalmente.",
+        _ => "Correo o contraseña incorrectos."
+    };
+
+    public string VistaActual { get; set; } = "Login";
+
+    public string Nombres { get; set; } = string.Empty;
+    public string Apellidos { get; set; } = string.Empty;
+    public string Correo { get; set; } = string.Empty;
+    public string Telefono { get; set; } = string.Empty;
+    public string Direccion { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public string ConfirmarPassword { get; set; } = string.Empty;
+    public string Disciplina { get; set; } = string.Empty;
+    public string Biografia { get; set; } = string.Empty;
+
+    public bool MostrarPassword { get; set; } = false;
+    public bool MostrarConfirmarPassword { get; set; } = false;
+
+    private IBrowserFile? imagenSeleccionada;
+    private string? imagenPreview;
+    private bool registrando = false;
+
+    private void CambiarVisibilidadPassword()
+    {
+        MostrarPassword = !MostrarPassword;
+    }
+
+    private void CambiarVisibilidadConfirmarPassword()
+    {
+        MostrarConfirmarPassword = !MostrarConfirmarPassword;
+    }
+
+    private void MostrarRegistro()
+    {
+        LimpiarCampos();
+        VistaActual = "SeleccionRegistro";
+    }
+
+    private void MostrarRegistroCliente()
+    {
+        LimpiarCampos();
+        VistaActual = "RegistroCliente";
+    }
+
+    private void MostrarRegistroArtista()
+    {
+        LimpiarCampos();
+        VistaActual = "RegistroArtista";
+    }
+
+    private void VolverLogin()
+    {
+        LimpiarCampos();
+        VistaActual = "Login";
+    }
+
+    private void LimpiarCampos()
+    {
+        Nombres = string.Empty;
+        Apellidos = string.Empty;
+        Correo = string.Empty;
+        Telefono = string.Empty;
+        Direccion = string.Empty;
+        Password = string.Empty;
+        ConfirmarPassword = string.Empty;
+        Disciplina = string.Empty;
+        Biografia = string.Empty;
+        MostrarPassword = false;
+        MostrarConfirmarPassword = false;
+        imagenSeleccionada = null;
+        imagenPreview = null;
+    }
+
+    private async Task SeleccionarImagen(InputFileChangeEventArgs archivoSeleccionado)
+    {
+        var imagen = archivoSeleccionado.File;
+
+        if (imagen.ContentType != "image/jpeg" && imagen.ContentType != "image/png")
+        {
+            imagenSeleccionada = null;
+            imagenPreview = null;
+            toastService.ShowError("Solo se permiten fotografías JPG, JPEG y PNG");
+            return;
+        }
+
+        if (imagen.Size > 5 * 1024 * 1024)
+        {
+            imagenSeleccionada = null;
+            imagenPreview = null;
+            toastService.ShowError("La fotografía no puede superar los 5 MB");
+            return;
+        }
+
+        try
+        {
+            using var memoria = new MemoryStream();
+            await imagen.OpenReadStream(5 * 1024 * 1024).CopyToAsync(memoria);
+
+            imagenSeleccionada = imagen;
+            imagenPreview = $"data:{imagen.ContentType};base64,{Convert.ToBase64String(memoria.ToArray())}";
+        }
+        catch (Exception ex)
+        {
+            imagenSeleccionada = null;
+            imagenPreview = null;
+            toastService.ShowError($"No se pudo cargar la fotografía: {ex.Message}");
+        }
+    }
+
+    private async Task RegistrarCliente()
+    {
+        if (registrando)
+            return;
+
+        if (string.IsNullOrWhiteSpace(Nombres) || string.IsNullOrWhiteSpace(Apellidos) || string.IsNullOrWhiteSpace(Correo) || string.IsNullOrWhiteSpace(Telefono) || string.IsNullOrWhiteSpace(Direccion) || string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(ConfirmarPassword))
+        {
+            toastService.ShowError("Complete todos los campos obligatorios.");
+            return;
+        }
+
+        if (Password != ConfirmarPassword)
+        {
+            toastService.ShowError("Las contraseñas no coinciden.");
+            return;
+        }
+
+        registrando = true;
+
+        try
+        {
+            var resultado = await registroService.RegistrarCliente(Nombres, Apellidos, Correo, Telefono, Direccion, Password, imagenPreview);
+
+            if (!resultado.Exito)
+            {
+                toastService.ShowError(resultado.Mensaje);
+                return;
+            }
+
+            toastService.ShowSuccess(resultado.Mensaje);
+            VolverLogin();
+        }
+        catch (Exception)
+        {
+            toastService.ShowError("Ocurrió un error al registrar el cliente.");
+        }
+        finally
+        {
+            registrando = false;
+        }
+    }
+
+    private async Task RegistrarArtista()
+    {
+        if (registrando)
+            return;
+
+        if (string.IsNullOrWhiteSpace(Nombres) || string.IsNullOrWhiteSpace(Apellidos) || string.IsNullOrWhiteSpace(Correo) || string.IsNullOrWhiteSpace(Telefono) || string.IsNullOrWhiteSpace(Disciplina) || string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(ConfirmarPassword))
+        {
+            toastService.ShowError("Complete todos los campos obligatorios.");
+            return;
+        }
+
+        if (Password != ConfirmarPassword)
+        {
+            toastService.ShowError("Las contraseñas no coinciden.");
+            return;
+        }
+
+        registrando = true;
+
+        try
+        {
+            var resultado = await registroService.RegistrarArtista(Nombres, Apellidos, Correo, Telefono, Disciplina, Biografia, Password, imagenPreview);
+
+            if (!resultado.Exito)
+            {
+                toastService.ShowError(resultado.Mensaje);
+                return;
+            }
+
+            toastService.ShowSuccess(resultado.Mensaje);
+            VolverLogin();
+        }
+        catch (Exception)
+        {
+            toastService.ShowError("Ocurrió un error al registrar el artista.");
+        }
+        finally
+        {
+            registrando = false;
+        }
+    }
+
+    private void EntrarComoVisitante()
+    {
+        navigationManager.NavigateTo("/inicio");
+    }
+}

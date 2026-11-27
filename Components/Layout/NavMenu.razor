@@ -1,9 +1,13 @@
 ﻿@rendermode InteractiveServer
 
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject UserManager<Usuarios> userManager
+@inject IDbContextFactory<Contexto> contextFactory
+
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">
-            AP1_ProyectoFinal_Arthea
+        <a class="navbar-brand" href="/inicio">
+            Arthea
         </a>
     </div>
 </div>
@@ -24,12 +28,9 @@
     @* Perfil del usuario *@
     <div class="perfil-usuario">
         <div class="marco-usuario">
-            <img src="imagenes/usuario.jpeg"
-                 alt="Usuario"
-                 class="foto-usuario" />
+            <img src="@FotoUsuario" alt="Usuario" class="foto-usuario" />
         </div>
-
-        <h6 class="nombre-usuario">Administrador</h6>
+        <h6 class="nombre-usuario">@NombreUsuario</h6>
     </div>
 
     <hr class="separador-arthea" />
@@ -38,14 +39,11 @@
 
         @* Inicio *@
         <div class="nav-item px-3">
-            <NavLink class="nav-link"
-                     href=""
-                     Match="NavLinkMatch.All"
-                     @onclick="CerrarMenu">
+            <NavLink class="nav-link" href="/inicio" Match="NavLinkMatch.All" @onclick="CerrarMenu">
                 <span class="bi bi-house-door-fill"></span>
                 Inicio
             </NavLink>
-        </div
+        </div>
 
         @* Catálogo *@
         <div class="nav-item px-3">
@@ -177,6 +175,34 @@
 
 @code {
     private string? menuAbierto = null;
+    private string NombreUsuario = string.Empty;
+    private string FotoUsuario = "/imagenes/usuario.jpeg";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var estado = await authenticationStateProvider.GetAuthenticationStateAsync();
+
+        if (estado.User.Identity?.IsAuthenticated != true)
+            return;
+
+        var usuario = await userManager.GetUserAsync(estado.User);
+
+        if (usuario == null)
+            return;
+
+        NombreUsuario = $"{usuario.Nombres} {usuario.Apellidos}";
+
+        await using var contexto = await contextFactory.CreateDbContextAsync();
+
+        var foto = await contexto.Set<Administradores>().AsNoTracking().Where(a => a.UsuarioId == usuario.Id).Select(a => a.FotoPerfil).FirstOrDefaultAsync();
+
+        foto ??= await contexto.Set<Artistas>().AsNoTracking().Where(a => a.UsuarioId == usuario.Id).Select(a => a.FotoPerfil).FirstOrDefaultAsync();
+
+        foto ??= await contexto.Set<Clientes>().AsNoTracking().Where(c => c.UsuarioId == usuario.Id).Select(c => c.FotoPerfil).FirstOrDefaultAsync();
+
+        if (!string.IsNullOrWhiteSpace(foto))
+            FotoUsuario = foto;
+    }
 
     private void AlternarMenu(string menu)
     {
