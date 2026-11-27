@@ -20,12 +20,13 @@ builder.Services.AddScoped<ServiciosService>();
 builder.Services.AddScoped<ClientesService>();
 builder.Services.AddScoped<ObrasService>();
 builder.Services.AddScoped<PedidosService>();
-builder.Services.AddScoped<PedidosService>();
 builder.Services.AddScoped<PortafoliosService>();
 
 builder.Services.AddIdentity<Usuarios, IdentityRole>()
     .AddEntityFrameworkStores<Contexto>()
     .AddDefaultTokenProviders();
+
+builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddBlazorBootstrap();
 
@@ -49,5 +50,27 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapPost("/auth/login", async (HttpContext http, UserManager<Usuarios> userManager, SignInManager<Usuarios> signInManager) =>
+{
+    var formulario = await http.Request.ReadFormAsync();
+    var correo = formulario["Correo"].ToString().Trim();
+    var password = formulario["Password"].ToString();
+
+    if (string.IsNullOrWhiteSpace(correo) || string.IsNullOrWhiteSpace(password))
+        return Results.LocalRedirect("/login?error=campos");
+
+    var usuario = await userManager.FindByEmailAsync(correo);
+
+    if (usuario == null || !usuario.Estado)
+        return Results.LocalRedirect("/login?error=credenciales");
+
+    var resultado = await signInManager.PasswordSignInAsync(usuario, password, false, lockoutOnFailure: true);
+
+    if (!resultado.Succeeded)
+        return Results.LocalRedirect(resultado.IsLockedOut ? "/login?error=bloqueado" : "/login?error=credenciales");
+
+    return Results.LocalRedirect("/");
+});
 
 app.Run();
