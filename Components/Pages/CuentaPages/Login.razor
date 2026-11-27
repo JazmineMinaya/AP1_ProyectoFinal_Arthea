@@ -2,10 +2,11 @@
 @rendermode InteractiveServer
 
 @inject NavigationManager navigationManager
+@inject ToastService toastService
 
 @layout LoginLayout
 
-<PageTitle>Iniciar Sesión - Arthea</PageTitle>
+<PageTitle>Iniciar Sesión</PageTitle>
 
 <div class="container arthea-login">
 
@@ -47,7 +48,7 @@
                 <hr />
 
                 @* Acceso como visitante *@
-                <button type="button" class="btn btn-outline-secondary w-100"@onclick="EntrarComoVisitante"><i class="bi bi-eye"></i> Explorar como visitante</button>
+                <button type="button" class="btn btn-outline-secondary w-100" @onclick="EntrarComoVisitante"><i class="bi bi-eye"></i> Explorar como visitante</button>
             }
 
             else if (VistaActual == "SeleccionRegistro")
@@ -61,40 +62,20 @@
 
                     @* Cliente *@
                     <div class="col-6">
-
                         <button type="button" class="btn btn-outline-primary w-100" @onclick="MostrarRegistroCliente">
-
                             <i class="bi bi-person fs-2"></i>
-
-                            <div>
-                                <strong>Cliente</strong>
-                            </div>
-
-                            <small>
-                                Descubre obras y contrata servicios artísticos.
-                            </small>
-
+                            <div><strong>Cliente</strong></div>
+                            <small>Descubre obras y contrata servicios artísticos.</small>
                         </button>
-
                     </div>
 
                     @* Artista *@
                     <div class="col-6">
-
                         <button type="button" class="btn btn-outline-primary w-100" @onclick="MostrarRegistroArtista">
-
                             <i class="bi bi-palette fs-2"></i>
-
-                            <div>
-                                <strong>Artista</strong>
-                            </div>
-
-                            <small>
-                                Comparte tus obras y ofrece tus servicios.
-                            </small>
-
+                            <div><strong>Artista</strong></div>
+                            <small>Comparte tus obras y ofrece tus servicios.</small>
                         </button>
-
                     </div>
 
                 </div>
@@ -108,33 +89,77 @@
             {
                 @* Registro de Cliente *@
 
-                <h5 class="text-center mb-3"> Registro de Cliente</h5>
+                <h5 class="text-center mb-3">Registro de Cliente</h5>
 
+                @* Foto de Perfil *@
                 <div class="mb-3">
-                    <label class="form-label"><strong>Nombres y apellidos</strong></label>
-                    <input class="form-control" @bind="Nombres" placeholder="Ingrese sus nombres y apellidos" />
+                    <label class="form-label"><strong>Foto de Perfil (opcional)</strong></label>
+                    <div>
+                        <label for="imagenCliente" class="cuadro-imagen">
+                            @if (string.IsNullOrEmpty(imagenPreview))
+                            {
+                                <i class="bi bi-plus-lg"></i>
+                            }
+                            else
+                            {
+                                <img src="@imagenPreview" alt="Foto de perfil" />
+                            }
+                        </label>
+                        <InputFile id="imagenCliente" class="d-none" accept=".jpg,.jpeg,.png" OnChange="SeleccionarImagen" />
+                    </div>
                 </div>
 
+                @* Nombres *@
                 <div class="mb-3">
-                    <label class="form-label"><strong>Correo electrónico</strong></label>
+                    <label class="form-label"><strong>Nombres</strong></label>
+                    <input class="form-control" @bind="Nombres" placeholder="Ingrese sus nombres" />
+                </div>
+
+                @* Apellidos *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Apellidos</strong></label>
+                    <input class="form-control" @bind="Apellidos" placeholder="Ingrese sus apellidos" />
+                </div>
+
+                @* Correo *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Correo</strong></label>
                     <input type="email" class="form-control" @bind="Correo" placeholder="Ingrese su correo" />
                 </div>
 
+                @* Teléfono *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Teléfono</strong></label>
                     <input type="tel" class="form-control" @bind="Telefono" placeholder="Ingrese su teléfono" />
                 </div>
 
+                @* Dirección *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Dirección</strong></label>
+                    <input class="form-control" @bind="Direccion" placeholder="Ingrese su dirección" />
+                </div>
+
+                @* Contraseña *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Contraseña</strong></label>
-                    <input type="password" class="form-control" @bind="Password" placeholder="Ingrese una contraseña" />
+
+                    <div class="input-group">
+                        <input type="@(MostrarPassword ? "text" : "password")" class="form-control" @bind="Password" placeholder="Ingrese una contraseña" />
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadPassword"><i class="bi @(MostrarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
+                    </div>
                 </div>
 
+                @* Confirmar contraseña *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Confirmar contraseña</strong></label>
-                    <input type="password" class="form-control" @bind="ConfirmarPassword" placeholder="Confirme su contraseña" />
+
+                    <div class="input-group">
+                        <input type="@(MostrarConfirmarPassword ? "text" : "password")" class="form-control" @bind="ConfirmarPassword" placeholder="Confirme su contraseña" />
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadConfirmarPassword"><i class="bi @(MostrarConfirmarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
+                    </div>
                 </div>
 
+                @* Botones *@
                 <button type="button" class="btn btn-primary w-100" @onclick="RegistrarCliente">Registrarme</button>
 
                 <div class="text-center mt-3">
@@ -148,21 +173,49 @@
 
                 <h5 class="text-center mb-3">Registro de Artista</h5>
 
+                @* Foto de Perfil *@
                 <div class="mb-3">
-                    <label class="form-label"><strong>Nombres y apellidos</strong></label>
-                    <input class="form-control" @bind="Nombres" placeholder="Ingrese sus nombres y apellidos" />
+                    <label class="form-label"><strong>Foto de Perfil (opcional)</strong></label>
+                    <div>
+                        <label for="imagenArtista" class="cuadro-imagen">
+                            @if (string.IsNullOrEmpty(imagenPreview))
+                            {
+                                <i class="bi bi-plus-lg"></i>
+                            }
+                            else
+                            {
+                                <img src="@imagenPreview" alt="Foto de perfil" />
+                            }
+                        </label>
+                        <InputFile id="imagenArtista" class="d-none" accept=".jpg,.jpeg,.png" OnChange="SeleccionarImagen" />
+                    </div>
                 </div>
 
+                @* Nombres *@
                 <div class="mb-3">
-                    <label class="form-label"><strong>Correo electrónico</strong></label>
+                    <label class="form-label"><strong>Nombres</strong></label>
+                    <input class="form-control" @bind="Nombres" placeholder="Ingrese sus nombres" />
+                </div>
+
+                @* Apellidos *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Apellidos</strong></label>
+                    <input class="form-control" @bind="Apellidos" placeholder="Ingrese sus apellidos" />
+                </div>
+
+                @* Correo *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Correo</strong></label>
                     <input type="email" class="form-control" @bind="Correo" placeholder="Ingrese su correo" />
                 </div>
 
+                @* Teléfono *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Teléfono</strong></label>
                     <input type="tel" class="form-control" @bind="Telefono" placeholder="Ingrese su teléfono" />
                 </div>
 
+                @* Disciplina artística *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Disciplina artística</strong></label>
 
@@ -171,21 +224,41 @@
                         <option value="Pintura">Pintura</option>
                         <option value="Escultura">Escultura</option>
                         <option value="Fotografía">Fotografía</option>
+                        <option value="Música">Música</option>
                         <option value="Ilustración">Ilustración</option>
-                        <option value="Otra">Otra</option>
+                        <option value="Danza">Danza</option>
+                        <option value="Diseño Gráfico">Diseño Gráfico</option>
+                        <option value="Artesanía">Artesanía</option>
                     </select>
                 </div>
 
+                @* Biografía *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Biografía (opcional)</strong></label>
+                    <textarea class="form-control" @bind="Biografia" rows="3" placeholder="Cuéntanos sobre tu trayectoria y experiencia artística"></textarea>
+                </div>
+
+                @* Contraseña *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Contraseña</strong></label>
-                    <input type="password" class="form-control" @bind="Password" placeholder="Ingrese una contraseña" />
+
+                    <div class="input-group">
+                        <input type="@(MostrarPassword ? "text" : "password")" class="form-control" @bind="Password" placeholder="Ingrese una contraseña" />
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadPassword"><i class="bi @(MostrarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
+                    </div>
                 </div>
 
+                @* Confirmar contraseña *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Confirmar contraseña</strong></label>
-                    <input type="password" class="form-control" @bind="ConfirmarPassword" placeholder="Confirme su contraseña" />
+
+                    <div class="input-group">
+                        <input type="@(MostrarConfirmarPassword ? "text" : "password")" class="form-control" @bind="ConfirmarPassword" placeholder="Confirme su contraseña" />
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadConfirmarPassword"><i class="bi @(MostrarConfirmarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
+                    </div>
                 </div>
 
+                @* Botones *@
                 <button type="button" class="btn btn-primary w-100" @onclick="RegistrarArtista">Registrarme</button>
 
                 <div class="text-center mt-3">
@@ -201,21 +274,34 @@
     public string VistaActual { get; set; } = "Login";
 
     public string Nombres { get; set; } = string.Empty;
+    public string Apellidos { get; set; } = string.Empty;
     public string Correo { get; set; } = string.Empty;
     public string Telefono { get; set; } = string.Empty;
+    public string Direccion { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string ConfirmarPassword { get; set; } = string.Empty;
     public string Disciplina { get; set; } = string.Empty;
+    public string Biografia { get; set; } = string.Empty;
 
     public bool MostrarPassword { get; set; } = false;
+    public bool MostrarConfirmarPassword { get; set; } = false;
+
+    private IBrowserFile? imagenSeleccionada;
+    private string? imagenPreview;
 
     private void CambiarVisibilidadPassword()
     {
         MostrarPassword = !MostrarPassword;
     }
 
+    private void CambiarVisibilidadConfirmarPassword()
+    {
+        MostrarConfirmarPassword = !MostrarConfirmarPassword;
+    }
+
     private void MostrarRegistro()
     {
+        LimpiarCampos();
         VistaActual = "SeleccionRegistro";
     }
 
@@ -240,32 +326,67 @@
     private void LimpiarCampos()
     {
         Nombres = string.Empty;
+        Apellidos = string.Empty;
         Correo = string.Empty;
         Telefono = string.Empty;
+        Direccion = string.Empty;
         Password = string.Empty;
         ConfirmarPassword = string.Empty;
         Disciplina = string.Empty;
+        Biografia = string.Empty;
+        MostrarPassword = false;
+        MostrarConfirmarPassword = false;
+        imagenSeleccionada = null;
+        imagenPreview = null;
+    }
+
+    private async Task SeleccionarImagen(InputFileChangeEventArgs archivoSeleccionado)
+    {
+        var imagen = archivoSeleccionado.File;
+
+        if (imagen.ContentType != "image/jpeg" && imagen.ContentType != "image/png")
+        {
+            toastService.ShowError("Solo se permiten fotografías JPG, JPEG y PNG");
+            return;
+        }
+
+        if (imagen.Size > 5 * 1024 * 1024)
+        {
+            toastService.ShowError("La fotografía no puede superar los 5 MB");
+            return;
+        }
+
+        try
+        {
+            using var memoria = new MemoryStream();
+            await imagen.OpenReadStream(5 * 1024 * 1024).CopyToAsync(memoria);
+
+            imagenSeleccionada = imagen;
+            imagenPreview = $"data:{imagen.ContentType};base64,{Convert.ToBase64String(memoria.ToArray())}";
+        }
+        catch
+        {
+            toastService.ShowError("No se pudo cargar la fotografía");
+        }
     }
 
     private void IniciarSesion()
     {
-        // Pendiente: implementar autenticación.
+        // Pendiente: implementar autenticación con Identity.
     }
 
     private void RegistrarCliente()
     {
-        // Pendiente: guardar cliente en la base de datos.
+        // Pendiente: crear usuario y registrar cliente en la base de datos.
     }
 
     private void RegistrarArtista()
     {
-        // Pendiente: guardar artista en la base de datos.
+        // Pendiente: crear usuario y registrar artista en la base de datos.
     }
 
     private void EntrarComoVisitante()
     {
-        // Acceso visual temporal.
-        // Cambiar esta ruta cuando tengamos la página de inicio pública.
         navigationManager.NavigateTo("/");
     }
 }
