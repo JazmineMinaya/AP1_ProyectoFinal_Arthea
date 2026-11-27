@@ -16,7 +16,7 @@ partial class ContextoModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261126233730_ActualizarPedidosServicios";
+    public override string LastMigrationId => "20261127041259_AgregarObrasAlCarrito";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -292,6 +292,9 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.Property<string>("MotivoRechazo")
                     .HasColumnType("nvarchar(max)");
 
+                b.Property<int?>("ObraId")
+                    .HasColumnType("int");
+
                 b.Property<int>("PedidoId")
                     .HasColumnType("int");
 
@@ -302,16 +305,21 @@ partial class ContextoModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasColumnType("nvarchar(max)");
 
-                b.Property<int>("ServicioId")
+                b.Property<int?>("ServicioId")
                     .HasColumnType("int");
 
                 b.HasKey("DetalleId");
+
+                b.HasIndex("ObraId");
 
                 b.HasIndex("PedidoId");
 
                 b.HasIndex("ServicioId");
 
-                b.ToTable("PedidosDetalles");
+                b.ToTable("PedidosDetalles", t =>
+                    {
+                        t.HasCheckConstraint("CK_PedidosDetalle_Tipo", "([ServicioId] IS NOT NULL AND [ObraId] IS NULL) OR ([ServicioId] IS NULL AND [ObraId] IS NOT NULL)");
+                    });
             });
 
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.PedidosReferencias", b =>
@@ -736,6 +744,11 @@ partial class ContextoModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.PedidosDetalle", b =>
             {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Obras", "Obra")
+                    .WithMany()
+                    .HasForeignKey("ObraId")
+                    .OnDelete(DeleteBehavior.Restrict);
+
                 b.HasOne("AP1_ProyectoFinal_Arthea.Models.Pedidos", "Pedido")
                     .WithMany("PedidosDetalle")
                     .HasForeignKey("PedidoId")
@@ -745,8 +758,9 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.HasOne("AP1_ProyectoFinal_Arthea.Models.Servicios", "Servicio")
                     .WithMany()
                     .HasForeignKey("ServicioId")
-                    .OnDelete(DeleteBehavior.Restrict)
-                    .IsRequired();
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.Navigation("Obra");
 
                 b.Navigation("Pedido");
 

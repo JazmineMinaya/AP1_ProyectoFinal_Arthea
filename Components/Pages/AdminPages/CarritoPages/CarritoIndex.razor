@@ -1,0 +1,439 @@
+﻿@page "/Carrito/Index"
+@rendermode InteractiveServer
+
+@using AP1_ProyectoFinal_Arthea.Models
+@using AP1_ProyectoFinal_Arthea.Services
+@using System.Globalization
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+
+@inject CarritoService carritoService
+@inject PedidosService pedidosService
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject NavigationManager navigationManager
+
+<PageTitle>Mi Carrito - Arthea</PageTitle>
+
+<div class="container arthea-carrito">
+    <div class="card shadow-lg">
+        <div class="card-header carrito-encabezado">
+            <h2>Mi Carrito</h2>
+            <p>Las expresiones artísticas que has elegido</p>
+        </div>
+
+        <div class="card-body">
+
+            @if (!string.IsNullOrWhiteSpace(mensaje))
+            {
+                <div class="alert @(operacionExitosa ? "alert-success" : "alert-warning")">@mensaje</div>
+            }
+
+            @if (cargando)
+            {
+                <div class="carrito-vacio">Cargando carrito...</div>
+            }
+            else if (!autorizado)
+            {
+                <div class="carrito-vacio">
+                    <i class="bi bi-person-lock"></i>
+                    <h4>Inicia sesión para continuar</h4>
+                    <p>Accede como cliente para consultar tus obras y servicios.</p>
+                    <button type="button" class="btn-carrito-principal" @onclick='() => navigationManager.NavigateTo("/login")'>Iniciar sesión</button>
+                </div>
+            }
+            else if (!tienePerfil)
+            {
+                <div class="carrito-vacio">
+                    <i class="bi bi-person-exclamation"></i>
+                    <h4>Perfil de cliente requerido</h4>
+                    <p>Debes completar tu perfil de cliente para utilizar el carrito.</p>
+                </div>
+            }
+            else
+            {
+                <div class="carrito-paneles">
+
+                    @* Panel de Obras *@
+                    <section class="carrito-panel">
+                        <div class="carrito-panel-titulo">
+                            <div>
+                                <i class="bi bi-palette"></i>
+                                <h4>Obras</h4>
+                            </div>
+                            <span>@obras.Count</span>
+                        </div>
+
+                        @if (!obras.Any())
+                        {
+                            <div class="carrito-panel-vacio">
+                                <i class="bi bi-image"></i>
+                                <p>No has agregado obras todavía.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var detalle in obras)
+                            {
+                                <div class="carrito-articulo" @key="detalle.DetalleId">
+                                    <div class="carrito-articulo-imagen">
+                                        <img src="@ObtenerImagen(detalle.Obra?.ImagenUrl)" alt="@detalle.Obra?.Titulo" />
+                                    </div>
+
+                                    <div class="carrito-articulo-informacion">
+                                        <h5>@detalle.Obra?.Titulo</h5>
+                                        <p class="carrito-categoria">@detalle.Obra?.Categoria</p>
+                                        <p class="carrito-precio">@detalle.Precio.ToString("C", CulturaRD)</p>
+
+                                        <div class="carrito-articulo-acciones">
+                                            <div class="carrito-cantidad">
+                                                <button type="button" title="Disminuir" disabled="@(procesando || detalle.Cantidad <= 1)" @onclick="() => CambiarCantidad(detalle, -1)"><i class="bi bi-dash"></i></button>
+                                                <span>@detalle.Cantidad</span>
+                                                <button type="button" title="Aumentar" disabled="@(procesando || detalle.Cantidad >= (detalle.Obra?.Cantidad ?? 0))" @onclick="() => CambiarCantidad(detalle, 1)"><i class="bi bi-plus"></i></button>
+                                            </div>
+
+                                            <button type="button" class="carrito-eliminar" title="Eliminar obra" disabled="@procesando" @onclick="() => SolicitarEliminar(detalle)"><i class="bi bi-trash3"></i></button>
+                                        </div>
+
+                                        <div class="carrito-subtotal">Subtotal: @detalle.Subtotal.ToString("C", CulturaRD)</div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </section>
+
+                    @* Panel de Servicios *@
+                    <section class="carrito-panel">
+                        <div class="carrito-panel-titulo">
+                            <div>
+                                <i class="bi bi-brush"></i>
+                                <h4>Servicios</h4>
+                            </div>
+                            <span>@servicios.Count</span>
+                        </div>
+
+                        @if (!servicios.Any())
+                        {
+                            <div class="carrito-panel-vacio">
+                                <i class="bi bi-easel"></i>
+                                <p>No has agregado servicios todavía.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var detalle in servicios)
+                            {
+                                <div class="carrito-articulo" @key="detalle.DetalleId">
+                                    <div class="carrito-articulo-imagen">
+                                        <img src="@ObtenerImagen(detalle.Servicio?.Imagen1)" alt="@detalle.Servicio?.Nombre" />
+                                    </div>
+
+                                    <div class="carrito-articulo-informacion">
+                                        <h5>@detalle.Servicio?.Nombre</h5>
+                                        <p class="carrito-categoria">@detalle.Servicio?.Categoria</p>
+                                        <p class="carrito-precio">@detalle.Precio.ToString("C", CulturaRD)</p>
+
+                                        <div class="carrito-articulo-acciones">
+                                            <div class="carrito-cantidad">
+                                                <button type="button" title="Disminuir" disabled="@(procesando || detalle.Cantidad <= 1)" @onclick="() => CambiarCantidad(detalle, -1)"><i class="bi bi-dash"></i></button>
+                                                <span>@detalle.Cantidad</span>
+                                                <button type="button" title="Aumentar" disabled="@procesando" @onclick="() => CambiarCantidad(detalle, 1)"><i class="bi bi-plus"></i></button>
+                                            </div>
+
+                                            <button type="button" class="carrito-eliminar" title="Eliminar servicio" disabled="@procesando" @onclick="() => SolicitarEliminar(detalle)"><i class="bi bi-trash3"></i></button>
+                                        </div>
+
+                                        <div class="carrito-subtotal">Subtotal: @detalle.Subtotal.ToString("C", CulturaRD)</div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </section>
+                </div>
+
+                @* Resumen *@
+                <div class="carrito-resumen">
+                    <div class="carrito-resumen-titulo">
+                        <h4>Resumen del pedido</h4>
+                        <span>@cantidadArticulos artículo(s)</span>
+                    </div>
+
+                    <div class="carrito-resumen-fila">
+                        <span>Obras</span>
+                        <span>@subtotalObras.ToString("C", CulturaRD)</span>
+                    </div>
+
+                    <div class="carrito-resumen-fila">
+                        <span>Servicios</span>
+                        <span>@subtotalServicios.ToString("C", CulturaRD)</span>
+                    </div>
+
+                    <div class="carrito-resumen-total">
+                        <strong>Total</strong>
+                        <strong>@total.ToString("C", CulturaRD)</strong>
+                    </div>
+
+                    <div class="carrito-resumen-acciones">
+                        <button type="button" class="btn-carrito-volver" @onclick='() => navigationManager.NavigateTo("/Catalogo/Index")'><i class="bi bi-arrow-left"></i> Seguir explorando</button>
+                        <button type="button" class="btn-carrito-principal" disabled="@(procesando || cantidadArticulos == 0)" @onclick="SolicitarConfirmacion"><i class="bi bi-bag-check"></i> Confirmar pedido</button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@* Confirmar eliminación *@
+@if (detalleEliminar is not null)
+{
+    <div class="carrito-modal-fondo" @onclick="CancelarEliminar">
+        <div class="carrito-modal" role="dialog" aria-modal="true" @onclick:stopPropagation="true">
+            <button type="button" class="carrito-modal-cerrar" @onclick="CancelarEliminar"><i class="bi bi-x-lg"></i></button>
+            <i class="bi bi-trash3 carrito-modal-icono"></i>
+            <h4>Eliminar del carrito</h4>
+            <p>¿Deseas eliminar este artículo de tu carrito?</p>
+            <div class="carrito-modal-acciones">
+                <button type="button" class="btn-carrito-volver" @onclick="CancelarEliminar">Cancelar</button>
+                <button type="button" class="btn-carrito-principal" disabled="@procesando" @onclick="EliminarArticulo">Eliminar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@* Confirmar pedido *@
+@if (mostrarConfirmacion)
+{
+    <div class="carrito-modal-fondo" @onclick="CancelarConfirmacion">
+        <div class="carrito-modal" role="dialog" aria-modal="true" @onclick:stopPropagation="true">
+            <button type="button" class="carrito-modal-cerrar" @onclick="CancelarConfirmacion"><i class="bi bi-x-lg"></i></button>
+            <i class="bi bi-bag-check carrito-modal-icono"></i>
+            <h4>Confirmar pedido</h4>
+            <p>¿Deseas continuar con el pedido por <strong>@total.ToString("C", CulturaRD)</strong>?</p>
+            <div class="carrito-modal-acciones">
+                <button type="button" class="btn-carrito-volver" @onclick="CancelarConfirmacion">Cancelar</button>
+                <button type="button" class="btn-carrito-principal" disabled="@procesando" @onclick="ConfirmarPedido">Confirmar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<PedidosDetalle> obras = new();
+    private List<PedidosDetalle> servicios = new();
+    private PedidosDetalle? detalleEliminar;
+    private int pedidoId;
+    private bool cargando = true;
+    private bool procesando;
+    private bool autorizado;
+    private bool tienePerfil;
+    private bool mostrarConfirmacion;
+    private bool operacionExitosa;
+    private string? mensaje;
+    private readonly CultureInfo CulturaRD = new("es-DO");
+
+    private double subtotalObras => obras.Sum(d => d.Subtotal);
+    private double subtotalServicios => servicios.Sum(d => d.Subtotal);
+    private double total => subtotalObras + subtotalServicios;
+    private int cantidadArticulos => obras.Sum(d => d.Cantidad) + servicios.Sum(d => d.Cantidad);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarCarrito();
+    }
+
+    private async Task CargarCarrito()
+    {
+        cargando = true;
+
+        try
+        {
+            var autenticacion = await authenticationStateProvider.GetAuthenticationStateAsync();
+            var usuario = autenticacion.User;
+
+            autorizado = usuario.Identity?.IsAuthenticated == true && (usuario.IsInRole("Cliente") || usuario.IsInRole("Administrador"));
+
+            if (!autorizado)
+                return;
+
+            var usuarioId = usuario.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrWhiteSpace(usuarioId))
+                return;
+
+            var resultadoPedido = await pedidosService.ObtenerOCrearCarrito(usuarioId);
+            var pedido = resultadoPedido.Value;
+
+            if (pedido == null)
+                return;
+
+            tienePerfil = true;
+            pedidoId = pedido.PedidoId;
+
+            var resultadoDetalles = await carritoService.GetList(d => d.PedidoId == pedidoId);
+            var detalles = resultadoDetalles.Value ?? new List<PedidosDetalle>();
+
+            obras = detalles.Where(d => d.ObraId.HasValue).ToList();
+            servicios = detalles.Where(d => d.ServicioId.HasValue).ToList();
+        }
+        catch (Exception)
+        {
+            mensaje = "No fue posible cargar el carrito.";
+            operacionExitosa = false;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private string ObtenerImagen(string? imagen)
+    {
+        return string.IsNullOrWhiteSpace(imagen) ? "/imagenes/sin-imagen.png" : imagen;
+    }
+
+    private async Task CambiarCantidad(PedidosDetalle detalle, int cambio)
+    {
+        if (procesando)
+            return;
+
+        var nuevaCantidad = detalle.Cantidad + cambio;
+
+        if (nuevaCantidad < 1)
+            return;
+
+        if (detalle.ObraId.HasValue && nuevaCantidad > (detalle.Obra?.Cantidad ?? 0))
+        {
+            mensaje = "La cantidad solicitada supera la disponibilidad de la obra.";
+            operacionExitosa = false;
+            return;
+        }
+
+        procesando = true;
+        mensaje = null;
+
+        try
+        {
+            var actualizado = new PedidosDetalle
+            {
+                DetalleId = detalle.DetalleId,
+                PedidoId = detalle.PedidoId,
+                ObraId = detalle.ObraId,
+                ServicioId = detalle.ServicioId,
+                Cantidad = nuevaCantidad,
+                Precio = detalle.Precio,
+                Requerimientos = detalle.Requerimientos,
+                GuiaRequerimientos = detalle.GuiaRequerimientos,
+                EnlaceReferencia = detalle.EnlaceReferencia,
+                ModalidadEntrega = detalle.ModalidadEntrega,
+                DireccionEntrega = detalle.DireccionEntrega,
+                MedioEntrega = detalle.MedioEntrega,
+                ContactoEntrega = detalle.ContactoEntrega,
+                Referencias = detalle.Referencias.ToList()
+            };
+
+            await carritoService.Guardar(actualizado);
+            await CargarCarrito();
+
+            mensaje = "Cantidad actualizada correctamente.";
+            operacionExitosa = true;
+        }
+        catch (Exception)
+        {
+            mensaje = "No fue posible actualizar la cantidad.";
+            operacionExitosa = false;
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+
+    private void SolicitarEliminar(PedidosDetalle detalle)
+    {
+        detalleEliminar = detalle;
+    }
+
+    private void CancelarEliminar()
+    {
+        detalleEliminar = null;
+    }
+
+    private async Task EliminarArticulo()
+    {
+        if (detalleEliminar == null || procesando)
+            return;
+
+        procesando = true;
+        mensaje = null;
+
+        try
+        {
+            await carritoService.Eliminar(detalleEliminar.DetalleId);
+            detalleEliminar = null;
+
+            await CargarCarrito();
+
+            mensaje = "Artículo eliminado correctamente.";
+            operacionExitosa = true;
+        }
+        catch (Exception)
+        {
+            mensaje = "No fue posible eliminar el artículo.";
+            operacionExitosa = false;
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+
+    private void SolicitarConfirmacion()
+    {
+        if (cantidadArticulos > 0)
+            mostrarConfirmacion = true;
+    }
+
+    private void CancelarConfirmacion()
+    {
+        mostrarConfirmacion = false;
+    }
+
+    private async Task ConfirmarPedido()
+    {
+        if (procesando || pedidoId <= 0 || cantidadArticulos == 0)
+            return;
+
+        procesando = true;
+        mensaje = null;
+
+        try
+        {
+            var autenticacion = await authenticationStateProvider.GetAuthenticationStateAsync();
+            var usuarioId = autenticacion.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrWhiteSpace(usuarioId))
+            {
+                mensaje = "Debes iniciar sesión para confirmar el pedido.";
+                operacionExitosa = false;
+                return;
+            }
+
+            var resultado = await pedidosService.ConfirmarCarrito(pedidoId, usuarioId);
+
+            mostrarConfirmacion = false;
+
+            await CargarCarrito();
+
+            mensaje = "La solicitud de confirmación del pedido fue procesada. Revisa el estado en tus pedidos.";
+            operacionExitosa = true;
+        }
+        catch (Exception)
+        {
+            mensaje = "No fue posible confirmar el pedido.";
+            operacionExitosa = false;
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+}

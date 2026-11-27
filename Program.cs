@@ -22,6 +22,7 @@ builder.Services.AddScoped<ObrasService>();
 builder.Services.AddScoped<PedidosService>();
 builder.Services.AddScoped<PedidosService>();
 builder.Services.AddScoped<PortafoliosService>();
+builder.Services.AddScoped<CarritoService>();
 
 builder.Services.AddIdentity<Usuarios, IdentityRole>()
     .AddEntityFrameworkStores<Contexto>()

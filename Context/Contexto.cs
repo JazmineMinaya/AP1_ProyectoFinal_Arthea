@@ -48,6 +48,18 @@ public class Contexto : IdentityDbContext<Usuarios>
             .HasForeignKey(d => d.ServicioId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<PedidosDetalle>()
+            .HasOne(d => d.Obra)
+            .WithMany()
+            .HasForeignKey(d => d.ObraId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PedidosDetalle>()
+            .ToTable(t => t.HasCheckConstraint(
+                "CK_PedidosDetalle_Tipo",
+                "([ServicioId] IS NOT NULL AND [ObraId] IS NULL) OR ([ServicioId] IS NULL AND [ObraId] IS NOT NULL)"
+            ));
+
         modelBuilder.Entity<Pedidos>()
             .HasOne(p => p.Factura)
             .WithOne(f => f.Pedido)

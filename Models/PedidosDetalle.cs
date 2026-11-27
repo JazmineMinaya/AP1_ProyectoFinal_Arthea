@@ -11,8 +11,9 @@ public partial class PedidosDetalle
     [Range(1, int.MaxValue, ErrorMessage = "Seleccione un pedido")]
     public int PedidoId { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "Seleccione un servicio")]
-    public int ServicioId { get; set; }
+    public int? ServicioId { get; set; }
+
+    public int? ObraId { get; set; }
 
     [Range(1, int.MaxValue, ErrorMessage = "Ingrese una cantidad válida")]
     public int Cantidad { get; set; } = 1;
@@ -23,14 +24,12 @@ public partial class PedidosDetalle
     [NotMapped]
     public double Subtotal => Cantidad * Precio;
 
-    [Required(ErrorMessage = "Ingrese los requerimientos del servicio")]
     public string Requerimientos { get; set; } = string.Empty;
 
     public string GuiaRequerimientos { get; set; } = string.Empty;
 
     public string? EnlaceReferencia { get; set; }
 
-    [Required(ErrorMessage = "Seleccione la modalidad de entrega")]
     public string ModalidadEntrega { get; set; } = string.Empty;
 
     public string? DireccionEntrega { get; set; }
@@ -50,6 +49,9 @@ public partial class PedidosDetalle
 
     [ForeignKey("ServicioId")]
     public virtual Servicios? Servicio { get; set; }
+
+    [ForeignKey("ObraId")]
+    public virtual Obras? Obra { get; set; }
 
     public virtual ICollection<PedidosReferencias> Referencias { get; set; } = new List<PedidosReferencias>();
 }

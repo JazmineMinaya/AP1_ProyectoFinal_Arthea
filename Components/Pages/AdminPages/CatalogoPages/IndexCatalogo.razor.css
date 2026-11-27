@@ -1,4 +1,3 @@
-
 /* Contenedor principal */
 .arthea-catalogo {
     color: #493827;
@@ -99,7 +98,7 @@
         color: #FFFFFF;
     }
 
-/* Etiquetas de filtros */
+/* Etiquetas */
 .arthea-catalogo .col-form-label {
     color: #6F563B;
     font-family: Georgia, "Times New Roman", serif;
@@ -123,7 +122,6 @@
     gap: 0;
 }
 
-    /* Filtrar por */
     .catalogo-filtros > .col-3 {
         flex: 0 0 25%;
         width: 25%;
@@ -131,7 +129,6 @@
         min-width: 0;
     }
 
-    /* Búsqueda: ocupa todo el espacio disponible */
     .catalogo-filtros > .col-4 {
         flex: 1 1 0;
         width: auto;
@@ -151,7 +148,6 @@
             min-width: 0;
         }
 
-    /* Restablecer al extremo derecho */
     .catalogo-filtros > .col-2 {
         flex: 0 0 auto;
         width: auto;
@@ -183,14 +179,12 @@
         color: #493827;
     }
 
-    /* Cursor sobre los campos */
     .arthea-catalogo .form-control:hover,
     .arthea-catalogo .form-select:hover {
         background-color: #FFFDF9;
         border-color: #A68B64;
     }
 
-    /* Campo seleccionado */
     .arthea-catalogo .form-control:focus,
     .arthea-catalogo .form-select:focus {
         background-color: #FFFFFF;
@@ -237,7 +231,7 @@
         box-shadow: 0 0 0 0.15rem rgba(156, 128, 96, 0.2);
     }
 
-/* Tres artistas por fila */
+/* Tres elementos por fila */
 .catalogo-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -246,7 +240,7 @@
     margin-top: 15px;
 }
 
-/* Tarjetas de artistas */
+/* Tarjetas */
 .artista-card {
     display: flex;
     flex-direction: column;
@@ -285,7 +279,7 @@
     transform: scale(1.035);
 }
 
-/* Información del artista */
+/* Información */
 .artista-informacion {
     display: flex;
     flex-direction: column;
@@ -311,7 +305,7 @@
     margin-bottom: 20px;
 }
 
-/* Botón Ver detalles: crema suave */
+/* Botón Ver detalles */
 .btn-detalles {
     display: flex;
     align-items: center;
@@ -343,6 +337,68 @@
         font-size: 13px;
     }
 
+/* Acciones de Obras y Servicios */
+.arthea-catalogo .artista-informacion .catalogo-acciones {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+    margin-top: auto;
+}
+
+    .arthea-catalogo .artista-informacion .catalogo-acciones .btn-detalles {
+        display: inline-flex;
+        flex: 1 1 0;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        min-width: 0;
+        height: 42px;
+        margin: 0;
+        padding: 9px 12px;
+    }
+
+    /* Botón pequeño del carrito */
+    .arthea-catalogo .artista-informacion .catalogo-acciones .btn-carrito-icono {
+        display: inline-flex;
+        flex: 0 0 42px;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        padding: 0;
+        margin: 0;
+        background-color: #F4EBDD;
+        color: #947653;
+        border: 1px solid #DCC9AE;
+        border-radius: 5px;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 17px;
+        font-weight: normal;
+        line-height: 1;
+        cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+        .arthea-catalogo .artista-informacion .catalogo-acciones .btn-carrito-icono:hover:not(:disabled) {
+            background-color: #EADBC4;
+            color: #493827;
+            border-color: #C9AD88;
+        }
+
+        .arthea-catalogo .artista-informacion .catalogo-acciones .btn-carrito-icono:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .arthea-catalogo .artista-informacion .catalogo-acciones .btn-carrito-icono:focus-visible {
+            outline: 2px solid #A68B64;
+            outline-offset: 2px;
+        }
+
 /* Mensajes */
 .catalogo-mensaje {
     text-align: center;
@@ -367,48 +423,78 @@
     background-color: rgba(35, 27, 19, 0.55);
 }
 
-/* Modal */
-.catalogo-modal {
+/* Modal: tamaño uniforme y desplazamiento interno */
+.arthea-catalogo .catalogo-modal,
+.arthea-catalogo .catalogo-modal-servicio {
     position: relative;
-    width: 100%;
-    max-width: 850px;
+    box-sizing: border-box;
+    width: 900px;
+    max-width: 95vw;
+    height: 520px;
     max-height: 90vh;
-    overflow-y: auto;
     padding: 35px;
     background-color: #FBF7F0;
     border: 1px solid #D8C7AF;
     border-radius: 9px;
     box-shadow: 0 15px 45px rgba(0, 0, 0, 0.20);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #C9AD88 #FBF7F0;
+    overscroll-behavior: contain;
 }
 
-/* Botón cerrar */
+/* Barra de desplazamiento */
+.catalogo-modal::-webkit-scrollbar {
+    width: 6px;
+}
+
+.catalogo-modal::-webkit-scrollbar-track {
+    background-color: #FBF7F0;
+    border-radius: 10px;
+}
+
+.catalogo-modal::-webkit-scrollbar-thumb {
+    background-color: #C9AD88;
+    border-radius: 10px;
+}
+
+    .catalogo-modal::-webkit-scrollbar-thumb:hover {
+        background-color: #A68B64;
+    }
+
+/* Botón cerrar: permanece visible al desplazarse */
 .modal-cerrar {
-    position: absolute;
-    top: 15px;
-    right: 18px;
+    position: sticky;
+    top: 0;
+    float: right;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 30px;
     height: 30px;
+    margin: -20px -20px 0 0;
     padding: 0;
-    background-color: transparent;
+    background-color: #FBF7F0;
     border: none;
+    border-radius: 50%;
     color: #80694B;
     font-size: 19px;
     cursor: pointer;
+    z-index: 2;
 }
 
     .modal-cerrar:hover {
         color: #A65D50;
     }
 
-/* Contenido del modal */
+/* Contenido del modal de artistas */
 .modal-artista {
     display: grid;
     grid-template-columns: 260px minmax(0, 1fr);
     gap: 30px;
     align-items: start;
+    clear: both;
 }
 
 .modal-imagen {
@@ -471,8 +557,7 @@
         margin-right: 7px;
     }
 
-
-/* Artista que ofrece el servicio */
+/* Artista del servicio */
 .servicio-artista {
     color: #80694B;
     font-family: Georgia, "Times New Roman", serif;
@@ -480,7 +565,7 @@
     margin-bottom: 10px;
 }
 
-/* Precio en las tarjetas */
+/* Precio en tarjetas */
 .servicio-precio {
     color: #493827;
     font-family: Georgia, "Times New Roman", serif;
@@ -488,17 +573,13 @@
     margin-bottom: 20px;
 }
 
-/* Modal de servicios */
-.catalogo-modal-servicio {
-    max-width: 900px;
-}
-
-/* Distribución del modal */
+/* Modal de Obras, Servicios y Portafolios */
 .modal-servicio {
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
     gap: 30px;
     align-items: start;
+    clear: both;
 }
 
 /* Galería */
@@ -523,7 +604,7 @@
         object-fit: contain;
     }
 
-/* Flechas de navegación */
+/* Flechas */
 .galeria-anterior,
 .galeria-siguiente {
     position: absolute;
@@ -557,7 +638,7 @@
         color: #FFFFFF;
     }
 
-/* Contador de imágenes */
+/* Contador */
 .galeria-contador {
     margin-top: 12px;
     text-align: center;
@@ -566,7 +647,7 @@
     font-size: 13px;
 }
 
-/* Indicadores de imágenes */
+/* Indicadores */
 .galeria-indicadores {
     display: flex;
     justify-content: center;
@@ -592,7 +673,7 @@
         background-color: #6F563B;
     }
 
-/* Información del servicio */
+/* Información */
 .servicio-modal-texto {
     color: #6F563B;
     font-family: Georgia, "Times New Roman", serif;
@@ -605,4 +686,232 @@
     font-family: Georgia, "Times New Roman", serif;
     font-size: 22px;
     margin-bottom: 0;
+}
+
+/* Botón Agregar al carrito dentro de los modales */
+.arthea-catalogo .catalogo-modal .modal-informacion .btn-carrito-modal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 24px;
+    padding: 11px 16px;
+    background-color: #F1E7D9;
+    color: #735B40;
+    border: 1px solid #D5BFA3;
+    border-radius: 5px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 14px;
+    font-weight: normal;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+    .arthea-catalogo .catalogo-modal .modal-informacion .btn-carrito-modal .bi {
+        color: #A08460;
+        font-size: 16px;
+    }
+
+    .arthea-catalogo .catalogo-modal .modal-informacion .btn-carrito-modal:hover:not(:disabled) {
+        background-color: #EADBC4;
+        border-color: #B99B75;
+        color: #493827;
+    }
+
+        .arthea-catalogo .catalogo-modal .modal-informacion .btn-carrito-modal:hover:not(:disabled) .bi {
+            color: #6F563B;
+        }
+
+    .arthea-catalogo .catalogo-modal .modal-informacion .btn-carrito-modal:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    .arthea-catalogo .catalogo-modal .modal-informacion .btn-carrito-modal:focus-visible {
+        outline: 2px solid #A68B64;
+        outline-offset: 3px;
+    }
+
+/* Adaptación a pantallas medianas */
+@media (max-width: 900px) {
+    .catalogo-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .modal-servicio,
+    .modal-artista {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-imagen {
+        max-width: 320px;
+    }
+}
+
+/* Adaptación a pantallas pequeñas */
+@media (max-width: 600px) {
+    .arthea-catalogo .card-body {
+        padding: 16px;
+    }
+
+    .catalogo-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .catalogo-filtros {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+        .catalogo-filtros > .col-3,
+        .catalogo-filtros > .col-4 {
+            flex: 1 1 100%;
+            width: 100%;
+        }
+
+    .arthea-catalogo .catalogo-modal,
+    .arthea-catalogo .catalogo-modal-servicio {
+        width: 95vw;
+        height: 85vh;
+        max-height: 85vh;
+        padding: 25px 18px;
+    }
+
+    .servicio-galeria-imagen {
+        height: 280px;
+    }
+
+    .catalogo-encabezado h2 {
+        font-size: 25px;
+    }
+
+    .arthea-catalogo .card-header::after {
+        width: 65%;
+    }
+}
+
+/* Modal exclusivo de Artistas */
+.arthea-catalogo .catalogo-modal:not(.catalogo-modal-servicio) {
+    height: 395px;
+    max-height: 90vh;
+    overflow: hidden;
+}
+
+/* Adaptación a pantallas pequeñas */
+@media (max-width: 600px) {
+    .arthea-catalogo .catalogo-modal:not(.catalogo-modal-servicio) {
+        height: auto;
+        max-height: none;
+        overflow: visible;
+    }
+}
+
+/* Modal de inicio de sesión */
+.arthea-modal-acceso {
+    z-index: 1060;
+}
+
+    .arthea-modal-acceso .modal-dialog {
+        max-width: 500px;
+    }
+
+    .arthea-modal-acceso .modal-content {
+        background-color: #FBF7F0;
+        border: 1px solid #D8C7AF;
+        border-radius: 8px;
+        color: #493827;
+        font-family: Georgia, "Times New Roman", serif;
+        box-shadow: 0 12px 30px rgba(61, 44, 29, 0.13);
+        overflow: hidden;
+    }
+
+    .arthea-modal-acceso .modal-header {
+        background-color: #F7F1E8;
+        border-bottom: 1px solid #D8C7AF;
+    }
+
+    .arthea-modal-acceso .modal-title {
+        font-family: Georgia, "Times New Roman", serif;
+        font-variant: small-caps;
+        letter-spacing: 0.6px;
+        color: #493827;
+    }
+
+    .arthea-modal-acceso .modal-body {
+        background-color: #FBF7F0;
+        background-image: radial-gradient(rgba(111, 86, 59, 0.045) 0.7px, transparent 0.7px);
+        background-size: 9px 9px;
+        color: #493827;
+        padding: 35px 25px 30px;
+    }
+
+    .arthea-modal-acceso .modal-acceso-icono {
+        display: block;
+        font-size: 34px;
+        color: #A68B64;
+        margin-bottom: 15px;
+    }
+
+    .arthea-modal-acceso .modal-body h4 {
+        font-family: Georgia, "Times New Roman", serif;
+        color: #493827;
+        font-size: 24px;
+        margin-bottom: 12px;
+    }
+
+    .arthea-modal-acceso .modal-body p {
+        font-family: Georgia, "Times New Roman", serif;
+        color: #806B54;
+        font-size: 15px;
+        margin-bottom: 0;
+    }
+
+    .arthea-modal-acceso .modal-footer {
+        background-color: #F0E6D9;
+        border-top: 1px solid #D8C7AF;
+    }
+
+    .arthea-modal-acceso .btn-secondary {
+        background-color: transparent;
+        border-color: #B9AA98;
+        color: #806B54;
+        font-family: Georgia, "Times New Roman", serif;
+    }
+
+        .arthea-modal-acceso .btn-secondary:hover {
+            background-color: #806B54;
+            border-color: #806B54;
+            color: white;
+        }
+
+    .arthea-modal-acceso .btn-primary {
+        background-color: #6F563B;
+        border-color: #6F563B;
+        color: white;
+        font-family: Georgia, "Times New Roman", serif;
+    }
+
+        .arthea-modal-acceso .btn-primary:hover {
+            background-color: #493827;
+            border-color: #493827;
+            color: white;
+        }
+
+    /* Animación de entrada */
+    .arthea-modal-acceso.modal-animado .modal-dialog {
+        animation: entradaModal 0.3s ease-out both;
+    }
+
+@keyframes entradaModal {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
