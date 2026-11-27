@@ -3,6 +3,7 @@
 
 @inject NavigationManager navigationManager
 @inject ToastService toastService
+@inject RegistroService registroService
 
 @layout LoginLayout
 
@@ -24,20 +25,20 @@
             {
                 @* Inicio de Sesión *@
 
-                <form method="post" action="/auth/login">
+                <form method="post" action="/auth/login" autocomplete="on">
                     <AntiforgeryToken />
 
                     <div class="mb-3">
-                        <label class="form-label"><strong>Correo electrónico</strong></label>
-                        <input type="email" name="Correo" class="form-control" @bind="Correo" placeholder="Ingrese su correo" required />
+                        <label for="loginCorreo" class="form-label"><strong>Correo electrónico</strong></label>
+                        <input id="loginCorreo" type="email" name="Correo" class="form-control" @bind="Correo" autocomplete="username" placeholder="Ingrese su correo" required />
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label"><strong>Contraseña</strong></label>
+                        <label for="loginPassword" class="form-label"><strong>Contraseña</strong></label>
 
                         <div class="input-group">
-                            <input type="@(MostrarPassword ? "text" : "password")" name="Password" class="form-control" @bind="Password" placeholder="Ingrese su contraseña" required />
-                            <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadPassword"><i class="bi @(MostrarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
+                            <input id="loginPassword" type="@(MostrarPassword ? "text" : "password")" name="Password" class="form-control" @bind="Password" autocomplete="current-password" placeholder="Ingrese su contraseña" required />
+                            <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadPassword" aria-label="Mostrar u ocultar contraseña"><i class="bi @(MostrarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
                         </div>
                     </div>
 
@@ -121,31 +122,31 @@
                 @* Nombres *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Nombres</strong></label>
-                    <input class="form-control" @bind="Nombres" placeholder="Ingrese sus nombres" />
+                    <input class="form-control" @bind="Nombres" autocomplete="given-name" placeholder="Ingrese sus nombres" />
                 </div>
 
                 @* Apellidos *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Apellidos</strong></label>
-                    <input class="form-control" @bind="Apellidos" placeholder="Ingrese sus apellidos" />
+                    <input class="form-control" @bind="Apellidos" autocomplete="family-name" placeholder="Ingrese sus apellidos" />
                 </div>
 
                 @* Correo *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Correo</strong></label>
-                    <input type="email" class="form-control" @bind="Correo" placeholder="Ingrese su correo" />
+                    <input type="email" class="form-control" @bind="Correo" autocomplete="email" placeholder="Ingrese su correo" />
                 </div>
 
                 @* Teléfono *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Teléfono</strong></label>
-                    <input type="tel" class="form-control" @bind="Telefono" placeholder="Ingrese su teléfono" />
+                    <input type="tel" class="form-control" @bind="Telefono" autocomplete="tel" placeholder="Ingrese su teléfono" />
                 </div>
 
                 @* Dirección *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Dirección</strong></label>
-                    <input class="form-control" @bind="Direccion" placeholder="Ingrese su dirección" />
+                    <input class="form-control" @bind="Direccion" autocomplete="street-address" placeholder="Ingrese su dirección" />
                 </div>
 
                 @* Contraseña *@
@@ -153,7 +154,7 @@
                     <label class="form-label"><strong>Contraseña</strong></label>
 
                     <div class="input-group">
-                        <input type="@(MostrarPassword ? "text" : "password")" class="form-control" @bind="Password" placeholder="Ingrese una contraseña" />
+                        <input type="@(MostrarPassword ? "text" : "password")" class="form-control" @bind="Password" autocomplete="new-password" placeholder="Ingrese una contraseña" />
                         <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadPassword"><i class="bi @(MostrarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
                     </div>
                 </div>
@@ -163,16 +164,16 @@
                     <label class="form-label"><strong>Confirmar contraseña</strong></label>
 
                     <div class="input-group">
-                        <input type="@(MostrarConfirmarPassword ? "text" : "password")" class="form-control" @bind="ConfirmarPassword" placeholder="Confirme su contraseña" />
+                        <input type="@(MostrarConfirmarPassword ? "text" : "password")" class="form-control" @bind="ConfirmarPassword" autocomplete="new-password" placeholder="Confirme su contraseña" />
                         <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadConfirmarPassword"><i class="bi @(MostrarConfirmarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
                     </div>
                 </div>
 
                 @* Botones *@
-                <button type="button" class="btn btn-primary w-100" @onclick="RegistrarCliente">Registrarme</button>
+                <button type="button" class="btn btn-primary w-100" @onclick="RegistrarCliente" disabled="@registrando">@(registrando ? "Registrando..." : "Registrarme")</button>
 
                 <div class="text-center mt-3">
-                    <button type="button" class="btn btn-secondary" @onclick="MostrarRegistro"><i class="bi bi-arrow-left"></i> Volver</button>
+                    <button type="button" class="btn btn-secondary" @onclick="MostrarRegistro" disabled="@registrando"><i class="bi bi-arrow-left"></i> Volver</button>
                 </div>
             }
 
@@ -203,25 +204,25 @@
                 @* Nombres *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Nombres</strong></label>
-                    <input class="form-control" @bind="Nombres" placeholder="Ingrese sus nombres" />
+                    <input class="form-control" @bind="Nombres" autocomplete="given-name" placeholder="Ingrese sus nombres" />
                 </div>
 
                 @* Apellidos *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Apellidos</strong></label>
-                    <input class="form-control" @bind="Apellidos" placeholder="Ingrese sus apellidos" />
+                    <input class="form-control" @bind="Apellidos" autocomplete="family-name" placeholder="Ingrese sus apellidos" />
                 </div>
 
                 @* Correo *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Correo</strong></label>
-                    <input type="email" class="form-control" @bind="Correo" placeholder="Ingrese su correo" />
+                    <input type="email" class="form-control" @bind="Correo" autocomplete="email" placeholder="Ingrese su correo" />
                 </div>
 
                 @* Teléfono *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Teléfono</strong></label>
-                    <input type="tel" class="form-control" @bind="Telefono" placeholder="Ingrese su teléfono" />
+                    <input type="tel" class="form-control" @bind="Telefono" autocomplete="tel" placeholder="Ingrese su teléfono" />
                 </div>
 
                 @* Disciplina artística *@
@@ -252,7 +253,7 @@
                     <label class="form-label"><strong>Contraseña</strong></label>
 
                     <div class="input-group">
-                        <input type="@(MostrarPassword ? "text" : "password")" class="form-control" @bind="Password" placeholder="Ingrese una contraseña" />
+                        <input type="@(MostrarPassword ? "text" : "password")" class="form-control" @bind="Password" autocomplete="new-password" placeholder="Ingrese una contraseña" />
                         <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadPassword"><i class="bi @(MostrarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
                     </div>
                 </div>
@@ -262,16 +263,16 @@
                     <label class="form-label"><strong>Confirmar contraseña</strong></label>
 
                     <div class="input-group">
-                        <input type="@(MostrarConfirmarPassword ? "text" : "password")" class="form-control" @bind="ConfirmarPassword" placeholder="Confirme su contraseña" />
+                        <input type="@(MostrarConfirmarPassword ? "text" : "password")" class="form-control" @bind="ConfirmarPassword" autocomplete="new-password" placeholder="Confirme su contraseña" />
                         <button type="button" class="btn btn-outline-secondary" @onclick="CambiarVisibilidadConfirmarPassword"><i class="bi @(MostrarConfirmarPassword ? "bi-eye-slash" : "bi-eye")"></i></button>
                     </div>
                 </div>
 
                 @* Botones *@
-                <button type="button" class="btn btn-primary w-100" @onclick="RegistrarArtista">Registrarme</button>
+                <button type="button" class="btn btn-primary w-100" @onclick="RegistrarArtista" disabled="@registrando">@(registrando ? "Registrando..." : "Registrarme")</button>
 
                 <div class="text-center mt-3">
-                    <button type="button" class="btn btn-secondary" @onclick="MostrarRegistro"><i class="bi bi-arrow-left"></i> Volver</button>
+                    <button type="button" class="btn btn-secondary" @onclick="MostrarRegistro" disabled="@registrando"><i class="bi bi-arrow-left"></i> Volver</button>
                 </div>
             }
 
@@ -307,6 +308,7 @@
 
     private IBrowserFile? imagenSeleccionada;
     private string? imagenPreview;
+    private bool registrando = false;
 
     private void CambiarVisibilidadPassword()
     {
@@ -365,12 +367,16 @@
 
         if (imagen.ContentType != "image/jpeg" && imagen.ContentType != "image/png")
         {
+            imagenSeleccionada = null;
+            imagenPreview = null;
             toastService.ShowError("Solo se permiten fotografías JPG, JPEG y PNG");
             return;
         }
 
         if (imagen.Size > 5 * 1024 * 1024)
         {
+            imagenSeleccionada = null;
+            imagenPreview = null;
             toastService.ShowError("La fotografía no puede superar los 5 MB");
             return;
         }
@@ -383,24 +389,100 @@
             imagenSeleccionada = imagen;
             imagenPreview = $"data:{imagen.ContentType};base64,{Convert.ToBase64String(memoria.ToArray())}";
         }
-        catch
+        catch (Exception ex)
         {
-            toastService.ShowError("No se pudo cargar la fotografía");
+            imagenSeleccionada = null;
+            imagenPreview = null;
+            toastService.ShowError($"No se pudo cargar la fotografía: {ex.Message}");
         }
     }
 
-    private void RegistrarCliente()
+    private async Task RegistrarCliente()
     {
-        // Pendiente: crear usuario y registrar cliente en la base de datos.
+        if (registrando)
+            return;
+
+        if (string.IsNullOrWhiteSpace(Nombres) || string.IsNullOrWhiteSpace(Apellidos) || string.IsNullOrWhiteSpace(Correo) || string.IsNullOrWhiteSpace(Telefono) || string.IsNullOrWhiteSpace(Direccion) || string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(ConfirmarPassword))
+        {
+            toastService.ShowError("Complete todos los campos obligatorios.");
+            return;
+        }
+
+        if (Password != ConfirmarPassword)
+        {
+            toastService.ShowError("Las contraseñas no coinciden.");
+            return;
+        }
+
+        registrando = true;
+
+        try
+        {
+            var resultado = await registroService.RegistrarCliente(Nombres, Apellidos, Correo, Telefono, Direccion, Password, imagenPreview);
+
+            if (!resultado.Exito)
+            {
+                toastService.ShowError(resultado.Mensaje);
+                return;
+            }
+
+            toastService.ShowSuccess(resultado.Mensaje);
+            VolverLogin();
+        }
+        catch (Exception)
+        {
+            toastService.ShowError("Ocurrió un error al registrar el cliente.");
+        }
+        finally
+        {
+            registrando = false;
+        }
     }
 
-    private void RegistrarArtista()
+    private async Task RegistrarArtista()
     {
-        // Pendiente: crear usuario y registrar artista en la base de datos.
+        if (registrando)
+            return;
+
+        if (string.IsNullOrWhiteSpace(Nombres) || string.IsNullOrWhiteSpace(Apellidos) || string.IsNullOrWhiteSpace(Correo) || string.IsNullOrWhiteSpace(Telefono) || string.IsNullOrWhiteSpace(Disciplina) || string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(ConfirmarPassword))
+        {
+            toastService.ShowError("Complete todos los campos obligatorios.");
+            return;
+        }
+
+        if (Password != ConfirmarPassword)
+        {
+            toastService.ShowError("Las contraseñas no coinciden.");
+            return;
+        }
+
+        registrando = true;
+
+        try
+        {
+            var resultado = await registroService.RegistrarArtista(Nombres, Apellidos, Correo, Telefono, Disciplina, Biografia, Password, imagenPreview);
+
+            if (!resultado.Exito)
+            {
+                toastService.ShowError(resultado.Mensaje);
+                return;
+            }
+
+            toastService.ShowSuccess(resultado.Mensaje);
+            VolverLogin();
+        }
+        catch (Exception)
+        {
+            toastService.ShowError("Ocurrió un error al registrar el artista.");
+        }
+        finally
+        {
+            registrando = false;
+        }
     }
 
     private void EntrarComoVisitante()
     {
-        navigationManager.NavigateTo("/");
+        navigationManager.NavigateTo("/inicio");
     }
 }
