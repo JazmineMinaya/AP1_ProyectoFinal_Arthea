@@ -16,7 +16,7 @@ partial class ContextoModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261126225519_ActualizarServiciosCarrito";
+    public override string LastMigrationId => "20261126233730_ActualizarPedidosServicios";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -206,10 +206,6 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.Property<int>("ClienteId")
                     .HasColumnType("int");
 
-                b.Property<string>("DireccionEntrega")
-                    .IsRequired()
-                    .HasColumnType("nvarchar(max)");
-
                 b.Property<string>("Estado")
                     .IsRequired()
                     .HasColumnType("nvarchar(max)");
@@ -222,6 +218,12 @@ partial class ContextoModelSnapshot : ModelSnapshot
                     .HasColumnType("datetime2");
 
                 b.Property<DateTime?>("FechaCancelacion")
+                    .HasColumnType("datetime2");
+
+                b.Property<DateTime?>("FechaConfirmacion")
+                    .HasColumnType("datetime2");
+
+                b.Property<DateTime>("FechaLimiteAprobacion")
                     .HasColumnType("datetime2");
 
                 b.Property<DateTime?>("FechaPago")
@@ -260,11 +262,45 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.Property<int>("Cantidad")
                     .HasColumnType("int");
 
+                b.Property<string>("ContactoEntrega")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("DireccionEntrega")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("EnlaceReferencia")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("EstadoAprobacion")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<DateTime?>("FechaRespuesta")
+                    .HasColumnType("datetime2");
+
+                b.Property<string>("GuiaRequerimientos")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("MedioEntrega")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("ModalidadEntrega")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("MotivoRechazo")
+                    .HasColumnType("nvarchar(max)");
+
                 b.Property<int>("PedidoId")
                     .HasColumnType("int");
 
                 b.Property<double>("Precio")
                     .HasColumnType("float");
+
+                b.Property<string>("Requerimientos")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
                 b.Property<int>("ServicioId")
                     .HasColumnType("int");
@@ -276,6 +312,28 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.HasIndex("ServicioId");
 
                 b.ToTable("PedidosDetalles");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.PedidosReferencias", b =>
+            {
+                var referenciaId = b.Property<int>("ReferenciaId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(referenciaId);
+
+                b.Property<int>("DetalleId")
+                    .HasColumnType("int");
+
+                b.Property<string>("Imagen")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.HasKey("ReferenciaId");
+
+                b.HasIndex("DetalleId");
+
+                b.ToTable("PedidosReferencias");
             });
 
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Portafolios", b =>
@@ -648,7 +706,7 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.HasOne("AP1_ProyectoFinal_Arthea.Models.Pedidos", "Pedido")
                     .WithOne("Factura")
                     .HasForeignKey("AP1_ProyectoFinal_Arthea.Models.Facturas", "PedidoId")
-                    .OnDelete(DeleteBehavior.Cascade)
+                    .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired();
 
                 b.Navigation("Pedido");
@@ -687,12 +745,23 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.HasOne("AP1_ProyectoFinal_Arthea.Models.Servicios", "Servicio")
                     .WithMany()
                     .HasForeignKey("ServicioId")
-                    .OnDelete(DeleteBehavior.Cascade)
+                    .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired();
 
                 b.Navigation("Pedido");
 
                 b.Navigation("Servicio");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.PedidosReferencias", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.PedidosDetalle", "Detalle")
+                    .WithMany("Referencias")
+                    .HasForeignKey("DetalleId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Detalle");
             });
 
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Portafolios", b =>
@@ -792,6 +861,11 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.Navigation("Factura");
 
                 b.Navigation("PedidosDetalle");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.PedidosDetalle", b =>
+            {
+                b.Navigation("Referencias");
             });
 
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Portafolios", b =>

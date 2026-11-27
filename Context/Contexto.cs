@@ -15,6 +15,7 @@ public class Contexto : IdentityDbContext<Usuarios>
     public DbSet<Obras> Obras { get; set; }
     public DbSet<Pedidos> Pedidos { get; set; }
     public DbSet<PedidosDetalle> PedidosDetalles { get; set; }
+    public DbSet<PedidosReferencias> PedidosReferencias { get; set; }
     public DbSet<Facturas> Facturas { get; set; }
     public DbSet<Portafolios> Portafolios { get; set; }
     public DbSet<PortafoliosDetalle> PortafoliosDetalle { get; set; }
@@ -28,6 +29,30 @@ public class Contexto : IdentityDbContext<Usuarios>
             .WithMany()
             .HasForeignKey(p => p.ClienteId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<PedidosDetalle>()
+            .HasOne(d => d.Pedido)
+            .WithMany(p => p.PedidosDetalle)
+            .HasForeignKey(d => d.PedidoId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PedidosReferencias>()
+            .HasOne(r => r.Detalle)
+            .WithMany(d => d.Referencias)
+            .HasForeignKey(r => r.DetalleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PedidosDetalle>()
+            .HasOne(d => d.Servicio)
+            .WithMany()
+            .HasForeignKey(d => d.ServicioId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Pedidos>()
+            .HasOne(p => p.Factura)
+            .WithOne(f => f.Pedido)
+            .HasForeignKey<Facturas>(f => f.PedidoId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<PortafoliosDetalle>()
             .HasOne(d => d.Obra)

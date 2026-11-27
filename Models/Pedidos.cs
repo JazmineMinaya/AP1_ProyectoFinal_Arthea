@@ -13,13 +13,14 @@ public partial class Pedidos
     [Range(1, int.MaxValue, ErrorMessage = "Seleccione un cliente")]
     public int ClienteId { get; set; }
 
-    [Required(ErrorMessage = "Ingrese la dirección de entrega")]
-    public string DireccionEntrega { get; set; } = string.Empty;
-
     [Required(ErrorMessage = "Seleccione el estado del pedido")]
     public string Estado { get; set; } = "Pendiente";
 
     public string EstadoPago { get; set; } = "Pendiente";
+
+    public DateTime FechaLimiteAprobacion { get; set; }
+
+    public DateTime? FechaConfirmacion { get; set; }
 
     public DateTime? FechaPago { get; set; }
 

@@ -36,6 +36,7 @@
                         <option value="PedidoId">PedidoId</option>
                         <option value="Cliente">Cliente</option>
                         <option value="Estado">Estado</option>
+                        <option value="EstadoPago">Estado de Pago</option>
                         <option value="Fecha">Fecha</option>
                     </InputSelect>
                 </div>
@@ -76,10 +77,38 @@
 
                         <PropertyColumn Property="p => p.Fecha" Title="Fecha" Format="dd/MM/yyyy" Sortable="true" />
 
-                        <PropertyColumn Property="p => p.Total" Title="Total" Sortable="true" />
+                        <PropertyColumn Property="p => p.Total" Title="Total" Format="N2" Sortable="true" />
 
                         <TemplateColumn Title="Estado" Sortable="true" SortBy="GridSort<Pedidos>.ByAscending(p => p.Estado)">
                             <span class="estado-pedido @context.Estado.ToLower().Replace(" ", "-")">@context.Estado</span>
+                        </TemplateColumn>
+
+                        <TemplateColumn Title="Aprobaciones">
+                            @{
+                                var aprobados = context.PedidosDetalle.Count(d => d.EstadoAprobacion == "Aprobado");
+                                var pendientes = context.PedidosDetalle.Count(d => d.EstadoAprobacion == "Pendiente");
+                                var rechazados = context.PedidosDetalle.Count(d => d.EstadoAprobacion == "Rechazado");
+                                var vencidos = context.PedidosDetalle.Count(d => d.EstadoAprobacion == "Vencido");
+                            }
+
+                            <div class="d-flex flex-column gap-1">
+                                @if (aprobados > 0)
+                                {
+                                    <span class="text-success"><i class="bi bi-check-circle"></i> Aprobados: @aprobados</span>
+                                }
+                                @if (pendientes > 0)
+                                {
+                                    <span class="text-warning"><i class="bi bi-clock"></i> Pendientes: @pendientes</span>
+                                }
+                                @if (rechazados > 0)
+                                {
+                                    <span class="text-danger"><i class="bi bi-x-circle"></i> Rechazados: @rechazados</span>
+                                }
+                                @if (vencidos > 0)
+                                {
+                                    <span class="text-secondary"><i class="bi bi-hourglass-bottom"></i> Vencidos: @vencidos</span>
+                                }
+                            </div>
                         </TemplateColumn>
 
                         <TemplateColumn Title="Estado de Pago" Sortable="true" SortBy="GridSort<Pedidos>.ByAscending(p => p.EstadoPago)">
@@ -87,7 +116,14 @@
                         </TemplateColumn>
 
                         <TemplateColumn Title="Opciones" Align="Align.Center">
-                            <a href="/Pedidos/Edit/@context.PedidoId" class="btn btn-outline-primary bi bi-pencil-square"></a>
+                            @if (context.Estado == "Pendiente" && context.EstadoPago == "Pendiente" && context.FechaConfirmacion == null)
+                            {
+                                <a href="/Pedidos/Edit/@context.PedidoId" class="btn btn-outline-primary bi bi-pencil-square" title="Modificar pedido"></a>
+                            }
+                            else
+                            {
+                                <span class="text-muted" title="Este pedido ya no puede modificarse"><i class="bi bi-lock"></i></span>
+                            }
                         </TemplateColumn>
 
                     </QuickGrid>
@@ -137,6 +173,12 @@
         {
             var valor = ValorFiltro.Trim().ToLower();
             var resultado = await pedidosService.GetList(p => p.Estado.ToLower().Contains(valor));
+            ListaPedidos = resultado.Value ?? new();
+        }
+        else if (Filtro == "EstadoPago")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await pedidosService.GetList(p => p.EstadoPago.ToLower().Contains(valor));
             ListaPedidos = resultado.Value ?? new();
         }
         else if (Filtro == "Fecha")
