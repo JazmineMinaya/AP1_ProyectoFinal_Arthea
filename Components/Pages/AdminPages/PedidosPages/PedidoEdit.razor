@@ -1,0 +1,273 @@
+﻿@page "/Pedidos/Edit/{PedidoId:int}"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador")]
+
+@inject PedidosService pedidosService
+@inject ClientesService clientesService
+@inject ServiciosService serviciosService
+@inject NavigationManager navigationManager
+@inject ToastService toastService
+
+<PageTitle>Modificar Pedido</PageTitle>
+
+@if (Pedido is not null)
+{
+    <EditForm Model="Pedido" OnValidSubmit="Modificar" FormName="editarPedido" Context="formContext">
+        <DataAnnotationsValidator />
+
+        <div class="container arthea-pedidos-edit">
+            <div class="card shadow-lg">
+
+                @* Encabezado *@
+                <div class="card-header">
+                    <h5 class="card-title">Modificar Pedido</h5>
+                </div>
+
+                <div class="card-body">
+
+                    @* PedidoId *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>PedidoId</strong></label>
+                        <InputNumber class="form-control" @bind-Value="Pedido.PedidoId" readonly />
+                    </div>
+
+                    @* Cliente *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Cliente</strong></label>
+                        <InputSelect class="form-select" @bind-Value="Pedido.ClienteId">
+                            <option value="0">-- Seleccione un cliente --</option>
+                            @foreach (var cliente in ListaClientes)
+                            {
+                                <option value="@cliente.ClienteId">@cliente.Usuario?.Nombres @cliente.Usuario?.Apellidos</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => Pedido.ClienteId)" />
+                    </div>
+
+                    @* Fecha *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Fecha</strong></label>
+                        <InputDate class="form-control" @bind-Value="Pedido.Fecha" />
+                        <ValidationMessage For="@(() => Pedido.Fecha)" />
+                    </div>
+
+                    @* Dirección de entrega *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Dirección de entrega</strong></label>
+                        <InputText class="form-control" @bind-Value="Pedido.DireccionEntrega" />
+                        <ValidationMessage For="@(() => Pedido.DireccionEntrega)" />
+                    </div>
+
+                    @* Total *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Total</strong></label>
+                        <InputNumber class="form-control" @bind-Value="Pedido.Total" readonly />
+                    </div>
+
+                    @* Picker para el detalle *@
+                    <div class="detalle-servicios border p-3 mt-3">
+                        <h5>Detalles</h5>
+
+                        <div class="input-group">
+                            <span class="input-group-text">Seleccione:</span>
+
+                            <InputSelect class="form-select" @bind-Value="ServicioId">
+                                <option value="0">-- Seleccione un servicio --</option>
+                                @foreach (var servicio in ListaServicios)
+                                {
+                                    <option value="@servicio.ServicioId">@servicio.Nombre</option>
+                                }
+                            </InputSelect>
+
+                            <span class="input-group-text">Precio:</span>
+                            <label class="form-control">@(ListaServicios.FirstOrDefault(s => s.ServicioId == ServicioId)?.Precio.ToString("N2") ?? "0.00")</label>
+
+                            <button type="button" class="btn btn-outline-primary" @onclick="AgregarServicio">+ Agregar</button>
+                        </div>
+
+                        @* Tabla para el detalle *@
+                        <hr />
+
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Servicio</th>
+                                    <th>Artista</th>
+                                    <th>Precio</th>
+                                    <th>Remover</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var detalle in Pedido.PedidosDetalle)
+                                {
+                                    var servicio = ListaServicios.FirstOrDefault(s => s.ServicioId == detalle.ServicioId) ?? detalle.Servicio;
+
+                                    <tr>
+                                        <td>@servicio?.Nombre</td>
+                                        <td>@servicio?.Artista?.Usuario?.Nombres @servicio?.Artista?.Usuario?.Apellidos</td>
+                                        <td>@detalle.Precio.ToString("N2")</td>
+                                        <td>
+                                            <button type="button" class="btn btn-danger bi bi-trash" @onclick="() => QuitarServicio(detalle)"></button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                @* Footer *@
+                <div class="card-footer text-center mt-2">
+                    <a href="/Pedidos/Index" class="btn btn-secondary"><span class="bi bi-arrow-left"></span> Volver</a>
+                    <button type="submit" class="btn btn-primary bi bi-floppy"> Modificar</button>
+                    <button type="button" class="btn btn-danger bi bi-trash" data-bs-toggle="modal" data-bs-target="#eliminarModal"> Eliminar</button>
+                </div>
+
+            </div>
+        </div>
+    </EditForm>
+}
+
+@* Modal de eliminación *@
+<div class="modal fade" id="eliminarModal" tabindex="-1" aria-labelledby="eliminarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="eliminarModalLabel">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                ¿Está seguro que desea eliminar este pedido?
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Cancelar</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @onclick="Eliminar"> Eliminar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int PedidoId { get; set; }
+
+    public Pedidos? Pedido;
+    public List<Clientes> ListaClientes { get; set; } = new();
+    public List<Servicios> ListaServicios { get; set; } = new();
+
+    public int ServicioId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resultadoPedido = await pedidosService.Buscar(PedidoId);
+
+        if (resultadoPedido.Value is null)
+        {
+            toastService.ShowError("Pedido no encontrado");
+            navigationManager.NavigateTo("/Pedidos/Index");
+            return;
+        }
+
+        Pedido = resultadoPedido.Value;
+
+        var clientes = await clientesService.GetList(c => c.ClienteId > 0);
+        ListaClientes = clientes.Value ?? new();
+
+        var servicios = await serviciosService.GetList(s => s.Estado);
+        ListaServicios = servicios.Value ?? new();
+    }
+
+    private void AgregarServicio()
+    {
+        if (Pedido is null) return;
+
+        var servicio = ListaServicios.FirstOrDefault(s => s.ServicioId == ServicioId);
+
+        if (servicio is null)
+        {
+            toastService.ShowError("Seleccione un servicio válido");
+            return;
+        }
+
+        if (Pedido.PedidosDetalle.Any(d => d.ServicioId == ServicioId))
+        {
+            toastService.ShowError("Este servicio ya fue agregado");
+            return;
+        }
+
+        Pedido.PedidosDetalle.Add(new PedidosDetalle
+        {
+            ServicioId = ServicioId,
+            Cantidad = 1,
+            Precio = Convert.ToDouble(servicio.Precio)
+        });
+
+        CalcularTotal();
+        ServicioId = 0;
+    }
+
+    private void QuitarServicio(PedidosDetalle detalle)
+    {
+        if (Pedido is null) return;
+
+        Pedido.PedidosDetalle.Remove(detalle);
+        CalcularTotal();
+    }
+
+    private void CalcularTotal()
+    {
+        if (Pedido is null) return;
+        Pedido.Total = Pedido.PedidosDetalle.Sum(d => d.Precio);
+    }
+
+    private async Task Modificar()
+    {
+        if (Pedido is null) return;
+
+        if (Pedido.PedidosDetalle.Count == 0)
+        {
+            toastService.ShowError("Debe agregar al menos un servicio");
+            return;
+        }
+
+        CalcularTotal();
+
+        var resultado = await pedidosService.Guardar(Pedido);
+        bool guardado = false;
+
+        resultado.OnSuccess(() => { guardado = true; });
+        resultado.OnFailure(() => { guardado = false; });
+
+        if (!guardado)
+        {
+            toastService.ShowError("No se ha podido modificar el pedido");
+            return;
+        }
+
+        toastService.ShowSuccess("Pedido modificado correctamente");
+        navigationManager.NavigateTo("/Pedidos/Index");
+    }
+
+    private async Task Eliminar()
+    {
+        if (Pedido is null) return;
+
+        var resultado = await pedidosService.Eliminar(Pedido.PedidoId);
+        bool eliminado = false;
+
+        resultado.OnSuccess(() => { eliminado = true; });
+        resultado.OnFailure(() => { eliminado = false; });
+
+        if (!eliminado)
+        {
+            toastService.ShowError("No se ha podido eliminar el pedido");
+            return;
+        }
+
+        toastService.ShowSuccess("Pedido eliminado correctamente");
+        navigationManager.NavigateTo("/Pedidos/Index");
+    }
+}

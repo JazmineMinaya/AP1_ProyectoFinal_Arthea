@@ -1,0 +1,155 @@
+﻿@page "/Artistas/Index"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador")]
+
+@inject ArtistasService artistasService
+@inject ToastService toastService
+
+<PageTitle>Artistas</PageTitle>
+
+<div class="container arthea-artista-index">
+    <div class="card shadow-lg">
+
+        @* Encabezado *@
+        <div class="card-header d-flex justify-content-between align-content-center">
+            <h5 class="card-title">Registro de Artistas</h5>
+            <a href="/Artistas/Create" class="btn btn-primary"><span class="bi bi-plus-square mt-3"></span> Crear</a>
+        </div>
+
+        <div class="card-body">
+
+            @* Labels *@
+            <div class="row">
+
+                @* Filtrar por *@
+                <div class="col-3">
+                    <label class="col-form-label"><strong>Filtrar por</strong></label>
+                </div>
+
+                @* Búsqueda *@
+                <div class="col-4">
+                    <label class="col-form-label"><strong>Búsqueda</strong></label>
+                </div>
+            </div>
+
+            @* Filtros *@
+            <div class="row align-items-end">
+
+                @* Filtrar por *@
+                <div class="col-3">
+                    <InputSelect class="form-select" @bind-Value="Filtro">
+                        <option value="" disabled>Elija una opción</option>
+                        <option value="ArtistaId">ArtistaId</option>
+                        <option value="Nombres">Nombres</option>
+                        <option value="Correo">Correo</option>
+                        <option value="Disciplina">Disciplina</option>
+                    </InputSelect>
+                </div>
+
+                @* Búsqueda *@
+                <div class="col-4">
+                    <div class="input-group">
+                        <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
+                        <button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
+                    </div>
+                </div>
+
+                @* Reestablecer *@
+                <div class="col-2">
+                    <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Reestablecer"></button>
+                </div>
+
+                @* QuickGrid *@
+                <div class="grid">
+                    <QuickGrid Items="ListaArtistas.AsQueryable()" Class="table table-hover mt-3">
+                        <PropertyColumn Property="a => a.ArtistaId" Title="ArtistaId" Sortable="true" />
+
+                        <TemplateColumn Title="Nombres" Sortable="true" SortBy="GridSort<Artistas>.ByAscending(a => a.Usuario!.Nombres)">
+                            @($"{context.Usuario?.Nombres} {context.Usuario?.Apellidos}")
+                        </TemplateColumn>
+
+                        <PropertyColumn Property="a => a.Usuario!.Email" Title="Correo" Sortable="true" />
+                        <PropertyColumn Property="a => a.Telefono" Title="Teléfono" Sortable="true" />
+                        <PropertyColumn Property="a => a.Disciplina" Title="Disciplina" Sortable="true" />
+
+                        <TemplateColumn Title="Estado" Sortable="true" SortBy="GridSort<Artistas>.ByAscending(a => a.Usuario!.Estado)">
+                            @(context.Usuario?.Estado == true ? "Activo" : "Inactivo")
+                        </TemplateColumn>
+
+                        <TemplateColumn Title="Opciones" Align="Align.Center">
+                            <a href="/Artistas/Edit/@context.ArtistaId" class="btn btn-outline-primary bi bi-pencil-square"></a>
+                        </TemplateColumn>
+                    </QuickGrid>
+                </div>
+
+            </div>
+        </div>
+
+        @* Footer *@
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <label><strong>Cantidad: </strong> @ListaArtistas.Count()</label>
+        </div>
+
+    </div>
+</div>
+
+@code {
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+
+    public List<Artistas> ListaArtistas { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Reestablecer();
+    }
+
+    private async Task Buscar()
+    {
+        if (Filtro == "ArtistaId")
+        {
+            var valor = ValorFiltro.Trim();
+            var resultado = await artistasService.GetList(a => a.ArtistaId.ToString() == valor);
+
+            ListaArtistas = resultado.Value ?? new();
+        }
+
+        else if (Filtro == "Nombres")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await artistasService.GetList(a => a.Usuario != null && (a.Usuario.Nombres + " " + a.Usuario.Apellidos).ToLower().Contains(valor));
+
+            ListaArtistas = resultado.Value ?? new();
+        }
+
+        else if (Filtro == "Correo")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await artistasService.GetList(a => a.Usuario != null && a.Usuario.Email != null && a.Usuario.Email.ToLower().Contains(valor));
+
+            ListaArtistas = resultado.Value ?? new();
+        }
+
+        else if (Filtro == "Disciplina")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await artistasService.GetList(a => a.Disciplina.ToLower().Contains(valor));
+
+            ListaArtistas = resultado.Value ?? new();
+        }
+
+        else
+        {
+            toastService.ShowError("Seleccione un filtro");
+        }
+    }
+
+    private async Task Reestablecer()
+    {
+        var resultado = await artistasService.GetList(a => a.ArtistaId > 0);
+        ListaArtistas = resultado.Value ?? new();
+
+        Filtro = string.Empty;
+        ValorFiltro = string.Empty;
+    }
+}

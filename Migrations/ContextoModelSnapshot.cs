@@ -16,7 +16,7 @@ partial class ContextoModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261120060932_Administradores";
+    public override string LastMigrationId => "20261125063752_EliminarArtistaDePedidos";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -35,38 +35,760 @@ partial class ContextoModelSnapshot : ModelSnapshot
 
                 SqlServerPropertyBuilderExtensions.UseIdentityColumn(administradorId);
 
-                b.Property<bool>("Activo")
-                    .HasColumnType("bit");
-
-                b.Property<string>("Correo")
-                    .IsRequired()
-                    .HasColumnType("nvarchar(max)");
-
-                b.Property<DateTime>("FechaRegistro")
-                    .HasColumnType("datetime2");
-
                 b.Property<string>("FotoPerfil")
                     .HasColumnType("nvarchar(max)");
 
-                b.Property<string>("Nombres")
+                b.Property<string>("UsuarioId")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(450)");
+
+                b.HasKey("AdministradorId");
+
+                b.HasIndex("UsuarioId");
+
+                b.ToTable("Administradores");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Artistas", b =>
+            {
+                var artistaId = b.Property<int>("ArtistaId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(artistaId);
+
+                b.Property<string>("Biografia")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Disciplina")
                     .IsRequired()
                     .HasColumnType("nvarchar(max)");
 
-                b.Property<string>("PasswordHash")
-                    .IsRequired()
-                    .HasColumnType("nvarchar(max)");
-
-                b.Property<string>("Rol")
-                    .IsRequired()
+                b.Property<string>("FotoPerfil")
                     .HasColumnType("nvarchar(max)");
 
                 b.Property<string>("Telefono")
                     .IsRequired()
                     .HasColumnType("nvarchar(max)");
 
-                b.HasKey("AdministradorId");
+                b.Property<string>("UsuarioId")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(450)");
 
-                b.ToTable("Administradores");
+                b.HasKey("ArtistaId");
+
+                b.HasIndex("UsuarioId");
+
+                b.ToTable("Artistas");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Clientes", b =>
+            {
+                var clienteId = b.Property<int>("ClienteId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(clienteId);
+
+                b.Property<string>("Direccion")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("FotoPerfil")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Telefono")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("UsuarioId")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(450)");
+
+                b.HasKey("ClienteId");
+
+                b.HasIndex("UsuarioId");
+
+                b.ToTable("Clientes");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Facturas", b =>
+            {
+                var facturaId = b.Property<int>("FacturaId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(facturaId);
+
+                b.Property<string>("Estado")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<DateTime>("Fecha")
+                    .HasColumnType("datetime2");
+
+                b.Property<string>("NumeroFactura")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<int>("PedidoId")
+                    .HasColumnType("int");
+
+                b.Property<double>("Total")
+                    .HasColumnType("float");
+
+                b.HasKey("FacturaId");
+
+                b.HasIndex("PedidoId")
+                    .IsUnique();
+
+                b.ToTable("Facturas");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Obras", b =>
+            {
+                var obraId = b.Property<int>("ObraId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(obraId);
+
+                b.Property<int>("ArtistaId")
+                    .HasColumnType("int");
+
+                b.Property<int>("Cantidad")
+                    .HasColumnType("int");
+
+                b.Property<string>("Categoria")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Descripcion")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Estado")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<DateTime>("FechaPublicacion")
+                    .HasColumnType("datetime2");
+
+                b.Property<string>("ImagenUrl")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<decimal>("Precio")
+                    .HasColumnType("decimal(18,2)");
+
+                b.Property<string>("Tecnica")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Titulo")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.HasKey("ObraId");
+
+                b.HasIndex("ArtistaId");
+
+                b.ToTable("Obras");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Pedidos", b =>
+            {
+                var pedidoId = b.Property<int>("PedidoId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(pedidoId);
+
+                b.Property<int>("ClienteId")
+                    .HasColumnType("int");
+
+                b.Property<string>("DireccionEntrega")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Estado")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("EstadoPago")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<DateTime>("Fecha")
+                    .HasColumnType("datetime2");
+
+                b.Property<DateTime?>("FechaCancelacion")
+                    .HasColumnType("datetime2");
+
+                b.Property<DateTime?>("FechaPago")
+                    .HasColumnType("datetime2");
+
+                b.Property<DateTime?>("FechaRecepcion")
+                    .HasColumnType("datetime2");
+
+                b.Property<DateTime?>("FechaReembolso")
+                    .HasColumnType("datetime2");
+
+                b.Property<double>("MontoReembolsado")
+                    .HasColumnType("float");
+
+                b.Property<string>("MotivoCancelacion")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<double>("Total")
+                    .HasColumnType("float");
+
+                b.HasKey("PedidoId");
+
+                b.HasIndex("ClienteId");
+
+                b.ToTable("Pedidos");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.PedidosDetalle", b =>
+            {
+                var detalleId = b.Property<int>("DetalleId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(detalleId);
+
+                b.Property<int>("Cantidad")
+                    .HasColumnType("int");
+
+                b.Property<int>("PedidoId")
+                    .HasColumnType("int");
+
+                b.Property<double>("Precio")
+                    .HasColumnType("float");
+
+                b.Property<int>("ServicioId")
+                    .HasColumnType("int");
+
+                b.HasKey("DetalleId");
+
+                b.HasIndex("PedidoId");
+
+                b.HasIndex("ServicioId");
+
+                b.ToTable("PedidosDetalles");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Portafolios", b =>
+            {
+                var portafolioId = b.Property<int>("PortafolioId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(portafolioId);
+
+                b.Property<int>("ArtistaId")
+                    .HasColumnType("int");
+
+                b.Property<string>("Descripcion")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<DateTime>("FechaCreacion")
+                    .HasColumnType("datetime2");
+
+                b.Property<string>("ImagenPortada")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Titulo")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.HasKey("PortafolioId");
+
+                b.HasIndex("ArtistaId");
+
+                b.ToTable("Portafolios");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.PortafoliosDetalle", b =>
+            {
+                var detalleId = b.Property<int>("DetalleId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(detalleId);
+
+                b.Property<int>("ObraId")
+                    .HasColumnType("int");
+
+                b.Property<int>("PortafolioId")
+                    .HasColumnType("int");
+
+                b.HasKey("DetalleId");
+
+                b.HasIndex("ObraId");
+
+                b.HasIndex("PortafolioId");
+
+                b.ToTable("PortafoliosDetalle");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Servicios", b =>
+            {
+                var servicioId = b.Property<int>("ServicioId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(servicioId);
+
+                b.Property<int>("ArtistaId")
+                    .HasColumnType("int");
+
+                b.Property<string>("Categoria")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Descripcion")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<bool>("Estado")
+                    .HasColumnType("bit");
+
+                b.Property<string>("Imagen1")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Imagen2")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Imagen3")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Imagen4")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Imagen5")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Nombre")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<decimal>("Precio")
+                    .HasColumnType("decimal(18,2)");
+
+                b.Property<string>("Tecnica")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.HasKey("ServicioId");
+
+                b.HasIndex("ArtistaId");
+
+                b.ToTable("Servicios");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Usuarios", b =>
+            {
+                b.Property<string>("Id")
+                    .HasColumnType("nvarchar(450)");
+
+                b.Property<int>("AccessFailedCount")
+                    .HasColumnType("int");
+
+                b.Property<string>("Apellidos")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("ConcurrencyStamp")
+                    .IsConcurrencyToken()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Email")
+                    .HasMaxLength(256)
+                    .HasColumnType("nvarchar(256)");
+
+                b.Property<bool>("EmailConfirmed")
+                    .HasColumnType("bit");
+
+                b.Property<bool>("Estado")
+                    .HasColumnType("bit");
+
+                b.Property<DateTime>("FechaRegistro")
+                    .HasColumnType("datetime2");
+
+                b.Property<bool>("LockoutEnabled")
+                    .HasColumnType("bit");
+
+                b.Property<DateTimeOffset?>("LockoutEnd")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<string>("Nombres")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("NormalizedEmail")
+                    .HasMaxLength(256)
+                    .HasColumnType("nvarchar(256)");
+
+                b.Property<string>("NormalizedUserName")
+                    .HasMaxLength(256)
+                    .HasColumnType("nvarchar(256)");
+
+                b.Property<string>("PasswordHash")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("PhoneNumber")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<bool>("PhoneNumberConfirmed")
+                    .HasColumnType("bit");
+
+                b.Property<string>("SecurityStamp")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<bool>("TwoFactorEnabled")
+                    .HasColumnType("bit");
+
+                b.Property<string>("UserName")
+                    .HasMaxLength(256)
+                    .HasColumnType("nvarchar(256)");
+
+                b.HasKey("Id");
+
+                b.HasIndex("NormalizedEmail")
+                    .HasDatabaseName("EmailIndex");
+
+                b.HasIndex("NormalizedUserName")
+                    .IsUnique()
+                    .HasDatabaseName("UserNameIndex")
+                    .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                b.ToTable("AspNetUsers");
+            });
+
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+            {
+                b.Property<string>("Id")
+                    .HasColumnType("nvarchar(450)");
+
+                b.Property<string>("ConcurrencyStamp")
+                    .IsConcurrencyToken()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Name")
+                    .HasMaxLength(256)
+                    .HasColumnType("nvarchar(256)");
+
+                b.Property<string>("NormalizedName")
+                    .HasMaxLength(256)
+                    .HasColumnType("nvarchar(256)");
+
+                b.HasKey("Id");
+
+                b.HasIndex("NormalizedName")
+                    .IsUnique()
+                    .HasDatabaseName("RoleNameIndex")
+                    .HasFilter("[NormalizedName] IS NOT NULL");
+
+                b.ToTable("AspNetRoles");
+            });
+
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            {
+                var id = b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(id);
+
+                b.Property<string>("ClaimType")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("ClaimValue")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("RoleId")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(450)");
+
+                b.HasKey("Id");
+
+                b.HasIndex("RoleId");
+
+                b.ToTable("AspNetRoleClaims");
+            });
+
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            {
+                var id = b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(id);
+
+                b.Property<string>("ClaimType")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("ClaimValue")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("UserId")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(450)");
+
+                b.HasKey("Id");
+
+                b.HasIndex("UserId");
+
+                b.ToTable("AspNetUserClaims");
+            });
+
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            {
+                b.Property<string>("LoginProvider")
+                    .HasColumnType("nvarchar(450)");
+
+                b.Property<string>("ProviderKey")
+                    .HasColumnType("nvarchar(450)");
+
+                b.Property<string>("ProviderDisplayName")
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("UserId")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(450)");
+
+                b.HasKey("LoginProvider", "ProviderKey");
+
+                b.HasIndex("UserId");
+
+                b.ToTable("AspNetUserLogins");
+            });
+
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            {
+                b.Property<string>("UserId")
+                    .HasColumnType("nvarchar(450)");
+
+                b.Property<string>("RoleId")
+                    .HasColumnType("nvarchar(450)");
+
+                b.HasKey("UserId", "RoleId");
+
+                b.HasIndex("RoleId");
+
+                b.ToTable("AspNetUserRoles");
+            });
+
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            {
+                b.Property<string>("UserId")
+                    .HasColumnType("nvarchar(450)");
+
+                b.Property<string>("LoginProvider")
+                    .HasColumnType("nvarchar(450)");
+
+                b.Property<string>("Name")
+                    .HasColumnType("nvarchar(450)");
+
+                b.Property<string>("Value")
+                    .HasColumnType("nvarchar(max)");
+
+                b.HasKey("UserId", "LoginProvider", "Name");
+
+                b.ToTable("AspNetUserTokens");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Administradores", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Usuarios", "Usuario")
+                    .WithMany()
+                    .HasForeignKey("UsuarioId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Usuario");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Artistas", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Usuarios", "Usuario")
+                    .WithMany()
+                    .HasForeignKey("UsuarioId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Usuario");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Clientes", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Usuarios", "Usuario")
+                    .WithMany()
+                    .HasForeignKey("UsuarioId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Usuario");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Facturas", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Pedidos", "Pedido")
+                    .WithOne("Factura")
+                    .HasForeignKey("AP1_ProyectoFinal_Arthea.Models.Facturas", "PedidoId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Pedido");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Obras", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Artistas", "Artista")
+                    .WithMany()
+                    .HasForeignKey("ArtistaId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Artista");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Pedidos", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Clientes", "Cliente")
+                    .WithMany()
+                    .HasForeignKey("ClienteId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.Navigation("Cliente");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.PedidosDetalle", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Pedidos", "Pedido")
+                    .WithMany("PedidosDetalle")
+                    .HasForeignKey("PedidoId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Servicios", "Servicio")
+                    .WithMany()
+                    .HasForeignKey("ServicioId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Pedido");
+
+                b.Navigation("Servicio");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Portafolios", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Artistas", "Artista")
+                    .WithMany()
+                    .HasForeignKey("ArtistaId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Artista");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.PortafoliosDetalle", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Obras", "Obra")
+                    .WithMany()
+                    .HasForeignKey("ObraId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Portafolios", "Portafolio")
+                    .WithMany("PortafoliosDetalle")
+                    .HasForeignKey("PortafolioId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Obra");
+
+                b.Navigation("Portafolio");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Servicios", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Artistas", "Artista")
+                    .WithMany()
+                    .HasForeignKey("ArtistaId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Artista");
+            });
+
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            {
+                b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    .WithMany()
+                    .HasForeignKey("RoleId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Usuarios", null)
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Usuarios", null)
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            {
+                b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    .WithMany()
+                    .HasForeignKey("RoleId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Usuarios", null)
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            {
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Usuarios", null)
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Pedidos", b =>
+            {
+                b.Navigation("Factura");
+
+                b.Navigation("PedidosDetalle");
+            });
+
+        modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.Portafolios", b =>
+            {
+                b.Navigation("PortafoliosDetalle");
             });
 #pragma warning restore 612, 618
     }

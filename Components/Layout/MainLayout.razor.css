@@ -9,41 +9,59 @@ main {
 }
 
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    background-color: #4a3b28;
 }
 
 .top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
+    background-color: #f7f1e8;
+    border-bottom: 1px solid #d8c7af;
     justify-content: flex-end;
     height: 3.5rem;
     display: flex;
     align-items: center;
 }
+    .top-acciones {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
+    .top-row ::deep .btn-top-carrito,
+    .top-row ::deep .btn-top-login {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 6px 14px;
+        border-radius: 5px;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 14px;
         text-decoration: none;
+        white-space: nowrap;
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     }
 
-    .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-        text-decoration: underline;
+    .top-row ::deep .btn-top-carrito {
+        background-color: #FFFCF8;
+        color: #493827;
+        border: 1px solid #C9B59B;
     }
 
-    .top-row ::deep a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .top-row ::deep .btn-top-carrito:hover {
+        background-color: #EFE4D5;
+        border-color: #A68B64;
+        color: #493827;
     }
 
-@media (max-width: 640.98px) {
-    .top-row {
-        justify-content: space-between;
+    .top-row ::deep .btn-top-login {
+        background-color: #6F563B;
+        color: #FFFFFF;
+        border: 1px solid #6F563B;
     }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        margin-left: 0;
-    }
+    .top-row ::deep .btn-top-login:hover {
+    background-color: #493827;
+    border-color: #493827;
+    color: #FFFFFF;
 }
 
 @media (min-width: 641px) {
@@ -61,13 +79,7 @@ main {
     .top-row {
         position: sticky;
         top: 0;
-        z-index: 1;
-    }
-
-    .top-row.auth ::deep a:first-child {
-        flex: 1;
-        text-align: right;
-        width: 0;
+        z-index: 20;
     }
 
     .top-row, article {
@@ -76,23 +88,24 @@ main {
     }
 }
 
-#blazor-error-ui {
-    color-scheme: light only;
-    background: lightyellow;
-    bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
-    box-sizing: border-box;
-    display: none;
-    left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
-    position: fixed;
-    width: 100%;
-    z-index: 1000;
-}
-
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
+    #blazor-error-ui {
+        color-scheme: light only;
+        background: lightyellow;
+        bottom: 0;
+        box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+        box-sizing: border-box;
+        display: none;
+        left: 0;
+        padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+        position: fixed;
+        width: 100%;
+        z-index: 1000;
     }
+
+        #blazor-error-ui .dismiss {
+            cursor: pointer;
+            position: absolute;
+            right: 0.75rem;
+            top: 0.5rem;
+        }
+   

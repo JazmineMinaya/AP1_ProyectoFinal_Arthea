@@ -1,0 +1,295 @@
+@page "/Obras/Edit/{ObraId:int}"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador")]
+
+@inject ObrasService obrasService
+@inject ArtistasService artistasService
+@inject NavigationManager navigationManager
+@inject ToastService toastService
+@inject IWebHostEnvironment environment
+
+<PageTitle>Modificar Obra</PageTitle>
+
+<EditForm Model="Obra" OnValidSubmit="Modificar" FormName="editarObra">
+    <DataAnnotationsValidator />
+
+    <div class="container arthea-obra-edit">
+        <div class="card shadow-lg">
+
+            <div class="card-header">
+                <h5 class="card-title">Modificar Obra</h5>
+            </div>
+
+            <div class="card-body">
+
+                @* Imagen de la Obra *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Fotografía de la Obra</strong></label>
+                    <div>
+                        <label for="imagen" class="cuadro-imagen">
+                            @if (string.IsNullOrEmpty(imagenPreview))
+                            {
+                                <i class="bi bi-plus-lg"></i>
+                            }
+                            else
+                            {
+                                <img src="@imagenPreview" alt="Imagen de obra" />
+                            }
+                        </label>
+                        <InputFile id="imagen" class="d-none" accept=".jpg,.jpeg,.png" OnChange="SeleccionarImagen" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>ObraId</strong></label>
+                    <InputNumber class="form-control" @bind-Value="Obra.ObraId" readonly />
+                </div>
+
+                @* Artista *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Artista</strong></label>
+                    <InputSelect class="form-select" @bind-Value="Obra.ArtistaId">
+                        <option value="0">Seleccione un artista</option>
+                        @foreach (var artista in ListaArtistas)
+                        {
+                            <option value="@artista.ArtistaId">@($"{artista.Usuario?.Nombres} {artista.Usuario?.Apellidos} ({artista.Disciplina})")</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => Obra.ArtistaId)" />
+                </div>
+
+                @* Título *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Título</strong></label>
+                    <InputText class="form-control" @bind-Value="Obra.Titulo" placeholder="Título de la obra" />
+                    <ValidationMessage For="@(() => Obra.Titulo)" />
+                </div>
+
+                @* Categoría *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Categoría</strong></label>
+                    <InputSelect class="form-select" @bind-Value="Obra.Categoria" @bind-Value:after="OnCategoriaChanged">
+                        <option value="">Seleccione una categoría</option>
+                        <option value="Pintura">Pintura</option>
+                        <option value="Escultura">Escultura</option>
+                        <option value="Fotografía">Fotografía</option>
+                        <option value="Música">Música</option>
+                        <option value="Ilustración">Ilustración</option>
+                        <option value="Danza">Danza</option>
+                        <option value="Diseño Gráfico">Diseño Gráfico</option>
+                        <option value="Artesanía">Artesanía</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => Obra.Categoria)" />
+                </div>
+
+                @* Técnica (Combo Box dinámico dependiente de Categoría) *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Técnica</strong></label>
+                    <InputSelect class="form-select" @bind-Value="Obra.Tecnica" disabled="@string.IsNullOrEmpty(Obra.Categoria)">
+                        <option value="">Seleccione una técnica</option>
+                        @foreach (var tecnica in TecnicasDisponibles)
+                        {
+                            <option value="@tecnica">@tecnica</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => Obra.Tecnica)" />
+                </div>
+
+                @* Precio *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Precio</strong></label>
+                    <InputNumber class="form-control" @bind-Value="Obra.Precio" />
+                    <ValidationMessage For="@(() => Obra.Precio)" />
+                </div>
+
+                @* Cantidad *@
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Cantidad</label>
+                    <InputNumber class="form-control" @bind-Value="Obra.Cantidad" />
+                    <ValidationMessage For="@(() => Obra.Cantidad)" class="text-danger small" />
+                </div>
+
+                @* Descripción *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Descripción</strong></label>
+                    <InputTextArea class="form-control" @bind-Value="Obra.Descripcion" rows="4" placeholder="Describa la técnica, dimensiones e inspiración de la obra" />
+                    <ValidationMessage For="@(() => Obra.Descripcion)" />
+                </div>
+
+                @* Fecha de Publicación *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Fecha de Publicación</strong></label>
+                    <InputDate class="form-control" @bind-Value="Obra.FechaPublicacion" readonly />
+                </div>
+
+                @* Estado *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Estado</strong></label>
+                    <InputSelect class="form-select" @bind-Value="Obra.Estado">
+                        <option value="Disponible">Disponible</option>
+                        <option value="Reservada">Reservada</option>
+                        <option value="Vendida">Vendida</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => Obra.Estado)" />
+                </div>
+
+            </div>
+
+            <div class="card-footer text-center mt-2">
+                <a href="/Obras/Index" class="btn btn-secondary"><span class="bi bi-arrow-left"></span> Volver</a>
+                <button type="submit" class="btn btn-primary bi bi-floppy"> Modificar</button>
+                <button type="button" class="btn btn-danger bi bi-trash" data-bs-toggle="modal" data-bs-target="#eliminarModal"> Eliminar</button>
+            </div>
+
+        </div>
+    </div>
+</EditForm>
+
+<div class="modal fade" id="eliminarModal" tabindex="-1" aria-labelledby="eliminarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eliminarModalLabel">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                ¿Está seguro que desea eliminar esta obra?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Cancelar</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @onclick="Eliminar"> Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int ObraId { get; set; }
+
+    public Obras Obra = new Obras();
+    public List<Artistas> ListaArtistas = new();
+
+    private IBrowserFile? imagenSeleccionada;
+    private string? imagenPreview;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var artistasRes = await artistasService.GetList(a => a.ArtistaId > 0);
+        ListaArtistas = artistasRes.Value ?? new();
+
+        var resultado = await obrasService.Buscar(ObraId);
+        if (resultado.Value is not null)
+        {
+            Obra = resultado.Value;
+            imagenPreview = !string.IsNullOrWhiteSpace(Obra.ImagenUrl)
+                && Obra.ImagenUrl.StartsWith("/imagenes/obras/") ? Obra.ImagenUrl : null;
+        }
+        else
+        {
+            toastService.ShowError("Obra no encontrada");
+            navigationManager.NavigateTo("/Obras/Index");
+        }
+    }
+
+    private async Task Modificar()
+    {
+        try
+        {
+            await GuardarFotografia();
+            var resultado = await obrasService.Guardar(Obra);
+
+            resultado.OnSuccess(() =>
+            {
+                toastService.ShowSuccess("Obra modificada correctamente");
+                navigationManager.NavigateTo("/Obras/Index");
+            });
+
+            resultado.OnFailure(() => toastService.ShowError("No se ha podido modificar la obra"));
+        }
+        catch
+        {
+            toastService.ShowError("No se ha podido modificar la obra");
+        }
+    }
+
+    private async Task SeleccionarImagen(InputFileChangeEventArgs archivoSeleccionado)
+    {
+        var imagen = archivoSeleccionado.File;
+        var formatos = new[] { "image/jpeg", "image/png" };
+
+        if (!formatos.Contains(imagen.ContentType.ToLowerInvariant()))
+        {
+            toastService.ShowError("Solo se permiten fotografías JPG, JPEG y PNG");
+            return;
+        }
+
+        if (imagen.Size > 5 * 1024 * 1024)
+        {
+            toastService.ShowError("La fotografía no puede superar los 5 MB");
+            return;
+        }
+
+        imagenSeleccionada = imagen;
+        using var memoria = new MemoryStream();
+        await imagen.OpenReadStream(5 * 1024 * 1024).CopyToAsync(memoria);
+        imagenPreview = $"data:{imagen.ContentType};base64,{Convert.ToBase64String(memoria.ToArray())}";
+    }
+
+    private async Task GuardarFotografia()
+    {
+        if (imagenSeleccionada is null) return;
+
+        var carpeta = Path.Combine(environment.WebRootPath, "imagenes", "obras");
+        Directory.CreateDirectory(carpeta);
+
+        var extension = imagenSeleccionada.ContentType.ToLowerInvariant() switch
+        {
+            "image/jpeg" => ".jpg",
+            "image/png" => ".png",
+            _ => throw new InvalidOperationException("Formato no permitido")
+        };
+
+        var nombreArchivo = $"{Guid.NewGuid():N}{extension}";
+        var rutaArchivo = Path.Combine(carpeta, nombreArchivo);
+
+        await using var archivo = new FileStream(rutaArchivo, FileMode.CreateNew);
+        await imagenSeleccionada.OpenReadStream(5 * 1024 * 1024).CopyToAsync(archivo);
+
+        Obra.ImagenUrl = $"/imagenes/obras/{nombreArchivo}";
+    }
+
+    private async Task Eliminar()
+    {
+        var resultado = await obrasService.Eliminar(Obra.ObraId);
+
+        resultado.OnSuccess(() =>
+        {
+            toastService.ShowSuccess("Obra eliminada correctamente");
+            navigationManager.NavigateTo("/Obras/Index");
+        });
+
+        resultado.OnFailure(() => toastService.ShowError("No se ha podido eliminar la obra"));
+    }
+
+    private static readonly Dictionary<string, List<string>> TecnicasPorCategoria = new()
+    {
+        ["Pintura"] = new() { "Óleo", "Acrílico", "Acuarela", "Gouache", "Pastel", "Fresco", "Aerografía", "Pintura digital", "Técnica mixta" },
+        ["Escultura"] = new() { "Modelado", "Tallado", "Fundición", "Ensamblaje", "Cerámica", "Relieve", "Forja", "Escultura digital" },
+        ["Fotografía"] = new() { "Digital", "Analógica", "Larga exposición", "Doble exposición", "Macro", "HDR", "Panorámica", "Infrarroja" },
+        ["Música"] = new() { "Canto", "Composición", "Improvisación", "Interpretación instrumental", "Arreglos musicales", "Producción musical", "Mezcla musical" },
+        ["Ilustración"] = new() { "Grafito", "Carboncillo", "Tinta", "Lápices de colores", "Acuarela", "Ilustración digital", "Ilustración vectorial", "Collage" },
+        ["Danza"] = new() { "Ballet", "Contemporánea", "Jazz", "Hip-hop", "Salsa", "Bachata", "Merengue", "Flamenco" },
+        ["Diseño Gráfico"] = new() { "Diseño vectorial", "Fotomontaje", "Lettering", "Ilustración digital", "Tipografía", "Animación 2D", "Modelado 3D" },
+        ["Artesanía"] = new() { "Alambrismo", "Macramé", "Crochet", "Bordado", "Tejido", "Cerámica", "Bisutería", "Tallado", "Decoupage", "Resina" }
+    };
+
+    private List<string> TecnicasDisponibles =>
+        !string.IsNullOrEmpty(Obra.Categoria) && TecnicasPorCategoria.TryGetValue(Obra.Categoria, out var lista)
+            ? lista
+            : new List<string>();
+
+    private void OnCategoriaChanged()
+    {
+        Obra.Tecnica = string.Empty;
+    }
+}

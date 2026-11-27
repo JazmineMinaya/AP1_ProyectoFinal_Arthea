@@ -1,0 +1,690 @@
+﻿@page "/Catalogo/Index"
+@rendermode InteractiveServer
+
+@inject ArtistasService artistasService
+@inject ServiciosService serviciosService
+@inject ObrasService obrasService
+@inject PortafoliosService portafoliosService
+
+<PageTitle>Catálogo Artístico</PageTitle>
+
+<div class="container arthea-catalogo">
+    <div class="card shadow-lg">
+
+        @* Encabezado *@
+        <div class="card-header catalogo-encabezado">
+            <h2>Catálogo Artístico</h2>
+            <p>Descubre el talento, las obras y los servicios de nuestros artistas</p>
+        </div>
+
+        <div class="card-body">
+
+            @* Categorías *@
+            <div class="catalogo-categorias">
+                <button type="button" class="categoria-btn @(categoriaSeleccionada == "Artistas" ? "activo" : "")" @onclick='() => CambiarCategoria("Artistas")'>Artistas</button>
+                <button type="button" class="categoria-btn @(categoriaSeleccionada == "Obras" ? "activo" : "")" @onclick='() => CambiarCategoria("Obras")'>Obras</button>
+                <button type="button" class="categoria-btn @(categoriaSeleccionada == "Portafolios" ? "activo" : "")" @onclick='() => CambiarCategoria("Portafolios")'>Portafolios</button>
+                <button type="button" class="categoria-btn @(categoriaSeleccionada == "Servicios" ? "activo" : "")" @onclick='() => CambiarCategoria("Servicios")'>Servicios</button>
+            </div>
+
+            @if (categoriaSeleccionada == "Artistas" || categoriaSeleccionada == "Servicios" || categoriaSeleccionada == "Obras" || categoriaSeleccionada == "Portafolios")
+            {
+                @* Labels *@
+                <div class="row">
+                    <div class="col-3">
+                        <label class="col-form-label"><strong>Filtrar por</strong></label>
+                    </div>
+
+                    <div class="col-4">
+                        <label class="col-form-label"><strong>Búsqueda</strong></label>
+                    </div>
+                </div>
+
+                @* Filtros *@
+                <div class="row align-items-end catalogo-filtros">
+
+                    @* Filtrar por *@
+                    <div class="col-3">
+                        <select class="form-select" @bind="Filtro">
+                            <option value="" disabled>Elija una opción</option>
+
+                            @if (categoriaSeleccionada == "Artistas")
+                            {
+                                <option value="Nombre">Nombre</option>
+                                <option value="Disciplina">Disciplina</option>
+                            }
+                            else if (categoriaSeleccionada == "Obras")
+                            {
+                                <option value="Titulo">Título</option>
+                                <option value="Categoria">Categoría</option>
+                                <option value="Tecnica">Técnica</option>
+                                <option value="Artista">Artista</option>
+                            }
+                            else if (categoriaSeleccionada == "Portafolios")
+                            {
+                                <option value="Titulo">Título</option>
+                                <option value="Artista">Artista</option>
+                            }
+                            else
+                            {
+                                <option value="Nombre">Nombre</option>
+                                <option value="Categoria">Categoría</option>
+                                <option value="Artista">Artista</option>
+                            }
+                        </select>
+                    </div>
+
+                    @* Búsqueda *@
+                    <div class="col-4">
+                        <div class="input-group">
+                            <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
+                            <button type="button" class="btn btn-outline-primary bi bi-search" title="Buscar" @onclick="Buscar"></button>
+                        </div>
+                    </div>
+
+                    @* Restablecer *@
+                    <div class="col-2">
+                        <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" title="Restablecer" @onclick="Reestablecer"></button>
+                    </div>
+                </div>
+
+                @if (cargando)
+                {
+                    <div class="catalogo-mensaje">Cargando @categoriaSeleccionada.ToLower()...</div>
+                }
+                else if (!string.IsNullOrEmpty(error))
+                {
+                    <div class="catalogo-mensaje">@error</div>
+                }
+                else if (categoriaSeleccionada == "Artistas")
+                {
+                    @* Artistas *@
+                    @if (!ListaArtistas.Any())
+                    {
+                        <div class="catalogo-mensaje">No se encontraron artistas</div>
+                    }
+                    else
+                    {
+                        <div class="catalogo-grid">
+                            @foreach (var artista in ListaArtistas)
+                            {
+                                <div class="artista-card" @key="artista.ArtistaId">
+                                    <div class="artista-imagen">
+                                        <img src="@ObtenerFoto(artista.FotoPerfil)" alt="Fotografía de @ObtenerNombre(artista)" />
+                                    </div>
+
+                                    <div class="artista-informacion">
+                                        <h5>@ObtenerNombre(artista)</h5>
+                                        <p class="artista-disciplina">@artista.Disciplina</p>
+
+                                        <button type="button" class="btn-detalles" @onclick="() => MostrarDetalles(artista)">Ver detalles <i class="bi bi-arrow-up-right"></i></button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+                else if (categoriaSeleccionada == "Obras")
+            {
+                @* Obras *@
+                @if (!ListaObras.Any())
+                {
+                    <div class="catalogo-mensaje">No se encontraron obras</div>
+                }
+                else
+                {
+                    <div class="catalogo-grid">
+                        @foreach (var obra in ListaObras)
+                        {
+                            <div class="artista-card servicio-card" @key="obra.ObraId">
+                                <div class="artista-imagen">
+                                    <img src="@ObtenerFoto(obra.ImagenUrl)" alt="Imagen de @obra.Titulo" />
+                                </div>
+
+                                <div class="artista-informacion">
+                                    <h5>@obra.Titulo</h5>
+                                    <p class="artista-disciplina">@obra.Categoria · @obra.Tecnica</p>
+                                    <p class="servicio-artista">Por @ObtenerNombre(obra.Artista)</p>
+                                    <p class="servicio-precio">@obra.Precio.ToString("C", CulturaRD)</p>
+
+                                    <button type="button" class="btn-detalles" @onclick="() => MostrarDetalles(obra)">Ver detalles <i class="bi bi-arrow-up-right"></i></button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            else if (categoriaSeleccionada == "Portafolios")
+            {
+                @* Portafolios *@
+                @if (!ListaPortafolios.Any())
+                {
+                    <div class="catalogo-mensaje">No se encontraron portafolios</div>
+                }
+                else
+                {
+                    <div class="catalogo-grid">
+                        @foreach (var portafolio in ListaPortafolios)
+                        {
+                            <div class="artista-card servicio-card" @key="portafolio.PortafolioId">
+                                <div class="artista-imagen">
+                                    <img src="@ObtenerPortadaPortafolio(portafolio)" alt="Portada de @portafolio.Titulo" />
+                                </div>
+
+                                <div class="artista-informacion">
+                                    <h5>@portafolio.Titulo</h5>
+                                    <p class="artista-disciplina">@portafolio.PortafoliosDetalle.Count obras</p>
+                                    <p class="servicio-artista">Por @ObtenerNombre(portafolio.Artista)</p>
+
+                                    <button type="button" class="btn-detalles" @onclick="() => MostrarDetalles(portafolio)">Ver detalles <i class="bi bi-arrow-up-right"></i></button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+                else
+                {
+                    @* Servicios *@
+                    @if (!ListaServicios.Any())
+                    {
+                        <div class="catalogo-mensaje">No se encontraron servicios</div>
+                    }
+                    else
+                    {
+                        <div class="catalogo-grid">
+                            @foreach (var servicio in ListaServicios)
+                            {
+                                <div class="artista-card servicio-card" @key="servicio.ServicioId">
+                                    <div class="artista-imagen">
+                                        <img src="@ObtenerFoto(servicio.Imagen1)" alt="Imagen de @servicio.Nombre" />
+                                    </div>
+
+                                    <div class="artista-informacion">
+                                        <h5>@servicio.Nombre</h5>
+                                        <p class="artista-disciplina">@servicio.Categoria</p>
+                                        <p class="servicio-artista">Por @ObtenerNombre(servicio.Artista)</p>
+                                        <p class="servicio-precio">@servicio.Precio.ToString("C", CulturaRD)</p>
+
+                                        <button type="button" class="btn-detalles" @onclick="() => MostrarDetalles(servicio)">Ver detalles <i class="bi bi-arrow-up-right"></i></button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            }
+
+            else
+            {
+                <div class="catalogo-mensaje">Próximamente estará disponible el catálogo de @categoriaSeleccionada.ToLower()</div>
+            }
+
+        </div>
+    </div>
+
+    @* Modal de artistas *@
+    @if (artistaSeleccionado is not null)
+    {
+        <div class="catalogo-modal-fondo" @onclick="CerrarDetalles">
+            <div class="catalogo-modal" role="dialog" aria-modal="true" aria-label="Detalles del artista" @onclick:stopPropagation="true">
+                <button type="button" class="modal-cerrar" aria-label="Cerrar" @onclick="CerrarDetalles"><i class="bi bi-x-lg"></i></button>
+
+                <div class="modal-artista">
+                    <div class="modal-imagen">
+                        <img src="@ObtenerFoto(artistaSeleccionado.FotoPerfil)" alt="Fotografía de @ObtenerNombre(artistaSeleccionado)" />
+                    </div>
+
+                    <div class="modal-informacion">
+                        <h3>@ObtenerNombre(artistaSeleccionado)</h3>
+                        <p class="modal-disciplina">@artistaSeleccionado.Disciplina</p>
+
+                        <h5>Biografía</h5>
+                        <p class="modal-biografia">@(string.IsNullOrWhiteSpace(artistaSeleccionado.Biografia) ? "Este artista todavía no ha agregado una biografía." : artistaSeleccionado.Biografia)</p>
+
+                        <h5>Teléfono</h5>
+                        <p class="modal-telefono"><i class="bi bi-telephone"></i> @artistaSeleccionado.Telefono</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* Modal de servicios *@
+    @if (servicioSeleccionado is not null)
+    {
+        <div class="catalogo-modal-fondo" @onclick="CerrarDetalles">
+            <div class="catalogo-modal catalogo-modal-servicio" role="dialog" aria-modal="true" aria-label="Detalles del servicio" @onclick:stopPropagation="true">
+                <button type="button" class="modal-cerrar" aria-label="Cerrar" @onclick="CerrarDetalles"><i class="bi bi-x-lg"></i></button>
+
+                <div class="modal-servicio">
+
+                    @* Galería de imágenes *@
+                    <div class="servicio-galeria">
+                        <div class="servicio-galeria-imagen">
+                            @if (imagenesServicio.Count > 0)
+                            {
+                                <img src="@ObtenerFoto(imagenesServicio[indiceImagen])" alt="Imagen @(indiceImagen + 1) de @servicioSeleccionado.Nombre" />
+                            }
+
+                            @if (imagenesServicio.Count > 1)
+                            {
+                                <button type="button" class="galeria-anterior" title="Imagen anterior" @onclick="ImagenAnterior"><i class="bi bi-chevron-left"></i></button>
+                                <button type="button" class="galeria-siguiente" title="Imagen siguiente" @onclick="ImagenSiguiente"><i class="bi bi-chevron-right"></i></button>
+                            }
+                        </div>
+
+                        @if (imagenesServicio.Count > 1)
+                        {
+                            <div class="galeria-contador">@(indiceImagen + 1) de @imagenesServicio.Count</div>
+                            <div class="galeria-indicadores">
+                                @for (int i = 0; i < imagenesServicio.Count; i++)
+                                {
+                                    var posicion = i;
+                                    <button type="button" class="galeria-punto @(indiceImagen == posicion ? "activo" : "")" title="Imagen @(posicion + 1)" @onclick="() => CambiarImagen(posicion)"></button>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    @* Información del servicio *@
+                    <div class="modal-informacion">
+                        <h3>@servicioSeleccionado.Nombre</h3>
+                        <p class="modal-disciplina">@servicioSeleccionado.Categoria</p>
+
+                        <h5>Artista</h5>
+                        <p class="servicio-modal-texto">@ObtenerNombre(servicioSeleccionado.Artista)</p>
+
+                        <h5>Descripción</h5>
+                        <p class="modal-biografia">@servicioSeleccionado.Descripcion</p>
+
+                        <h5>Precio</h5>
+                        <p class="servicio-modal-precio">@servicioSeleccionado.Precio.ToString("C", CulturaRD)</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    }
+    @* Modal de obras *@
+    @if (obraSeleccionada is not null)
+    {
+        <div class="catalogo-modal-fondo" @onclick="CerrarDetalles">
+            <div class="catalogo-modal catalogo-modal-servicio" role="dialog" aria-modal="true" aria-label="Detalles de la obra" @onclick:stopPropagation="true">
+                <button type="button" class="modal-cerrar" aria-label="Cerrar" @onclick="CerrarDetalles"><i class="bi bi-x-lg"></i></button>
+
+                <div class="modal-servicio">
+                    <div class="servicio-galeria">
+                        <div class="servicio-galeria-imagen">
+                            <img src="@ObtenerFoto(obraSeleccionada.ImagenUrl)" alt="Imagen de @obraSeleccionada.Titulo" />
+                        </div>
+                    </div>
+
+                    <div class="modal-informacion">
+                        <h3>@obraSeleccionada.Titulo</h3>
+                        <p class="modal-disciplina">@obraSeleccionada.Categoria · @obraSeleccionada.Tecnica</p>
+
+                        <h5>Artista</h5>
+                        <p class="servicio-modal-texto">@ObtenerNombre(obraSeleccionada.Artista)</p>
+
+                        <h5>Descripción</h5>
+                        <p class="modal-biografia">@obraSeleccionada.Descripcion</p>
+
+                        <h5>Disponibilidad</h5>
+                        <p class="servicio-modal-texto">@obraSeleccionada.Estado (@obraSeleccionada.Cantidad disponible(s))</p>
+
+                        <h5>Precio</h5>
+                        <p class="servicio-modal-precio">@obraSeleccionada.Precio.ToString("C", CulturaRD)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* Modal de portafolios *@
+    @if (portafolioSeleccionado is not null)
+    {
+        <div class="catalogo-modal-fondo" @onclick="CerrarDetalles">
+            <div class="catalogo-modal catalogo-modal-servicio" role="dialog" aria-modal="true" aria-label="Detalles del portafolio" @onclick:stopPropagation="true">
+                <button type="button" class="modal-cerrar" aria-label="Cerrar" @onclick="CerrarDetalles"><i class="bi bi-x-lg"></i></button>
+
+                <div class="modal-servicio">
+                    @* Galería de obras del portafolio *@
+                    <div class="servicio-galeria">
+                        <div class="servicio-galeria-imagen">
+                            @if (obrasDelPortafolio.Count > 0)
+                            {
+                                <img src="@ObtenerFoto(obrasDelPortafolio[indiceImagen].ImagenUrl)" alt="@obrasDelPortafolio[indiceImagen].Titulo" />
+                            }
+                            else
+                            {
+                                <img src="@ObtenerFoto(null)" alt="Sin obras" />
+                            }
+
+                            @if (obrasDelPortafolio.Count > 1)
+                            {
+                                <button type="button" class="galeria-anterior" title="Obra anterior" @onclick="ImagenAnteriorPortafolio"><i class="bi bi-chevron-left"></i></button>
+                                <button type="button" class="galeria-siguiente" title="Obra siguiente" @onclick="ImagenSiguientePortafolio"><i class="bi bi-chevron-right"></i></button>
+                            }
+                        </div>
+
+                        @if (obrasDelPortafolio.Count > 0)
+                        {
+                            <div class="galeria-contador">
+                                @obrasDelPortafolio[indiceImagen].Titulo (@(indiceImagen + 1) de @obrasDelPortafolio.Count)
+                            </div>
+                        }
+
+                        @if (obrasDelPortafolio.Count > 1)
+                        {
+                            <div class="galeria-indicadores">
+                                @for (int i = 0; i < obrasDelPortafolio.Count; i++)
+                                {
+                                    var posicion = i;
+                                    <button type="button" class="galeria-punto @(indiceImagen == posicion ? "activo" : "")" title="Obra @(posicion + 1)" @onclick="() => CambiarImagenPortafolio(posicion)"></button>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    @* Información del portafolio *@
+                    <div class="modal-informacion">
+                        <h3>@portafolioSeleccionado.Titulo</h3>
+                        <p class="modal-disciplina">@portafolioSeleccionado.PortafoliosDetalle.Count obras en colección</p>
+
+                        <h5>Artista</h5>
+                        <p class="servicio-modal-texto">@ObtenerNombre(portafolioSeleccionado.Artista)</p>
+
+                        <h5>Descripción</h5>
+                        <p class="modal-biografia">@portafolioSeleccionado.Descripcion</p>
+
+                        <h5>Fecha de creación</h5>
+                        <p class="servicio-modal-texto">@portafolioSeleccionado.FechaCreacion.ToString("dd/MM/yyyy")</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+    public List<Artistas> ListaArtistas { get; set; } = new();
+    public List<Servicios> ListaServicios { get; set; } = new();
+    public List<Obras> ListaObras { get; set; } = new();
+    public List<Portafolios> ListaPortafolios { get; set; } = new();
+    private Obras? obraSeleccionada;
+    private Portafolios? portafolioSeleccionado;
+    private List<Obras> obrasDelPortafolio = new();
+
+    private Artistas? artistaSeleccionado;
+    private Servicios? servicioSeleccionado;
+    private string categoriaSeleccionada = "Artistas";
+    private string? error;
+    private bool cargando = true;
+    private long versionImagen = DateTime.UtcNow.Ticks;
+    private List<string> imagenesServicio = new();
+    private int indiceImagen = 0;
+    private static readonly System.Globalization.CultureInfo CulturaRD = System.Globalization.CultureInfo.GetCultureInfo("es-DO");
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Reestablecer();
+    }
+
+    private async Task Buscar()
+    {
+        cargando = true;
+        error = null;
+
+        try
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+
+            if (categoriaSeleccionada == "Artistas")
+            {
+                if (Filtro == "Nombre")
+                {
+                    var resultado = await artistasService.GetList(a => a.Usuario != null && (a.Usuario.Nombres + " " + a.Usuario.Apellidos).ToLower().Contains(valor));
+                    ListaArtistas = resultado.Value ?? new();
+                }
+                else if (Filtro == "Disciplina")
+                {
+                    var resultado = await artistasService.GetList(a => a.Disciplina.ToLower().Contains(valor));
+                    ListaArtistas = resultado.Value ?? new();
+                }
+                else
+                    error = "Seleccione un filtro para realizar la búsqueda";
+            }
+            else if (categoriaSeleccionada == "Servicios")
+            {
+                if (Filtro == "Nombre")
+                {
+                    var resultado = await serviciosService.GetList(s => s.Estado && s.Nombre.ToLower().Contains(valor));
+                    ListaServicios = resultado.Value ?? new();
+                }
+                else if (Filtro == "Categoria")
+                {
+                    var resultado = await serviciosService.GetList(s => s.Estado && s.Categoria.ToLower().Contains(valor));
+                    ListaServicios = resultado.Value ?? new();
+                }
+                else if (Filtro == "Artista")
+                {
+                    var resultado = await serviciosService.GetList(s => s.Estado && s.Artista != null && s.Artista.Usuario != null && (s.Artista.Usuario.Nombres + " " + s.Artista.Usuario.Apellidos).ToLower().Contains(valor));
+                    ListaServicios = resultado.Value ?? new();
+                }
+                else
+                    error = "Seleccione un filtro para realizar la búsqueda";
+            }
+            else if (categoriaSeleccionada == "Obras")
+            {
+                if (Filtro == "Titulo")
+                {
+                    var resultado = await obrasService.GetList(o => o.Titulo.ToLower().Contains(valor));
+                    ListaObras = resultado.Value ?? new();
+                }
+                else if (Filtro == "Categoria")
+                {
+                    var resultado = await obrasService.GetList(o => o.Categoria.ToLower().Contains(valor));
+                    ListaObras = resultado.Value ?? new();
+                }
+                else if (Filtro == "Tecnica")
+                {
+                    var resultado = await obrasService.GetList(o => o.Tecnica.ToLower().Contains(valor));
+                    ListaObras = resultado.Value ?? new();
+                }
+                else if (Filtro == "Artista")
+                {
+                    var resultado = await obrasService.GetList(o => o.Artista != null && o.Artista.Usuario != null && (o.Artista.Usuario.Nombres + " " + o.Artista.Usuario.Apellidos).ToLower().Contains(valor));
+                    ListaObras = resultado.Value ?? new();
+                }
+                else
+                    error = "Seleccione un filtro para realizar la búsqueda";
+            }
+            else if (categoriaSeleccionada == "Portafolios")
+            {
+                if (Filtro == "Titulo")
+                {
+                    var resultado = await portafoliosService.GetList(p => p.Titulo.ToLower().Contains(valor));
+                    ListaPortafolios = resultado.Value ?? new();
+                }
+                else if (Filtro == "Artista")
+                {
+                    var resultado = await portafoliosService.GetList(p => p.Artista != null && p.Artista.Usuario != null && (p.Artista.Usuario.Nombres + " " + p.Artista.Usuario.Apellidos).ToLower().Contains(valor));
+                    ListaPortafolios = resultado.Value ?? new();
+                }
+                else
+                    error = "Seleccione un filtro para realizar la búsqueda";
+            }
+
+            versionImagen = DateTime.UtcNow.Ticks;
+        }
+        catch
+        {
+            error = "No fue posible realizar la búsqueda";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task Reestablecer()
+    {
+        cargando = true;
+        error = null;
+
+        try
+        {
+            if (categoriaSeleccionada == "Artistas")
+            {
+                var resultado = await artistasService.GetList(a => a.ArtistaId > 0);
+                ListaArtistas = resultado.Value ?? new();
+            }
+            else if (categoriaSeleccionada == "Servicios")
+            {
+                var resultado = await serviciosService.GetList(s => s.ServicioId > 0 && s.Estado);
+                ListaServicios = resultado.Value ?? new();
+            }
+            else if (categoriaSeleccionada == "Obras")
+            {
+                var resultado = await obrasService.GetList(o => o.ObraId > 0);
+                ListaObras = resultado.Value ?? new();
+            }
+            else if (categoriaSeleccionada == "Portafolios")
+            {
+                var resultado = await portafoliosService.GetList(p => p.PortafolioId > 0);
+                ListaPortafolios = resultado.Value ?? new();
+            }
+
+            Filtro = string.Empty;
+            ValorFiltro = string.Empty;
+            versionImagen = DateTime.UtcNow.Ticks;
+        }
+        catch
+        {
+            error = "No fue posible cargar los registros";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task CambiarCategoria(string categoria)
+    {
+        categoriaSeleccionada = categoria;
+        artistaSeleccionado = null;
+        servicioSeleccionado = null;
+        obraSeleccionada = null;
+        portafolioSeleccionado = null;
+
+        if (categoria == "Artistas" || categoria == "Servicios" || categoria == "Obras" || categoria == "Portafolios")
+            await Reestablecer();
+    }
+
+    private static string ObtenerNombre(Artistas? artista)
+    {
+        var nombre = $"{artista?.Usuario?.Nombres} {artista?.Usuario?.Apellidos}".Trim();
+        return string.IsNullOrWhiteSpace(nombre) ? "Artista" : nombre;
+    }
+
+    private string ObtenerFoto(string? foto)
+    {
+        if (string.IsNullOrWhiteSpace(foto))
+            return "/imagenes/artista-default.png";
+
+        var ruta = foto.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                   foto.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                   ? foto : "/" + foto.TrimStart('/');
+
+        return ruta + (ruta.Contains('?') ? "&" : "?") + "v=" + versionImagen;
+    }
+
+    private void MostrarDetalles(Artistas artista)
+    {
+        servicioSeleccionado = null;
+        artistaSeleccionado = artista;
+    }
+
+    private void MostrarDetalles(Servicios servicio)
+    {
+        artistaSeleccionado = null;
+        servicioSeleccionado = servicio;
+        indiceImagen = 0;
+
+        imagenesServicio = new[] { servicio.Imagen1, servicio.Imagen2, servicio.Imagen3, servicio.Imagen4, servicio.Imagen5 }
+            .Where(imagen => !string.IsNullOrWhiteSpace(imagen))
+            .Select(imagen => imagen!)
+            .ToList();
+    }
+
+    private void ImagenAnterior()
+    {
+        if (imagenesServicio.Count > 1)
+            indiceImagen = (indiceImagen - 1 + imagenesServicio.Count) % imagenesServicio.Count;
+    }
+
+    private void ImagenSiguiente()
+    {
+        if (imagenesServicio.Count > 1)
+            indiceImagen = (indiceImagen + 1) % imagenesServicio.Count;
+    }
+
+    private void CambiarImagen(int posicion)
+    {
+        if (posicion >= 0 && posicion < imagenesServicio.Count)
+            indiceImagen = posicion;
+    }
+
+    private void CerrarDetalles()
+    {
+        artistaSeleccionado = null;
+        servicioSeleccionado = null;
+        imagenesServicio.Clear();
+        indiceImagen = 0;
+        obraSeleccionada = null; portafolioSeleccionado = null; obrasDelPortafolio.Clear();
+    }
+
+    private string ObtenerPortadaPortafolio(Portafolios portafolio)
+    {
+        return ObtenerFoto(portafolio.ImagenPortada);
+    }
+
+    private void MostrarDetalles(Obras obra)
+    {
+        CerrarDetalles();
+        obraSeleccionada = obra;
+    }
+
+    private void MostrarDetalles(Portafolios portafolio)
+    {
+        CerrarDetalles();
+        portafolioSeleccionado = portafolio;
+        indiceImagen = 0;
+
+        obrasDelPortafolio = portafolio.PortafoliosDetalle
+            .Where(d => d.Obra is not null)
+            .Select(d => d.Obra!)
+            .ToList();
+    }
+
+    private void ImagenAnteriorPortafolio()
+    {
+        if (obrasDelPortafolio.Count > 1)
+            indiceImagen = (indiceImagen - 1 + obrasDelPortafolio.Count) % obrasDelPortafolio.Count;
+    }
+
+    private void ImagenSiguientePortafolio()
+    {
+        if (obrasDelPortafolio.Count > 1)
+            indiceImagen = (indiceImagen + 1) % obrasDelPortafolio.Count;
+    }
+
+    private void CambiarImagenPortafolio(int posicion)
+    {
+        if (posicion >= 0 && posicion < obrasDelPortafolio.Count)
+            indiceImagen = posicion;
+    }
+}

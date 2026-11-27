@@ -1,14 +1,17 @@
 ﻿@page "/Administradores/Create"
 @rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador")]
 
 @inject AdministradoresService administradoresService
+@inject UserManager<Usuarios> userManager
+@inject RoleManager<IdentityRole> roleManager
 @inject NavigationManager navigationManager
 @inject ToastService toastService
 @inject IWebHostEnvironment environment
 
 <PageTitle>Crear Administrador</PageTitle>
 
-<EditForm Model="Administrador" OnValidSubmit="Guardar" FormName="crearAdministrador" Context="formContext">
+<EditForm Model="Usuario" OnValidSubmit="Guardar" FormName="crearAdministrador" Context="formContext">
     <DataAnnotationsValidator />
 
     <div class="container arthea-admin-create">
@@ -22,13 +25,10 @@
 
                 @* Foto de Perfil *@
                 <div class="mb-3">
-                    <label class="form-label">
-                        <strong>Foto de Perfil (opcional)</strong>
-                    </label>
+                    <label class="form-label"><strong>Foto de Perfil (opcional)</strong></label>
 
                     <div>
                         <label for="imagen" class="cuadro-imagen">
-
                             @if (string.IsNullOrEmpty(imagenPreview))
                             {
                                 <i class="bi bi-plus-lg"></i>
@@ -37,7 +37,6 @@
                             {
                                 <img src="@imagenPreview" alt="Foto de perfil" />
                             }
-
                         </label>
 
                         <InputFile id="imagen" class="d-none" accept=".jpg,.jpeg,.png" OnChange="SeleccionarImagen" />
@@ -52,42 +51,47 @@
 
                 @* Nombres *@
                 <div class="mb-3">
-                    <label class="form-label"><strong>Nombres</strong></label>
-                    <InputText class="form-control" @bind-Value="Administrador.Nombres" />
-                    <ValidationMessage For="@(() => Administrador.Nombres)" />
+                    <label class="form-label"><strong>Nombre</strong></label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <InputText class="form-control" @bind-Value="Usuario.Nombres" placeholder="Nombres" />
+                            <ValidationMessage For="@(() => Usuario.Nombres)" />
+                        </div>
+                        <div class="col-6">
+                            <InputText class="form-control" @bind-Value="Usuario.Apellidos" placeholder="Apellidos" />
+                            <ValidationMessage For="@(() => Usuario.Apellidos)" />
+                        </div>
+                    </div>
                 </div>
 
                 @* Correo *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Correo</strong></label>
-                    <InputText class="form-control" @bind-Value="Administrador.Correo" />
-                    <ValidationMessage For="@(() => Administrador.Correo)" />
+                    <InputText type="email" class="form-control" @bind-Value="Usuario.Email" placeholder="Ingrese su correo" />
+                    <ValidationMessage For="@(() => Usuario.Email)" />
                 </div>
 
-                @* Teléfono *@
-                <div class="mb-3">
-                    <label class="form-label"><strong>Teléfono</strong></label>
-                    <InputText class="form-control" @bind-Value="Administrador.Telefono" />
-                    <ValidationMessage For="@(() => Administrador.Telefono)" />
-                </div>
-           
                 @* Contraseña *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Contraseña</strong></label>
-                    <input type="password" class="form-control" value="@Password" @oninput="ActualizarPassword" />
-                    <ValidationMessage For="@(() => Administrador.PasswordHash)" />
+                    <div class="input-group">
+                        <input type="@(MostrarPassword ? "text" : "password")" class="form-control" @bind="Password" @bind:event="oninput" placeholder="Ingrese una contraseña" />
+                        <button type="button" class="btn btn-password" @onclick="() => MostrarPassword = !MostrarPassword">
+                            <i class="bi @(MostrarPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                        </button>
+                    </div>
                 </div>
 
                 @* Fecha de Registro *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Fecha de Registro</strong></label>
-                    <InputDate class="form-control" @bind-Value="Administrador.FechaRegistro" readonly />
+                    <InputDate class="form-control" @bind-Value="Usuario.FechaRegistro" readonly />
                 </div>
-            
+
                 @* Estado *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Estado</strong></label>
-                    <InputSelect class="form-select" @bind-Value="Administrador.Activo">
+                    <InputSelect class="form-select" @bind-Value="Usuario.Estado">
                         <option value="true">Activo</option>
                         <option value="false">Inactivo</option>
                     </InputSelect>
@@ -107,11 +111,13 @@
 
 @code {
     public Administradores Administrador = new Administradores();
-
+    public Usuarios Usuario = new Usuarios();
     public string Password { get; set; } = string.Empty;
 
     private IBrowserFile? imagenSeleccionada;
     private string? imagenPreview;
+
+    private bool MostrarPassword = false;
 
     private async Task Guardar()
     {
@@ -121,35 +127,83 @@
             return;
         }
 
-        if (await administradoresService.CorreoExiste(Administrador.Correo, Administrador.AdministradorId))
+        if (string.IsNullOrWhiteSpace(Usuario.Email))
+        {
+            toastService.ShowError("Ingrese un correo");
+            return;
+        }
+
+        if (await userManager.FindByEmailAsync(Usuario.Email) is not null)
         {
             toastService.ShowError("Este correo ya está registrado");
             return;
         }
 
-        Administrador.PasswordHash = administradoresService.GenerarHash(Administrador, Password);
+        Usuario.UserName = Usuario.Email;
 
-        await GuardarFotografia();
+        var resultadoUsuario = await userManager.CreateAsync(Usuario, Password);
 
-        var resultado = await administradoresService.Guardar(Administrador);
-
-        resultado.OnSuccess(() =>
+        if (!resultadoUsuario.Succeeded)
         {
+            toastService.ShowError(string.Join(" ", resultadoUsuario.Errors.Select(e => e.Description)));
+            return;
+        }
+
+        if (!await roleManager.RoleExistsAsync("Administrador"))
+        {
+            var resultadoRol = await roleManager.CreateAsync(new IdentityRole("Administrador"));
+
+            if (!resultadoRol.Succeeded)
+            {
+                await userManager.DeleteAsync(Usuario);
+                toastService.ShowError("No se pudo crear el rol Administrador");
+                return;
+            }
+        }
+
+        var resultadoAsignacion = await userManager.AddToRoleAsync(Usuario, "Administrador");
+
+        if (!resultadoAsignacion.Succeeded)
+        {
+            await userManager.DeleteAsync(Usuario);
+            toastService.ShowError("No se pudo asignar el rol Administrador");
+            return;
+        }
+
+        Administrador.UsuarioId = Usuario.Id;
+
+        try
+        {
+            await GuardarFotografia();
+
+            var resultado = await administradoresService.Guardar(Administrador);
+            bool guardado = false;
+
+            resultado.OnSuccess(() =>
+            {
+                guardado = true;
+            });
+
+            resultado.OnFailure(() =>
+            {
+                guardado = false;
+            });
+
+            if (!guardado)
+            {
+                await userManager.DeleteAsync(Usuario);
+                toastService.ShowError("No se ha podido guardar el administrador");
+                return;
+            }
+
             toastService.ShowSuccess("Administrador guardado correctamente");
             navigationManager.NavigateTo("/Administradores/Index");
-        });
-
-        resultado.OnFailure(() =>
+        }
+        catch
         {
+            await userManager.DeleteAsync(Usuario);
             toastService.ShowError("No se ha podido guardar el administrador");
-        });
-    }
-    
-    private void ActualizarPassword(ChangeEventArgs e)
-    {
-        Password = e.Value?.ToString() ?? string.Empty;
-
-        Administrador.PasswordHash = string.IsNullOrWhiteSpace(Password) ? string.Empty : administradoresService.GenerarHash(Administrador, Password);
+        }
     }
 
     private async Task SeleccionarImagen(InputFileChangeEventArgs archivoSeleccionado)
@@ -173,9 +227,7 @@
         imagenSeleccionada = imagen;
 
         using var memoria = new MemoryStream();
-
-        await imagen.OpenReadStream(5 * 1024 * 1024)
-            .CopyToAsync(memoria);
+        await imagen.OpenReadStream(5 * 1024 * 1024).CopyToAsync(memoria);
 
         imagenPreview = $"data:{imagen.ContentType};base64,{Convert.ToBase64String(memoria.ToArray())}";
     }
@@ -185,11 +237,7 @@
         if (imagenSeleccionada is null)
             return;
 
-        var carpeta = Path.Combine(
-            environment.WebRootPath,
-            "imagenes",
-            "administradores"
-        );
+        var carpeta = Path.Combine(environment.WebRootPath, "imagenes", "administradores");
 
         Directory.CreateDirectory(carpeta);
 
@@ -203,13 +251,8 @@
         var nombreArchivo = $"{Guid.NewGuid():N}{extension}";
         var rutaArchivo = Path.Combine(carpeta, nombreArchivo);
 
-        await using var archivo = new FileStream(
-            rutaArchivo,
-            FileMode.CreateNew
-        );
-
-        await imagenSeleccionada.OpenReadStream(5 * 1024 * 1024)
-            .CopyToAsync(archivo);
+        await using var archivo = new FileStream(rutaArchivo, FileMode.CreateNew);
+        await imagenSeleccionada.OpenReadStream(5 * 1024 * 1024).CopyToAsync(archivo);
 
         Administrador.FotoPerfil = $"/imagenes/administradores/{nombreArchivo}";
     }

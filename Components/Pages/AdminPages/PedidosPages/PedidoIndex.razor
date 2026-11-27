@@ -1,0 +1,178 @@
+﻿@page "/Pedidos/Index"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador")]
+
+@inject PedidosService pedidosService
+@inject ToastService toastService
+
+<PageTitle>Pedidos</PageTitle>
+
+<div class="container arthea-pedidos-index">
+    <div class="card shadow-lg">
+
+        @* Encabezado *@
+        <div class="card-header d-flex justify-content-between align-content-center">
+            <h5 class="card-title">Registro de Pedidos</h5>
+            <a href="/Pedidos/Create" class="btn btn-primary"><span class="bi bi-plus-square mt-3"></span> Crear</a>
+        </div>
+
+        <div class="card-body">
+
+            @* Labels *@
+            <div class="row">
+                <div class="col-3">
+                    <label class="col-form-label"><strong>Filtrar por</strong></label>
+                </div>
+                <div class="col-4">
+                    <label class="col-form-label"><strong>Búsqueda</strong></label>
+                </div>
+            </div>
+
+            @* Filtros *@
+            <div class="row align-items-end">
+                <div class="col-3">
+                    <InputSelect class="form-select" @bind-Value="Filtro">
+                        <option value="" disabled>Elija una opción</option>
+                        <option value="PedidoId">PedidoId</option>
+                        <option value="Cliente">Cliente</option>
+                        <option value="Estado">Estado</option>
+                        <option value="Fecha">Fecha</option>
+                    </InputSelect>
+                </div>
+
+                <div class="col-4">
+                    <div class="input-group">
+                        <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
+                        <button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
+                    </div>
+                </div>
+
+                <div class="col-2">
+                    <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Reestablecer"></button>
+                </div>
+
+                @* Filtro Fecha *@
+                <div class="row mt-3">
+                    <div class="col-3">
+                        <label class="col-form-label"><strong>Desde</strong></label>
+                        <InputDate class="form-control" @bind-Value="Desde"></InputDate>
+                    </div>
+
+                    <div class="col-3">
+                        <label class="col-form-label"><strong>Hasta</strong></label>
+                        <InputDate class="form-control" @bind-Value="Hasta"></InputDate>
+                    </div>
+                </div>
+
+                @* QuickGrid *@
+                <div class="grid">
+                    <QuickGrid Items="ListaPedidos.AsQueryable()" Class="table table-hover mt-3">
+
+                        <PropertyColumn Property="p => p.PedidoId" Title="PedidoId" Sortable="true" />
+
+                        <TemplateColumn Title="Cliente" Sortable="true" SortBy="GridSort<Pedidos>.ByAscending(p => p.Cliente!.Usuario!.Nombres)">
+                            @($"{context.Cliente?.Usuario?.Nombres} {context.Cliente?.Usuario?.Apellidos}")
+                        </TemplateColumn>
+
+                        <PropertyColumn Property="p => p.Fecha" Title="Fecha" Format="dd/MM/yyyy" Sortable="true" />
+
+                        <PropertyColumn Property="p => p.Total" Title="Total" Sortable="true" />
+
+                        <TemplateColumn Title="Estado" Sortable="true" SortBy="GridSort<Pedidos>.ByAscending(p => p.Estado)">
+                            <span class="estado-pedido @context.Estado.ToLower().Replace(" ", "-")">@context.Estado</span>
+                        </TemplateColumn>
+
+                        <TemplateColumn Title="Estado de Pago" Sortable="true" SortBy="GridSort<Pedidos>.ByAscending(p => p.EstadoPago)">
+                            <span class="estado-pago @context.EstadoPago.ToLower()">@context.EstadoPago</span>
+                        </TemplateColumn>
+
+                        <TemplateColumn Title="Opciones" Align="Align.Center">
+                            <a href="/Pedidos/Edit/@context.PedidoId" class="btn btn-outline-primary bi bi-pencil-square"></a>
+                        </TemplateColumn>
+
+                    </QuickGrid>
+                </div>
+            </div>
+        </div>
+
+        @* Footer *@
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <label><strong>Cantidad: </strong> @ListaPedidos.Count()</label>
+            <label><strong>Total: </strong> @ListaPedidos.Sum(p => p.Total).ToString("N2")</label>
+        </div>
+
+    </div>
+</div>
+
+@code {
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+
+    public List<Pedidos> ListaPedidos { get; set; } = new();
+
+    public DateTime? Desde { get; set; }
+    public DateTime? Hasta { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resultado = await pedidosService.GetList(p => p.PedidoId > 0);
+        ListaPedidos = resultado.Value ?? new();
+    }
+
+    private async Task Buscar()
+    {
+        if (Filtro == "PedidoId")
+        {
+            var valor = ValorFiltro.Trim();
+            var resultado = await pedidosService.GetList(p => p.PedidoId.ToString() == valor);
+            ListaPedidos = resultado.Value ?? new();
+        }
+        else if (Filtro == "Cliente")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await pedidosService.GetList(p => p.Cliente != null && p.Cliente.Usuario != null && (p.Cliente.Usuario.Nombres + " " + p.Cliente.Usuario.Apellidos).ToLower().Contains(valor));
+            ListaPedidos = resultado.Value ?? new();
+        }
+        else if (Filtro == "Estado")
+        {
+            var valor = ValorFiltro.Trim().ToLower();
+            var resultado = await pedidosService.GetList(p => p.Estado.ToLower().Contains(valor));
+            ListaPedidos = resultado.Value ?? new();
+        }
+        else if (Filtro == "Fecha")
+        {
+            if (Desde == null || Hasta == null)
+            {
+                toastService.ShowError("Seleccione las fechas Desde y Hasta");
+                return;
+            }
+
+            if (Desde > Hasta)
+            {
+                toastService.ShowError("Seleccione un rango de fechas válido");
+                return;
+            }
+
+            var desde = Desde.Value.Date;
+            var hasta = Hasta.Value.Date.AddDays(1);
+
+            var resultado = await pedidosService.GetList(p => p.Fecha >= desde && p.Fecha < hasta);
+            ListaPedidos = resultado.Value ?? new();
+        }
+        else
+        {
+            toastService.ShowError("Seleccione un filtro");
+        }
+    }
+
+    private async Task Reestablecer()
+    {
+        var resultado = await pedidosService.GetList(p => p.PedidoId > 0);
+        ListaPedidos = resultado.Value ?? new();
+
+        Filtro = string.Empty;
+        ValorFiltro = string.Empty;
+        Desde = null;
+        Hasta = null;
+    }
+}

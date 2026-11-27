@@ -1,4 +1,3 @@
-
 /* Contenedor principal */
 .arthea-admin-index {
     color: #493827;
@@ -146,3 +145,26 @@
         color: #493827;
         font-family: Georgia, "Times New Roman", serif;
     }
+
+    /* Selectores de fecha Desde y Hasta */
+    .arthea-admin-index ::deep input[type="date"] {
+        background-color: #FFFCF8;
+        border: 1px solid #D9CBB9;
+        border-radius: 6px;
+        color: #493827;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 16px;
+    }
+
+        /* Ícono del calendario */
+        .arthea-admin-index ::deep input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.75;
+            filter: sepia(60%) saturate(150%) hue-rotate(350deg) brightness(45%);
+        }
+
+        /* Campo seleccionado */
+        .arthea-admin-index ::deep input[type="date"]:focus {
+            border-color: #9C8060;
+            box-shadow: 0 0 0 0.2rem rgba(156, 128, 96, 0.15);
+        }

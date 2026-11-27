@@ -1,6 +1,8 @@
 using AP1_ProyectoFinal_Arthea.Components;
 using AP1_ProyectoFinal_Arthea.Context;
+using AP1_ProyectoFinal_Arthea.Models;
 using AP1_ProyectoFinal_Arthea.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +15,17 @@ var ConStr = builder.Configuration.GetConnectionString("SqlConStr");
 
 builder.Services.AddDbContextFactory<Contexto>(o => o.UseSqlServer(ConStr));
 builder.Services.AddScoped<AdministradoresService>();
+builder.Services.AddScoped<ArtistasService>();
+builder.Services.AddScoped<ServiciosService>();
+builder.Services.AddScoped<ClientesService>();
+builder.Services.AddScoped<ObrasService>();
+builder.Services.AddScoped<PedidosService>();
+builder.Services.AddScoped<PedidosService>();
+builder.Services.AddScoped<PortafoliosService>();
+
+builder.Services.AddIdentity<Usuarios, IdentityRole>()
+    .AddEntityFrameworkStores<Contexto>()
+    .AddDefaultTokenProviders();
 
 builder.Services.AddBlazorBootstrap();
 
@@ -27,6 +40,9 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseAntiforgery();
 

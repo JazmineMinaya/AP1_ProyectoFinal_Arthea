@@ -1,0 +1,275 @@
+/* Contenedor principal */
+.arthea-servicios-edit {
+    color: #493827;
+}
+
+    /* Tarjeta principal */
+    .arthea-servicios-edit .card {
+        background-color: #F7F1E8;
+        border: 1px solid #D8C7AF;
+        border-radius: 8px;
+        box-shadow: 0 12px 30px rgba(61, 44, 29, 0.13) !important;
+    }
+
+    /* Encabezado */
+    .arthea-servicios-edit .card-header {
+        background-color: #F7F1E8;
+        border-bottom: 1px solid #D8C7AF;
+        color: #493827;
+        position: relative;
+    }
+
+        /* Línea decorativa */
+        .arthea-servicios-edit .card-header::after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            left: 16px;
+            width: 175px;
+            height: 2px;
+            background-color: #A68B64;
+        }
+
+    /* Título */
+    .arthea-servicios-edit .card-title {
+        font-family: Georgia, "Times New Roman", serif;
+        font-variant: small-caps;
+        letter-spacing: 0.6px;
+        color: #493827;
+    }
+
+    /* Cuerpo con textura de papel */
+    .arthea-servicios-edit .card-body {
+        background-color: #FBF7F0;
+        background-image: radial-gradient(rgba(111, 86, 59, 0.045) 0.7px, transparent 0.7px);
+        background-size: 9px 9px;
+    }
+
+    /* Etiquetas */
+    .arthea-servicios-edit .form-label {
+        font-family: Georgia, "Times New Roman", serif;
+        color: #493827;
+        font-size: 17px;
+        letter-spacing: 0.2px;
+    }
+
+    /* Campos del formulario */
+    .arthea-servicios-edit .form-control,
+    .arthea-servicios-edit ::deep .form-control,
+    .arthea-servicios-edit ::deep .form-select {
+        background-color: #FFFCF8;
+        border: 1px solid #D9CBB9;
+        border-radius: 6px;
+        color: #493827;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 16px;
+    }
+
+        /* Campos seleccionados */
+        .arthea-servicios-edit .form-control:focus,
+        .arthea-servicios-edit ::deep .form-control:focus,
+        .arthea-servicios-edit ::deep .form-select:focus {
+            border-color: #9C8060;
+            box-shadow: 0 0 0 0.2rem rgba(156, 128, 96, 0.15);
+        }
+
+        /* Solo lectura */
+        .arthea-servicios-edit ::deep .form-control[readonly] {
+            background-color: #F1E8DC;
+            color: #806B54;
+        }
+
+        /* Opciones */
+        .arthea-servicios-edit ::deep .form-select option {
+            background-color: #FFFCF8;
+            color: #493827;
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+    /* Imágenes */
+    .arthea-servicios-edit .contenedor-imagenes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-top: 12px;
+    }
+
+    .arthea-servicios-edit .imagen-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 7px;
+        width: 125px;
+    }
+
+    .arthea-servicios-edit .imagen-titulo {
+        font-size: 13px;
+        text-align: center;
+        margin-bottom: 0;
+    }
+
+    .arthea-servicios-edit .cuadro-imagen {
+        width: 115px;
+        height: 115px;
+        border: 2px dashed #B9A58B;
+        border-radius: 8px;
+        background-color: #F7F1E8;
+        color: #795D43;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        overflow: hidden;
+        transition: background-color 0.2s, border-color 0.2s;
+    }
+
+        .arthea-servicios-edit .cuadro-imagen i {
+            font-size: 28px;
+        }
+
+        .arthea-servicios-edit .cuadro-imagen img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .arthea-servicios-edit .cuadro-imagen:hover {
+            background-color: #EEE3D4;
+            border-color: #9C8060;
+        }
+
+    /* Quitar imagen */
+    .arthea-servicios-edit .btn-quitar-imagen {
+        background-color: transparent;
+        border: none;
+        color: #8B5145;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 13px;
+        padding: 2px 5px;
+    }
+
+        .arthea-servicios-edit .btn-quitar-imagen:hover {
+            color: #A34D43;
+            text-decoration: underline;
+        }
+
+    /* Texto de ayuda */
+    .arthea-servicios-edit .texto-ayuda {
+        color: #806B54;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 13px;
+        margin-top: 5px;
+    }
+
+    /* Footer */
+    .arthea-servicios-edit .card-footer {
+        background-color: #F0E6D9;
+        border-top: 1px solid #D8C7AF;
+        color: #493827;
+        font-family: Georgia, "Times New Roman", serif;
+    }
+
+    /* Modificar */
+    .arthea-servicios-edit .btn-primary {
+        background-color: #6F563B;
+        border-color: #6F563B;
+        color: white;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 16px;
+    }
+
+        .arthea-servicios-edit .btn-primary:hover {
+            background-color: #493827;
+            border-color: #493827;
+            color: white;
+        }
+
+    /* Volver */
+    .arthea-servicios-edit .btn-secondary {
+        background-color: transparent;
+        border-color: #B9AA98;
+        color: #806B54;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 16px;
+    }
+
+        .arthea-servicios-edit .btn-secondary:hover {
+            background-color: #806B54;
+            border-color: #806B54;
+            color: white;
+        }
+
+    /* Eliminar */
+    .arthea-servicios-edit .btn-danger {
+        background-color: #A65D50;
+        border-color: #A65D50;
+        color: white;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 16px;
+    }
+
+        .arthea-servicios-edit .btn-danger:hover {
+            background-color: #854438;
+            border-color: #854438;
+            color: white;
+        }
+
+    /* Validaciones */
+    .arthea-servicios-edit ::deep .validation-message {
+        color: #A34D43;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 14px;
+    }
+
+/* Modal de eliminación */
+#eliminarModal .modal-content {
+    background-color: #FBF7F0;
+    border: 1px solid #D8C7AF;
+    border-radius: 8px;
+    color: #493827;
+    font-family: Georgia, "Times New Roman", serif;
+    box-shadow: 0 12px 30px rgba(61, 44, 29, 0.13);
+}
+
+#eliminarModal .modal-header {
+    background-color: #F7F1E8;
+    border-bottom: 1px solid #D8C7AF;
+}
+
+#eliminarModal .modal-title {
+    font-family: Georgia, "Times New Roman", serif;
+    font-variant: small-caps;
+    letter-spacing: 0.6px;
+    color: #493827;
+}
+
+#eliminarModal .modal-footer {
+    background-color: #F0E6D9;
+    border-top: 1px solid #D8C7AF;
+}
+
+#eliminarModal .btn-secondary {
+    background-color: transparent;
+    border-color: #B9AA98;
+    color: #806B54;
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+    #eliminarModal .btn-secondary:hover {
+        background-color: #806B54;
+        border-color: #806B54;
+        color: white;
+    }
+
+#eliminarModal .btn-danger {
+    background-color: #A65D50;
+    border-color: #A65D50;
+    color: white;
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+    #eliminarModal .btn-danger:hover {
+        background-color: #854438;
+        border-color: #854438;
+        color: white;
+    }
