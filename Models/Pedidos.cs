@@ -10,8 +10,12 @@ public partial class Pedidos
 
     public DateTime Fecha { get; set; } = DateTime.Now;
 
-    [Range(1, int.MaxValue, ErrorMessage = "Seleccione un cliente")]
-    public int ClienteId { get; set; }
+    public int? ClienteId { get; set; }
+
+    public string? UsuarioId { get; set; }
+
+    [ForeignKey("UsuarioId")]
+    public Usuarios? Usuario { get; set; }
 
     [Required(ErrorMessage = "Seleccione el estado del pedido")]
     public string Estado { get; set; } = "Pendiente";

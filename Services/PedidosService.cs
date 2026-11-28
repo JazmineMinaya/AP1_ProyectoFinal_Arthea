@@ -1,27 +1,23 @@
 ﻿using AP1_ProyectoFinal_Arthea.Context;
 using AP1_ProyectoFinal_Arthea.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using System.Linq.Expressions;
 using Aplicada1.Core;
 
 namespace AP1_ProyectoFinal_Arthea.Services;
 
 public class PedidosService(
-    IDbContextFactory<Contexto> contextFactory
+    IDbContextFactory<Contexto> contextFactory,
+    UserManager<Usuarios> userManager
 ) : IServiceResult<Pedidos, int>
 {
     public async Task<Result> Guardar(Pedidos pedido)
     {
         if (!await Existe(pedido.PedidoId))
-        {
-            var inserto = await Insertar(pedido);
-            return Result.Success(inserto);
-        }
-        else
-        {
-            var modifico = await Modificar(pedido);
-            return Result.Success(modifico);
-        }
+            return Result.Success(await Insertar(pedido));
+
+        return Result.Success(await Modificar(pedido));
     }
 
     private async Task<bool> Existe(int pedidoId)
@@ -32,23 +28,45 @@ public class PedidosService(
 
     public async Task<Result<Pedidos?>> ObtenerOCrearCarrito(string usuarioId)
     {
+        var usuario = await userManager.FindByIdAsync(usuarioId);
+
+        if (usuario == null || !usuario.Estado)
+            return Result.Success<Pedidos?>(null);
+
+        var esCliente = await userManager.IsInRoleAsync(usuario, "Cliente");
+        var esAdministrador = await userManager.IsInRoleAsync(usuario, "Administrador");
+
+        if (!esCliente && !esAdministrador)
+            return Result.Success<Pedidos?>(null);
+
         await using var contexto = await contextFactory.CreateDbContextAsync();
 
         var cliente = await contexto.Clientes.FirstOrDefaultAsync(c => c.UsuarioId == usuarioId);
 
-        if (cliente == null)
-            return Result.Success<Pedidos?>(null);
-
         var carrito = await contexto.Pedidos
             .Include(p => p.PedidosDetalle)
-            .FirstOrDefaultAsync(p => p.ClienteId == cliente.ClienteId && p.Estado == "Carrito");
+            .FirstOrDefaultAsync(p => p.UsuarioId == usuarioId && p.Estado == "Carrito");
+
+        if (carrito == null && cliente != null)
+        {
+            carrito = await contexto.Pedidos
+                .Include(p => p.PedidosDetalle)
+                .FirstOrDefaultAsync(p => p.ClienteId == cliente.ClienteId && p.UsuarioId == null && p.Estado == "Carrito");
+
+            if (carrito != null)
+            {
+                carrito.UsuarioId = usuarioId;
+                await contexto.SaveChangesAsync();
+            }
+        }
 
         if (carrito != null)
             return Result.Success<Pedidos?>(carrito);
 
         carrito = new Pedidos
         {
-            ClienteId = cliente.ClienteId,
+            UsuarioId = usuarioId,
+            ClienteId = cliente?.ClienteId,
             Fecha = DateTime.Now,
             Estado = "Carrito",
             EstadoPago = "Pendiente",
@@ -68,23 +86,22 @@ public class PedidosService(
         var pedido = await contexto.Pedidos
             .Include(p => p.PedidosDetalle)
                 .ThenInclude(d => d.Referencias)
-            .FirstOrDefaultAsync(p => p.PedidoId == pedidoId && p.Cliente!.UsuarioId == usuarioId && p.Estado == "Carrito");
+            .FirstOrDefaultAsync(p => p.PedidoId == pedidoId && p.UsuarioId == usuarioId && p.Estado == "Carrito");
 
         if (pedido == null || !await ValidarDetalles(contexto, pedido))
             return Result.Success(false);
 
         var ahora = DateTime.UtcNow;
-        var tieneServicios = pedido.PedidosDetalle.Any(d => d.ServicioId.HasValue);
 
-        pedido.Estado = tieneServicios ? "PendienteAprobacion" : "PendientePago";
+        pedido.Estado = "PendienteAprobacion";
         pedido.EstadoPago = "Pendiente";
         pedido.FechaConfirmacion = ahora;
-        pedido.FechaLimiteAprobacion = tieneServicios ? ahora.AddHours(24) : ahora;
+        pedido.FechaLimiteAprobacion = ahora.AddHours(24);
 
         foreach (var detalle in pedido.PedidosDetalle)
         {
-            detalle.EstadoAprobacion = detalle.ObraId.HasValue ? "Aprobado" : "Pendiente";
-            detalle.FechaRespuesta = detalle.ObraId.HasValue ? ahora : null;
+            detalle.EstadoAprobacion = "Pendiente";
+            detalle.FechaRespuesta = null;
             detalle.MotivoRechazo = null;
         }
 
@@ -93,10 +110,34 @@ public class PedidosService(
 
     private async Task<bool> ValidarDetalles(Contexto contexto, Pedidos pedido)
     {
-        if (pedido.ClienteId <= 0 || pedido.PedidosDetalle == null || !pedido.PedidosDetalle.Any())
+        if (pedido.PedidosDetalle == null || !pedido.PedidosDetalle.Any())
             return false;
 
-        if (!await contexto.Clientes.AnyAsync(c => c.ClienteId == pedido.ClienteId))
+        if (pedido.ClienteId.HasValue)
+        {
+            var cliente = await contexto.Clientes.FirstOrDefaultAsync(c => c.ClienteId == pedido.ClienteId.Value);
+
+            if (cliente == null)
+                return false;
+
+            if (string.IsNullOrWhiteSpace(pedido.UsuarioId))
+                pedido.UsuarioId = cliente.UsuarioId;
+            else if (pedido.UsuarioId != cliente.UsuarioId)
+                return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(pedido.UsuarioId))
+            return false;
+
+        var usuario = await contexto.Users.FirstOrDefaultAsync(u => u.Id == pedido.UsuarioId && u.Estado);
+
+        if (usuario == null)
+            return false;
+
+        var esCliente = await userManager.IsInRoleAsync(usuario, "Cliente");
+        var esAdministrador = await userManager.IsInRoleAsync(usuario, "Administrador");
+
+        if (!esCliente && !esAdministrador)
             return false;
 
         foreach (var detalle in pedido.PedidosDetalle)
@@ -106,8 +147,7 @@ public class PedidosService(
 
             if (detalle.ObraId.HasValue)
             {
-                var obra = await contexto.Obras
-                    .AsNoTracking()
+                var obra = await contexto.Obras.AsNoTracking()
                     .FirstOrDefaultAsync(o => o.ObraId == detalle.ObraId && o.Estado == "Disponible");
 
                 if (obra == null)
@@ -121,12 +161,10 @@ public class PedidosService(
                     return false;
 
                 detalle.Precio = Convert.ToDouble(obra.Precio);
-                detalle.EstadoAprobacion = "Aprobado";
             }
             else
             {
-                var servicio = await contexto.Servicios
-                    .AsNoTracking()
+                var servicio = await contexto.Servicios.AsNoTracking()
                     .FirstOrDefaultAsync(s => s.ServicioId == detalle.ServicioId);
 
                 if (servicio == null || !servicio.Estado)
@@ -171,10 +209,11 @@ public class PedidosService(
         pedido.FechaPago = null;
         pedido.Factura = null;
         pedido.Cliente = null;
+        pedido.Usuario = null;
 
         foreach (var detalle in pedido.PedidosDetalle)
         {
-            detalle.EstadoAprobacion = detalle.ObraId.HasValue ? "Aprobado" : "Pendiente";
+            detalle.EstadoAprobacion = "Pendiente";
             detalle.FechaRespuesta = null;
             detalle.MotivoRechazo = null;
             detalle.Servicio = null;
@@ -204,29 +243,29 @@ public class PedidosService(
 
         pedidoInicial.Fecha = pedido.Fecha;
         pedidoInicial.ClienteId = pedido.ClienteId;
+        pedidoInicial.UsuarioId = pedido.UsuarioId;
         pedidoInicial.Total = pedido.Total;
-        pedidoInicial.PedidosDetalle = pedido.PedidosDetalle
-            .Select(d => new PedidosDetalle
+
+        pedidoInicial.PedidosDetalle = pedido.PedidosDetalle.Select(d => new PedidosDetalle
+        {
+            PedidoId = pedidoInicial.PedidoId,
+            ServicioId = d.ServicioId,
+            ObraId = d.ObraId,
+            Cantidad = d.Cantidad,
+            Precio = d.Precio,
+            Requerimientos = d.Requerimientos,
+            GuiaRequerimientos = d.GuiaRequerimientos,
+            EnlaceReferencia = d.EnlaceReferencia,
+            ModalidadEntrega = d.ModalidadEntrega,
+            DireccionEntrega = d.DireccionEntrega,
+            MedioEntrega = d.MedioEntrega,
+            ContactoEntrega = d.ContactoEntrega,
+            EstadoAprobacion = "Pendiente",
+            Referencias = d.Referencias.Select(r => new PedidosReferencias
             {
-                PedidoId = pedidoInicial.PedidoId,
-                ServicioId = d.ServicioId,
-                ObraId = d.ObraId,
-                Cantidad = d.Cantidad,
-                Precio = d.Precio,
-                Requerimientos = d.Requerimientos,
-                GuiaRequerimientos = d.GuiaRequerimientos,
-                EnlaceReferencia = d.EnlaceReferencia,
-                ModalidadEntrega = d.ModalidadEntrega,
-                DireccionEntrega = d.DireccionEntrega,
-                MedioEntrega = d.MedioEntrega,
-                ContactoEntrega = d.ContactoEntrega,
-                EstadoAprobacion = d.ObraId.HasValue ? "Aprobado" : "Pendiente",
-                Referencias = d.Referencias.Select(r => new PedidosReferencias
-                {
-                    Imagen = r.Imagen
-                }).ToList()
-            })
-            .ToList();
+                Imagen = r.Imagen
+            }).ToList()
+        }).ToList();
 
         return await contexto.SaveChangesAsync() > 0;
     }
@@ -238,8 +277,9 @@ public class PedidosService(
         await using var contexto = await contextFactory.CreateDbContextAsync();
 
         return await contexto.Pedidos
+            .Include(p => p.Usuario)
             .Include(p => p.Cliente)
-                .ThenInclude(c => c.Usuario)
+                .ThenInclude(c => c!.Usuario)
             .Include(p => p.PedidosDetalle)
                 .ThenInclude(d => d.Referencias)
             .Include(p => p.PedidosDetalle)
@@ -259,8 +299,8 @@ public class PedidosService(
         await using var contexto = await contextFactory.CreateDbContextAsync();
 
         var pedido = await contexto.Pedidos
-            .Include(a => a.PedidosDetalle)
-            .FirstOrDefaultAsync(a => a.PedidoId == pedidoId);
+            .Include(p => p.PedidosDetalle)
+            .FirstOrDefaultAsync(p => p.PedidoId == pedidoId);
 
         if (pedido == null || pedido.Estado != "Pendiente" || pedido.EstadoPago != "Pendiente" || pedido.FechaConfirmacion != null)
             return Result.Success(false);
@@ -278,8 +318,9 @@ public class PedidosService(
         await using var contexto = await contextFactory.CreateDbContextAsync();
 
         return await contexto.Pedidos
+            .Include(p => p.Usuario)
             .Include(p => p.Cliente)
-                .ThenInclude(c => c.Usuario)
+                .ThenInclude(c => c!.Usuario)
             .Include(p => p.PedidosDetalle)
                 .ThenInclude(d => d.Referencias)
             .Include(p => p.PedidosDetalle)
@@ -313,33 +354,34 @@ public class PedidosService(
             return Result.Success(false);
 
         var ahora = DateTime.UtcNow;
-        var tieneServicios = pedido.PedidosDetalle.Any(d => d.ServicioId.HasValue);
 
         pedido.FechaConfirmacion = ahora;
-        pedido.FechaLimiteAprobacion = tieneServicios ? ahora.AddHours(24) : ahora;
-        pedido.Estado = tieneServicios ? "PendienteAprobacion" : "PendientePago";
+        pedido.FechaLimiteAprobacion = ahora.AddHours(24);
+        pedido.Estado = "PendienteAprobacion";
 
         foreach (var detalle in pedido.PedidosDetalle)
         {
-            detalle.EstadoAprobacion = detalle.ObraId.HasValue ? "Aprobado" : "Pendiente";
-            detalle.FechaRespuesta = detalle.ObraId.HasValue ? ahora : null;
+            detalle.EstadoAprobacion = "Pendiente";
+            detalle.FechaRespuesta = null;
             detalle.MotivoRechazo = null;
         }
 
         return Result.Success(await contexto.SaveChangesAsync() > 0);
     }
 
-    public async Task<Result> AprobarDetalle(int detalleId, int artistaId)
+    public async Task<Result> AprobarDetalle(int detalleId, string usuarioId)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
 
         var detalle = await contexto.PedidosDetalles
-            .Include(d => d.Servicio)
             .Include(d => d.Pedido)
                 .ThenInclude(p => p!.PedidosDetalle)
             .FirstOrDefaultAsync(d => d.DetalleId == detalleId);
 
-        if (detalle == null || !detalle.ServicioId.HasValue || detalle.Servicio?.ArtistaId != artistaId || detalle.Pedido?.Estado != "PendienteAprobacion" || detalle.EstadoAprobacion != "Pendiente")
+        if (detalle == null || detalle.Pedido?.Estado != "PendienteAprobacion" || detalle.EstadoAprobacion != "Pendiente")
+            return Result.Success(false);
+
+        if (!await PuedeResponderDetalle(contexto, detalle, usuarioId))
             return Result.Success(false);
 
         if (DateTime.UtcNow >= detalle.Pedido.FechaLimiteAprobacion)
@@ -350,6 +392,7 @@ public class PedidosService(
 
         detalle.EstadoAprobacion = "Aprobado";
         detalle.FechaRespuesta = DateTime.UtcNow;
+        detalle.MotivoRechazo = null;
 
         var aprobado = await contexto.SaveChangesAsync() > 0;
 
@@ -359,7 +402,7 @@ public class PedidosService(
         return Result.Success(aprobado);
     }
 
-    public async Task<Result> RechazarDetalle(int detalleId, int artistaId, string motivo)
+    public async Task<Result> RechazarDetalle(int detalleId, string usuarioId, string motivo)
     {
         if (string.IsNullOrWhiteSpace(motivo))
             return Result.Success(false);
@@ -367,12 +410,14 @@ public class PedidosService(
         await using var contexto = await contextFactory.CreateDbContextAsync();
 
         var detalle = await contexto.PedidosDetalles
-            .Include(d => d.Servicio)
             .Include(d => d.Pedido)
                 .ThenInclude(p => p!.PedidosDetalle)
             .FirstOrDefaultAsync(d => d.DetalleId == detalleId);
 
-        if (detalle == null || !detalle.ServicioId.HasValue || detalle.Servicio?.ArtistaId != artistaId || detalle.Pedido?.Estado != "PendienteAprobacion" || detalle.EstadoAprobacion != "Pendiente")
+        if (detalle == null || detalle.Pedido?.Estado != "PendienteAprobacion" || detalle.EstadoAprobacion != "Pendiente")
+            return Result.Success(false);
+
+        if (!await PuedeResponderDetalle(contexto, detalle, usuarioId))
             return Result.Success(false);
 
         if (DateTime.UtcNow >= detalle.Pedido.FechaLimiteAprobacion)
@@ -458,6 +503,18 @@ public class PedidosService(
         return Result.Success(actualizado);
     }
 
+    public async Task<Result> ConfirmarPago(int pedidoId, string usuarioId)
+    {
+        await using var contexto = await contextFactory.CreateDbContextAsync();
+
+        var autorizado = await contexto.Pedidos.AnyAsync(p => p.PedidoId == pedidoId && p.UsuarioId == usuarioId);
+
+        if (!autorizado)
+            return Result.Success(false);
+
+        return await ConfirmarPago(pedidoId);
+    }
+
     public async Task<Result> ConfirmarPago(int pedidoId)
     {
         await FinalizarAprobaciones(pedidoId);
@@ -501,7 +558,7 @@ public class PedidosService(
                 obra.Estado = "Vendida";
         }
 
-        pedido.Estado = "Aprobado";
+        pedido.Estado = "Pagado";
         pedido.EstadoPago = "Pagado";
         pedido.FechaPago = DateTime.UtcNow;
 
@@ -527,10 +584,10 @@ public class PedidosService(
 
         var pedido = await contexto.Pedidos.FindAsync(pedidoId);
 
-        if (pedido == null || pedido.Estado != "Aprobado" || pedido.EstadoPago != "Pagado")
+        if (pedido == null || pedido.Estado != "Pagado" || pedido.EstadoPago != "Pagado")
             return Result.Success(false);
 
-        pedido.Estado = "En preparación";
+        pedido.Estado = "EnProceso";
 
         return Result.Success(await contexto.SaveChangesAsync() > 0);
     }
@@ -541,7 +598,7 @@ public class PedidosService(
 
         var pedido = await contexto.Pedidos.FindAsync(pedidoId);
 
-        if (pedido == null || pedido.Estado != "En preparación")
+        if (pedido == null || pedido.Estado != "EnProceso" || pedido.EstadoPago != "Pagado")
             return Result.Success(false);
 
         pedido.Estado = "Enviado";
@@ -555,11 +612,25 @@ public class PedidosService(
 
         var pedido = await contexto.Pedidos.FindAsync(pedidoId);
 
-        if (pedido == null || pedido.Estado != "Enviado")
+        if (pedido == null || pedido.Estado != "Enviado" || pedido.EstadoPago != "Pagado")
             return Result.Success(false);
 
-        pedido.Estado = "Recibido";
-        pedido.FechaRecepcion = DateTime.Now;
+        pedido.Estado = "Entregado";
+        pedido.FechaRecepcion = DateTime.UtcNow;
+
+        return Result.Success(await contexto.SaveChangesAsync() > 0);
+    }
+
+    public async Task<Result> Completar(int pedidoId)
+    {
+        await using var contexto = await contextFactory.CreateDbContextAsync();
+
+        var pedido = await contexto.Pedidos.FindAsync(pedidoId);
+
+        if (pedido == null || pedido.Estado != "Entregado" || pedido.EstadoPago != "Pagado")
+            return Result.Success(false);
+
+        pedido.Estado = "Completado";
 
         return Result.Success(await contexto.SaveChangesAsync() > 0);
     }
@@ -593,9 +664,31 @@ public class PedidosService(
             return Result.Success(false);
 
         pedido.MontoReembolsado = pedido.Total;
-        pedido.FechaReembolso = DateTime.Now;
+        pedido.FechaReembolso = DateTime.UtcNow;
         pedido.EstadoPago = "Reembolsado";
 
         return Result.Success(await contexto.SaveChangesAsync() > 0);
+    }
+
+    private async Task<bool> PuedeResponderDetalle(Contexto contexto, PedidosDetalle detalle, string usuarioId)
+    {
+        var usuario = await userManager.FindByIdAsync(usuarioId);
+
+        if (usuario == null || !usuario.Estado)
+            return false;
+
+        if (await userManager.IsInRoleAsync(usuario, "Administrador"))
+            return true;
+
+        if (!await userManager.IsInRoleAsync(usuario, "Artista"))
+            return false;
+
+        if (detalle.ObraId.HasValue)
+            return await contexto.Obras.AnyAsync(o => o.ObraId == detalle.ObraId && o.Artista!.UsuarioId == usuarioId);
+
+        if (detalle.ServicioId.HasValue)
+            return await contexto.Servicios.AnyAsync(s => s.ServicioId == detalle.ServicioId && s.Artista!.UsuarioId == usuarioId);
+
+        return false;
     }
 }

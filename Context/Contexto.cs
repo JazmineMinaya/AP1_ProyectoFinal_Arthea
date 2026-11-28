@@ -30,6 +30,12 @@ public class Contexto : IdentityDbContext<Usuarios>
             .HasForeignKey(p => p.ClienteId)
             .OnDelete(DeleteBehavior.NoAction);
 
+        modelBuilder.Entity<Pedidos>()
+            .HasOne(p => p.Usuario)
+            .WithMany()
+            .HasForeignKey(p => p.UsuarioId)
+            .OnDelete(DeleteBehavior.NoAction);
+
         modelBuilder.Entity<PedidosDetalle>()
             .HasOne(d => d.Pedido)
             .WithMany(p => p.PedidosDetalle)

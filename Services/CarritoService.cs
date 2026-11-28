@@ -28,10 +28,7 @@ public class CarritoService(
 
     public async Task<Result> Guardar(PedidosDetalle detalle)
     {
-        var guardado = !await Existe(detalle.DetalleId)
-            ? await Insertar(detalle)
-            : await Modificar(detalle);
-
+        var guardado = !await Existe(detalle.DetalleId) ? await Insertar(detalle) : await Modificar(detalle);
         return Result.Success(guardado);
     }
 
@@ -44,8 +41,7 @@ public class CarritoService(
 
         await using var contexto = await contextFactory.CreateDbContextAsync();
 
-        return await contexto.PedidosDetalles
-            .AnyAsync(d => d.DetalleId == detalleId && d.Pedido!.Estado == "Carrito" && d.Pedido.Cliente!.UsuarioId == usuarioId);
+        return await contexto.PedidosDetalles.AnyAsync(d => d.DetalleId == detalleId && d.Pedido!.Estado == "Carrito" && d.Pedido.UsuarioId == usuarioId);
     }
 
     private async Task<bool> Insertar(PedidosDetalle detalle)
@@ -55,29 +51,24 @@ public class CarritoService(
         if (usuarioId == null || detalle.DetalleId != 0 || detalle.Cantidad <= 0)
             return false;
 
-        if ((detalle.ServicioId.HasValue && detalle.ObraId.HasValue) || (!detalle.ServicioId.HasValue && !detalle.ObraId.HasValue))
+        if (detalle.ServicioId.HasValue == detalle.ObraId.HasValue)
             return false;
 
         await using var contexto = await contextFactory.CreateDbContextAsync();
 
-        var pedido = await contexto.Pedidos
-            .FirstOrDefaultAsync(p => p.PedidoId == detalle.PedidoId && p.Estado == "Carrito" && p.Cliente!.UsuarioId == usuarioId);
+        var pedido = await contexto.Pedidos.FirstOrDefaultAsync(p => p.PedidoId == detalle.PedidoId && p.Estado == "Carrito" && p.UsuarioId == usuarioId);
 
         if (pedido == null)
             return false;
 
         if (detalle.ObraId.HasValue)
         {
-            var obra = await contexto.Obras
-                .AsNoTracking()
-                .FirstOrDefaultAsync(o => o.ObraId == detalle.ObraId && o.Estado == "Disponible");
+            var obra = await contexto.Obras.AsNoTracking().FirstOrDefaultAsync(o => o.ObraId == detalle.ObraId && o.Estado == "Disponible");
 
             if (obra == null || obra.Cantidad < detalle.Cantidad)
                 return false;
 
-            var cantidadEnCarrito = await contexto.PedidosDetalles
-                .Where(d => d.PedidoId == pedido.PedidoId && d.ObraId == obra.ObraId)
-                .SumAsync(d => d.Cantidad);
+            var cantidadEnCarrito = await contexto.PedidosDetalles.Where(d => d.PedidoId == pedido.PedidoId && d.ObraId == obra.ObraId).SumAsync(d => d.Cantidad);
 
             if (cantidadEnCarrito + detalle.Cantidad > obra.Cantidad)
                 return false;
@@ -89,16 +80,14 @@ public class CarritoService(
                 ServicioId = null,
                 Cantidad = detalle.Cantidad,
                 Precio = Convert.ToDouble(obra.Precio),
-                EstadoAprobacion = "Aprobado"
+                EstadoAprobacion = "Pendiente"
             });
 
             pedido.Total += detalle.Cantidad * Convert.ToDouble(obra.Precio);
         }
         else
         {
-            var servicio = await contexto.Servicios
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.ServicioId == detalle.ServicioId && s.Estado);
+            var servicio = await contexto.Servicios.AsNoTracking().FirstOrDefaultAsync(s => s.ServicioId == detalle.ServicioId && s.Estado);
 
             if (servicio == null || !ValidarDetalle(detalle, servicio))
                 return false;
@@ -120,8 +109,7 @@ public class CarritoService(
                 EstadoAprobacion = "Pendiente",
                 Referencias = detalle.Referencias.Select(r => new PedidosReferencias
                 {
-                    Imagen = r.Imagen,
-                    Detalle = r.Detalle
+                    Imagen = r.Imagen
                 }).ToList()
             });
 
@@ -148,7 +136,7 @@ public class CarritoService(
         var existente = await contexto.PedidosDetalles
             .Include(d => d.Referencias)
             .Include(d => d.Pedido)
-            .FirstOrDefaultAsync(d => d.DetalleId == detalle.DetalleId && d.Pedido!.Estado == "Carrito" && d.Pedido.Cliente!.UsuarioId == usuarioId);
+            .FirstOrDefaultAsync(d => d.DetalleId == detalle.DetalleId && d.Pedido!.Estado == "Carrito" && d.Pedido.UsuarioId == usuarioId);
 
         if (existente == null || existente.Pedido == null)
             return false;
@@ -157,9 +145,7 @@ public class CarritoService(
 
         if (existente.ObraId.HasValue)
         {
-            var obra = await contexto.Obras
-                .AsNoTracking()
-                .FirstOrDefaultAsync(o => o.ObraId == existente.ObraId && o.Estado == "Disponible");
+            var obra = await contexto.Obras.AsNoTracking().FirstOrDefaultAsync(o => o.ObraId == existente.ObraId && o.Estado == "Disponible");
 
             if (obra == null)
                 return false;
@@ -176,9 +162,7 @@ public class CarritoService(
         }
         else
         {
-            var servicio = await contexto.Servicios
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.ServicioId == existente.ServicioId && s.Estado);
+            var servicio = await contexto.Servicios.AsNoTracking().FirstOrDefaultAsync(s => s.ServicioId == existente.ServicioId && s.Estado);
 
             if (servicio == null || !ValidarDetalle(detalle, servicio))
                 return false;
@@ -197,11 +181,11 @@ public class CarritoService(
 
             existente.Referencias = detalle.Referencias.Select(r => new PedidosReferencias
             {
-                Imagen = r.Imagen,
-                Detalle = r.Detalle
+                Imagen = r.Imagen
             }).ToList();
         }
 
+        existente.EstadoAprobacion = "Pendiente";
         existente.Pedido.Total += existente.Subtotal - subtotalAnterior;
 
         var modifico = await contexto.SaveChangesAsync() > 0;
@@ -223,7 +207,7 @@ public class CarritoService(
             .Include(d => d.Obra)
             .Include(d => d.Referencias)
             .AsNoTracking()
-            .FirstOrDefaultAsync(d => usuarioId != null && d.DetalleId == detalleId && d.Pedido!.Estado == "Carrito" && d.Pedido.Cliente!.UsuarioId == usuarioId);
+            .FirstOrDefaultAsync(d => usuarioId != null && d.DetalleId == detalleId && d.Pedido!.Estado == "Carrito" && d.Pedido.UsuarioId == usuarioId);
     }
 
     public async Task<Result> Eliminar(int detalleId)
@@ -238,7 +222,7 @@ public class CarritoService(
         var detalle = await contexto.PedidosDetalles
             .Include(d => d.Referencias)
             .Include(d => d.Pedido)
-            .FirstOrDefaultAsync(d => d.DetalleId == detalleId && d.Pedido!.Estado == "Carrito" && d.Pedido.Cliente!.UsuarioId == usuarioId);
+            .FirstOrDefaultAsync(d => d.DetalleId == detalleId && d.Pedido!.Estado == "Carrito" && d.Pedido.UsuarioId == usuarioId);
 
         if (detalle == null || detalle.Pedido == null)
             return Result.Success(false);
@@ -268,7 +252,7 @@ public class CarritoService(
                 .ThenInclude(o => o!.Artista)
                     .ThenInclude(a => a!.Usuario)
             .Include(d => d.Referencias)
-            .Where(d => usuarioId != null && d.Pedido!.Estado == "Carrito" && d.Pedido.Cliente!.UsuarioId == usuarioId)
+            .Where(d => usuarioId != null && d.Pedido!.Estado == "Carrito" && d.Pedido.UsuarioId == usuarioId)
             .Where(criterio)
             .AsNoTracking()
             .ToListAsync();
@@ -285,7 +269,7 @@ public class CarritoService(
 
         var pedido = await contexto.Pedidos
             .Include(p => p.PedidosDetalle)
-            .FirstOrDefaultAsync(p => p.PedidoId == pedidoId && p.Estado == "Carrito" && p.Cliente!.UsuarioId == usuarioId);
+            .FirstOrDefaultAsync(p => p.PedidoId == pedidoId && p.Estado == "Carrito" && p.UsuarioId == usuarioId);
 
         if (pedido == null)
             return Result.Success(false);
@@ -308,7 +292,7 @@ public class CarritoService(
         await using var contexto = await contextFactory.CreateDbContextAsync();
 
         return await contexto.PedidosDetalles
-            .Where(d => usuarioId != null && d.PedidoId == pedidoId && d.Pedido!.Estado == "Carrito" && d.Pedido.Cliente!.UsuarioId == usuarioId)
+            .Where(d => usuarioId != null && d.PedidoId == pedidoId && d.Pedido!.Estado == "Carrito" && d.Pedido.UsuarioId == usuarioId)
             .SumAsync(d => d.Cantidad);
     }
 
@@ -319,7 +303,7 @@ public class CarritoService(
         await using var contexto = await contextFactory.CreateDbContextAsync();
 
         return await contexto.PedidosDetalles
-            .Where(d => usuarioId != null && d.PedidoId == pedidoId && d.Pedido!.Estado == "Carrito" && d.Pedido.Cliente!.UsuarioId == usuarioId)
+            .Where(d => usuarioId != null && d.PedidoId == pedidoId && d.Pedido!.Estado == "Carrito" && d.Pedido.UsuarioId == usuarioId)
             .SumAsync(d => d.Cantidad * d.Precio);
     }
 

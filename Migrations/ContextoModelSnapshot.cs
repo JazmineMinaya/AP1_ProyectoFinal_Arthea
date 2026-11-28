@@ -16,7 +16,7 @@ partial class ContextoModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261127041259_AgregarObrasAlCarrito";
+    public override string LastMigrationId => "20261128062907_AgregarUsuarioComprador";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -203,7 +203,7 @@ partial class ContextoModelSnapshot : ModelSnapshot
 
                 SqlServerPropertyBuilderExtensions.UseIdentityColumn(pedidoId);
 
-                b.Property<int>("ClienteId")
+                b.Property<int?>("ClienteId")
                     .HasColumnType("int");
 
                 b.Property<string>("Estado")
@@ -244,9 +244,14 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.Property<double>("Total")
                     .HasColumnType("float");
 
+                b.Property<string>("UsuarioId")
+                    .HasColumnType("nvarchar(450)");
+
                 b.HasKey("PedidoId");
 
                 b.HasIndex("ClienteId");
+
+                b.HasIndex("UsuarioId");
 
                 b.ToTable("Pedidos");
             });
@@ -736,10 +741,16 @@ partial class ContextoModelSnapshot : ModelSnapshot
                 b.HasOne("AP1_ProyectoFinal_Arthea.Models.Clientes", "Cliente")
                     .WithMany()
                     .HasForeignKey("ClienteId")
-                    .OnDelete(DeleteBehavior.NoAction)
-                    .IsRequired();
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                b.HasOne("AP1_ProyectoFinal_Arthea.Models.Usuarios", "Usuario")
+                    .WithMany()
+                    .HasForeignKey("UsuarioId")
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 b.Navigation("Cliente");
+
+                b.Navigation("Usuario");
             });
 
         modelBuilder.Entity("AP1_ProyectoFinal_Arthea.Models.PedidosDetalle", b =>
