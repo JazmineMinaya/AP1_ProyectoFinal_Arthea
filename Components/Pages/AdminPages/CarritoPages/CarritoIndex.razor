@@ -1,16 +1,11 @@
 ﻿@page "/Carrito/Index"
 @rendermode InteractiveServer
 
-@using AP1_ProyectoFinal_Arthea.Models
-@using AP1_ProyectoFinal_Arthea.Services
-@using System.Globalization
-@using Microsoft.AspNetCore.Components.Authorization
-@using System.Security.Claims
-
 @inject CarritoService carritoService
 @inject PedidosService pedidosService
 @inject AuthenticationStateProvider authenticationStateProvider
 @inject NavigationManager navigationManager
+@inject ToastService toastService
 
 <PageTitle>Mi Carrito - Arthea</PageTitle>
 
@@ -22,12 +17,6 @@
         </div>
 
         <div class="card-body">
-
-            @if (!string.IsNullOrWhiteSpace(mensaje))
-            {
-                <div class="alert @(operacionExitosa ? "alert-success" : "alert-warning")">@mensaje</div>
-            }
-
             @if (cargando)
             {
                 <div class="carrito-vacio">Cargando carrito...</div>
@@ -226,8 +215,6 @@
     private bool autorizado;
     private bool tienePerfil;
     private bool mostrarConfirmacion;
-    private bool operacionExitosa;
-    private string? mensaje;
     private readonly CultureInfo CulturaRD = new("es-DO");
 
     private double subtotalObras => obras.Sum(d => d.Subtotal);
@@ -276,8 +263,7 @@
         }
         catch (Exception)
         {
-            mensaje = "No fue posible cargar el carrito.";
-            operacionExitosa = false;
+            toastService.ShowError("No fue posible cargar el carrito.");
         }
         finally
         {
@@ -302,13 +288,11 @@
 
         if (detalle.ObraId.HasValue && nuevaCantidad > (detalle.Obra?.Cantidad ?? 0))
         {
-            mensaje = "La cantidad solicitada supera la disponibilidad de la obra.";
-            operacionExitosa = false;
+            toastService.ShowError("La cantidad solicitada supera la disponibilidad de la obra.");
             return;
         }
 
         procesando = true;
-        mensaje = null;
 
         try
         {
@@ -333,13 +317,11 @@
             await carritoService.Guardar(actualizado);
             await CargarCarrito();
 
-            mensaje = "Cantidad actualizada correctamente.";
-            operacionExitosa = true;
+            toastService.ShowSuccess("Cantidad actualizada correctamente.");
         }
         catch (Exception)
         {
-            mensaje = "No fue posible actualizar la cantidad.";
-            operacionExitosa = false;
+            toastService.ShowError("No fue posible actualizar la cantidad.");
         }
         finally
         {
@@ -363,7 +345,6 @@
             return;
 
         procesando = true;
-        mensaje = null;
 
         try
         {
@@ -372,13 +353,11 @@
 
             await CargarCarrito();
 
-            mensaje = "Artículo eliminado correctamente.";
-            operacionExitosa = true;
+            toastService.ShowSuccess("Artículo eliminado correctamente.");
         }
         catch (Exception)
         {
-            mensaje = "No fue posible eliminar el artículo.";
-            operacionExitosa = false;
+            toastService.ShowError("No fue posible eliminar el artículo.");
         }
         finally
         {
@@ -403,7 +382,6 @@
             return;
 
         procesando = true;
-        mensaje = null;
 
         try
         {
@@ -412,8 +390,7 @@
 
             if (string.IsNullOrWhiteSpace(usuarioId))
             {
-                mensaje = "Debes iniciar sesión para confirmar el pedido.";
-                operacionExitosa = false;
+                toastService.ShowError("Debes iniciar sesión para confirmar el pedido.");
                 return;
             }
 
@@ -423,13 +400,11 @@
 
             await CargarCarrito();
 
-            mensaje = "La solicitud de confirmación del pedido fue procesada. Revisa el estado en tus pedidos.";
-            operacionExitosa = true;
+            toastService.ShowSuccess("La solicitud de confirmación del pedido fue procesada. Revisa el estado en tus pedidos.");
         }
         catch (Exception)
         {
-            mensaje = "No fue posible confirmar el pedido.";
-            operacionExitosa = false;
+            toastService.ShowError("No fue posible confirmar el pedido.");
         }
         finally
         {

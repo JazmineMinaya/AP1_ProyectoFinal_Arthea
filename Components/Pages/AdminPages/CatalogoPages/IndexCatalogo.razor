@@ -11,6 +11,7 @@
 @inject PedidosService pedidosService
 @inject AuthenticationStateProvider authenticationStateProvider
 @inject NavigationManager navigationManager
+@inject ToastService toastService
 
 <PageTitle>Catálogo Artístico</PageTitle>
 
@@ -32,11 +33,6 @@
                 <button type="button" class="categoria-btn @(categoriaSeleccionada == "Portafolios" ? "activo" : "")" @onclick='() => CambiarCategoria("Portafolios")'>Portafolios</button>
                 <button type="button" class="categoria-btn @(categoriaSeleccionada == "Servicios" ? "activo" : "")" @onclick='() => CambiarCategoria("Servicios")'>Servicios</button>
             </div>
-
-            @if (!string.IsNullOrWhiteSpace(mensajeCarrito))
-            {
-                <div class="alert @(carritoAgregado ? "alert-success" : "alert-warning") mt-3" role="alert">@mensajeCarrito</div>
-            }
 
             @* Etiquetas *@
             <div class="row">
@@ -445,8 +441,6 @@
 
     private string categoriaSeleccionada = "Artistas";
     private string? error;
-    private string? mensajeCarrito;
-    private bool carritoAgregado;
     private bool agregandoCarrito;
     private bool cargando = true;
     private int indiceImagen;
@@ -604,7 +598,6 @@
     {
         categoriaSeleccionada = categoria;
         CerrarDetalles();
-        mensajeCarrito = null;
         await Reestablecer();
     }
 
@@ -750,7 +743,6 @@
         }
 
         CerrarDetalles();
-        mensajeCarrito = null;
         servicioSolicitud = servicio;
 
         detalleSolicitud = new PedidosDetalle
@@ -769,7 +761,6 @@
         if (agregandoCarrito) return;
 
         agregandoCarrito = true;
-        mensajeCarrito = null;
 
         try
         {
@@ -796,8 +787,7 @@
 
             if (pedido == null)
             {
-                mensajeCarrito = "Debe completar su perfil de cliente para utilizar el carrito";
-                carritoAgregado = false;
+                toastService.ShowError("Debe completar su perfil de cliente para utilizar el carrito");
                 return;
             }
 
@@ -809,19 +799,16 @@
 
             if (cantidadActual <= cantidadAnterior)
             {
-                mensajeCarrito = "No fue posible agregar el servicio al carrito";
-                carritoAgregado = false;
+                toastService.ShowError("No fue posible agregar el servicio al carrito");
                 return;
             }
 
             await CerrarSolicitud();
-            mensajeCarrito = "Servicio agregado al carrito correctamente";
-            carritoAgregado = true;
+            toastService.ShowSuccess("Servicio agregado al carrito correctamente");
         }
         catch
         {
-            mensajeCarrito = "Ocurrió un error al agregar el servicio al carrito";
-            carritoAgregado = false;
+            toastService.ShowError("Ocurrió un error al agregar el servicio al carrito");
         }
         finally
         {
@@ -834,7 +821,6 @@
         if (agregandoCarrito) return;
 
         agregandoCarrito = true;
-        mensajeCarrito = null;
 
         try
         {
@@ -856,8 +842,7 @@
             if (obra.Estado != "Disponible" || obra.Cantidad <= 0)
             {
                 CerrarDetalles();
-                mensajeCarrito = "Esta obra no se encuentra disponible";
-                carritoAgregado = false;
+                toastService.ShowError("Esta obra no se encuentra disponible");
                 return;
             }
 
@@ -865,8 +850,7 @@
 
             if (string.IsNullOrWhiteSpace(usuarioId))
             {
-                mensajeCarrito = "No fue posible identificar al usuario";
-                carritoAgregado = false;
+                toastService.ShowError("No fue posible identificar al usuario");
                 return;
             }
 
@@ -876,8 +860,7 @@
             if (pedido == null)
             {
                 CerrarDetalles();
-                mensajeCarrito = "Debe completar su perfil de cliente para utilizar el carrito";
-                carritoAgregado = false;
+                toastService.ShowError("Debe completar su perfil de cliente para utilizar el carrito");
                 return;
             }
 
@@ -899,19 +882,16 @@
 
             if (cantidadActual <= cantidadAnterior)
             {
-                mensajeCarrito = "No fue posible agregar la obra al carrito. Verifique su disponibilidad";
-                carritoAgregado = false;
+                toastService.ShowError("No fue posible agregar la obra al carrito. Verifique su disponibilidad");
                 return;
             }
 
-            mensajeCarrito = "Obra agregada al carrito correctamente";
-            carritoAgregado = true;
+            toastService.ShowSuccess("Obra agregada al carrito correctamente");
         }
         catch
         {
             CerrarDetalles();
-            mensajeCarrito = "Ocurrió un error al agregar la obra al carrito";
-            carritoAgregado = false;
+            toastService.ShowError("Ocurrió un error al agregar la obra al carrito");
         }
         finally
         {
