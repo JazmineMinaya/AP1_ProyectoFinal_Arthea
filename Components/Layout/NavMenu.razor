@@ -119,6 +119,14 @@
                             </NavLink>
                         </Authorized>
                     </AuthorizeView>
+
+                    <AuthorizeView Roles="Cliente,Administrador">
+                        <Authorized>
+                            <NavLink class="nav-link" href="/FacturacionPagos/Index" @onclick="CerrarMenu">
+                                Facturación y Pagos
+                            </NavLink>
+                        </Authorized>
+                    </AuthorizeView>
                 </div>
             }
         </div>

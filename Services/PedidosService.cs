@@ -691,4 +691,33 @@ public class PedidosService(
 
         return false;
     }
+
+    public async Task<bool> ConfirmarPagoComprador(int pedidoId, string usuarioId)
+    {
+        if (pedidoId <= 0 || string.IsNullOrWhiteSpace(usuarioId))
+            return false;
+
+        await using (var contexto = await contextFactory.CreateDbContextAsync())
+        {
+            var perteneceAlComprador = await contexto.Pedidos.AsNoTracking().AnyAsync(p =>
+                p.PedidoId == pedidoId &&
+                p.UsuarioId == usuarioId &&
+                p.Estado == "PendientePago" &&
+                p.EstadoPago == "Pendiente" &&
+                p.Total > 0);
+
+            if (!perteneceAlComprador)
+                return false;
+        }
+
+        await ConfirmarPago(pedidoId);
+
+        await using var verificacion = await contextFactory.CreateDbContextAsync();
+
+        return await verificacion.Pedidos.AsNoTracking().AnyAsync(p =>
+            p.PedidoId == pedidoId &&
+            p.UsuarioId == usuarioId &&
+            p.EstadoPago == "Pagado" &&
+            p.Factura != null);
+    }
 }

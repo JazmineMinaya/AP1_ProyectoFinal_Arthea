@@ -26,48 +26,38 @@
                 <div class="carrito-vacio">
                     <i class="bi bi-person-lock"></i>
                     <h4>Inicia sesión para continuar</h4>
-                    <p>Accede como cliente para consultar tus obras y servicios.</p>
+                    <p>Accede como cliente o administrador para consultar tus obras y servicios.</p>
                     <button type="button" class="btn-carrito-principal" @onclick='() => navigationManager.NavigateTo("/login")'>Iniciar sesión</button>
                 </div>
             }
-            else if (!tienePerfil)
+            else if (!tieneCarrito)
             {
                 <div class="carrito-vacio">
-                    <i class="bi bi-person-exclamation"></i>
-                    <h4>Perfil de cliente requerido</h4>
-                    <p>Debes completar tu perfil de cliente para utilizar el carrito.</p>
+                    <i class="bi bi-bag"></i>
+                    <h4>No se pudo cargar el carrito</h4>
+                    <p>Intenta actualizar la página.</p>
                 </div>
             }
             else
             {
                 <div class="carrito-paneles">
-
-                    @* Panel de Obras *@
+                    @* Obras *@
                     <section class="carrito-panel">
                         <div class="carrito-panel-titulo">
-                            <div>
-                                <i class="bi bi-palette"></i>
-                                <h4>Obras</h4>
-                            </div>
+                            <div><i class="bi bi-palette"></i><h4>Obras</h4></div>
                             <span>@obras.Count</span>
                         </div>
 
                         @if (!obras.Any())
                         {
-                            <div class="carrito-panel-vacio">
-                                <i class="bi bi-image"></i>
-                                <p>No has agregado obras todavía.</p>
-                            </div>
+                            <div class="carrito-panel-vacio"><i class="bi bi-image"></i><p>No has agregado obras todavía.</p></div>
                         }
                         else
                         {
                             @foreach (var detalle in obras)
                             {
                                 <div class="carrito-articulo" @key="detalle.DetalleId">
-                                    <div class="carrito-articulo-imagen">
-                                        <img src="@ObtenerImagen(detalle.Obra?.ImagenUrl)" alt="@detalle.Obra?.Titulo" />
-                                    </div>
-
+                                    <div class="carrito-articulo-imagen"><img src="@ObtenerImagen(detalle.Obra?.ImagenUrl)" alt="@detalle.Obra?.Titulo" /></div>
                                     <div class="carrito-articulo-informacion">
                                         <h5>@detalle.Obra?.Titulo</h5>
                                         <p class="carrito-categoria">@detalle.Obra?.Categoria</p>
@@ -79,7 +69,6 @@
                                                 <span>@detalle.Cantidad</span>
                                                 <button type="button" title="Aumentar" disabled="@(procesando || detalle.Cantidad >= (detalle.Obra?.Cantidad ?? 0))" @onclick="() => CambiarCantidad(detalle, 1)"><i class="bi bi-plus"></i></button>
                                             </div>
-
                                             <button type="button" class="carrito-eliminar" title="Eliminar obra" disabled="@procesando" @onclick="() => SolicitarEliminar(detalle)"><i class="bi bi-trash3"></i></button>
                                         </div>
 
@@ -90,32 +79,23 @@
                         }
                     </section>
 
-                    @* Panel de Servicios *@
+                    @* Servicios *@
                     <section class="carrito-panel">
                         <div class="carrito-panel-titulo">
-                            <div>
-                                <i class="bi bi-brush"></i>
-                                <h4>Servicios</h4>
-                            </div>
+                            <div><i class="bi bi-brush"></i><h4>Servicios</h4></div>
                             <span>@servicios.Count</span>
                         </div>
 
                         @if (!servicios.Any())
                         {
-                            <div class="carrito-panel-vacio">
-                                <i class="bi bi-easel"></i>
-                                <p>No has agregado servicios todavía.</p>
-                            </div>
+                            <div class="carrito-panel-vacio"><i class="bi bi-easel"></i><p>No has agregado servicios todavía.</p></div>
                         }
                         else
                         {
                             @foreach (var detalle in servicios)
                             {
                                 <div class="carrito-articulo" @key="detalle.DetalleId">
-                                    <div class="carrito-articulo-imagen">
-                                        <img src="@ObtenerImagen(detalle.Servicio?.Imagen1)" alt="@detalle.Servicio?.Nombre" />
-                                    </div>
-
+                                    <div class="carrito-articulo-imagen"><img src="@ObtenerImagen(detalle.Servicio?.Imagen1)" alt="@detalle.Servicio?.Nombre" /></div>
                                     <div class="carrito-articulo-informacion">
                                         <h5>@detalle.Servicio?.Nombre</h5>
                                         <p class="carrito-categoria">@detalle.Servicio?.Categoria</p>
@@ -127,7 +107,6 @@
                                                 <span>@detalle.Cantidad</span>
                                                 <button type="button" title="Aumentar" disabled="@procesando" @onclick="() => CambiarCantidad(detalle, 1)"><i class="bi bi-plus"></i></button>
                                             </div>
-
                                             <button type="button" class="carrito-eliminar" title="Eliminar servicio" disabled="@procesando" @onclick="() => SolicitarEliminar(detalle)"><i class="bi bi-trash3"></i></button>
                                         </div>
 
@@ -141,30 +120,20 @@
 
                 @* Resumen *@
                 <div class="carrito-resumen">
-                    <div class="carrito-resumen-titulo">
-                        <h4>Resumen del pedido</h4>
-                        <span>@cantidadArticulos artículo(s)</span>
-                    </div>
-
-                    <div class="carrito-resumen-fila">
-                        <span>Obras</span>
-                        <span>@subtotalObras.ToString("C", CulturaRD)</span>
-                    </div>
-
-                    <div class="carrito-resumen-fila">
-                        <span>Servicios</span>
-                        <span>@subtotalServicios.ToString("C", CulturaRD)</span>
-                    </div>
-
-                    <div class="carrito-resumen-total">
-                        <strong>Total</strong>
-                        <strong>@total.ToString("C", CulturaRD)</strong>
-                    </div>
+                    <div class="carrito-resumen-titulo"><h4>Resumen del pedido</h4><span>@cantidadArticulos artículo(s)</span></div>
+                    <div class="carrito-resumen-fila"><span>Obras</span><span>@subtotalObras.ToString("C", CulturaRD)</span></div>
+                    <div class="carrito-resumen-fila"><span>Servicios</span><span>@subtotalServicios.ToString("C", CulturaRD)</span></div>
+                    <div class="carrito-resumen-total"><strong>Total</strong><strong>@total.ToString("C", CulturaRD)</strong></div>
 
                     <div class="carrito-resumen-acciones">
                         <button type="button" class="btn-carrito-volver" @onclick='() => navigationManager.NavigateTo("/Catalogo/Index")'><i class="bi bi-arrow-left"></i> Seguir explorando</button>
                         <button type="button" class="btn-carrito-principal" disabled="@(procesando || cantidadArticulos == 0)" @onclick="SolicitarConfirmacion"><i class="bi bi-bag-check"></i> Confirmar pedido</button>
                     </div>
+                </div>
+
+                <div class="carrito-acceso-pagos">
+                    <span>¿Ya realizaste un pedido? Consulta su aprobación y facturación.</span>
+                    <button type="button" class="btn-carrito-volver" @onclick='() => navigationManager.NavigateTo("/FacturacionPagos/Index")'><i class="bi bi-receipt"></i> Facturación y Pagos</button>
                 </div>
             }
         </div>
@@ -196,7 +165,7 @@
             <button type="button" class="carrito-modal-cerrar" @onclick="CancelarConfirmacion"><i class="bi bi-x-lg"></i></button>
             <i class="bi bi-bag-check carrito-modal-icono"></i>
             <h4>Confirmar pedido</h4>
-            <p>¿Deseas continuar con el pedido por <strong>@total.ToString("C", CulturaRD)</strong>?</p>
+            <p>¿Deseas enviar el pedido por <strong>@total.ToString("C", CulturaRD)</strong> para aprobación?</p>
             <div class="carrito-modal-acciones">
                 <button type="button" class="btn-carrito-volver" @onclick="CancelarConfirmacion">Cancelar</button>
                 <button type="button" class="btn-carrito-principal" disabled="@procesando" @onclick="ConfirmarPedido">Confirmar</button>
@@ -209,11 +178,12 @@
     private List<PedidosDetalle> obras = new();
     private List<PedidosDetalle> servicios = new();
     private PedidosDetalle? detalleEliminar;
+    private string? usuarioId;
     private int pedidoId;
     private bool cargando = true;
     private bool procesando;
     private bool autorizado;
-    private bool tienePerfil;
+    private bool tieneCarrito;
     private bool mostrarConfirmacion;
     private readonly CultureInfo CulturaRD = new("es-DO");
 
@@ -222,44 +192,35 @@
     private double total => subtotalObras + subtotalServicios;
     private int cantidadArticulos => obras.Sum(d => d.Cantidad) + servicios.Sum(d => d.Cantidad);
 
-    protected override async Task OnInitializedAsync()
-    {
-        await CargarCarrito();
-    }
+    protected override async Task OnInitializedAsync() => await CargarCarrito();
 
     private async Task CargarCarrito()
     {
         cargando = true;
-
         try
         {
             var autenticacion = await authenticationStateProvider.GetAuthenticationStateAsync();
             var usuario = autenticacion.User;
-
             autorizado = usuario.Identity?.IsAuthenticated == true && (usuario.IsInRole("Cliente") || usuario.IsInRole("Administrador"));
+            if (!autorizado) return;
 
-            if (!autorizado)
-                return;
-
-            var usuarioId = usuario.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (string.IsNullOrWhiteSpace(usuarioId))
-                return;
+            usuarioId = usuario.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(usuarioId)) return;
 
             var resultadoPedido = await pedidosService.ObtenerOCrearCarrito(usuarioId);
             var pedido = resultadoPedido.Value;
+            tieneCarrito = pedido != null;
+            obras.Clear();
+            servicios.Clear();
 
-            if (pedido == null)
-                return;
-
-            tienePerfil = true;
-            pedidoId = pedido.PedidoId;
-
-            var resultadoDetalles = await carritoService.GetList(d => d.PedidoId == pedidoId);
-            var detalles = resultadoDetalles.Value ?? new List<PedidosDetalle>();
-
-            obras = detalles.Where(d => d.ObraId.HasValue).ToList();
-            servicios = detalles.Where(d => d.ServicioId.HasValue).ToList();
+            if (pedido != null)
+            {
+                pedidoId = pedido.PedidoId;
+                var resultadoDetalles = await carritoService.GetList(d => d.PedidoId == pedidoId);
+                var detalles = resultadoDetalles.Value ?? new List<PedidosDetalle>();
+                obras = detalles.Where(d => d.ObraId.HasValue).ToList();
+                servicios = detalles.Where(d => d.ServicioId.HasValue).ToList();
+            }
         }
         catch (Exception)
         {
@@ -271,20 +232,13 @@
         }
     }
 
-    private string ObtenerImagen(string? imagen)
-    {
-        return string.IsNullOrWhiteSpace(imagen) ? "/imagenes/sin-imagen.png" : imagen;
-    }
+    private string ObtenerImagen(string? imagen) => string.IsNullOrWhiteSpace(imagen) ? "/imagenes/sin-imagen.png" : imagen;
 
     private async Task CambiarCantidad(PedidosDetalle detalle, int cambio)
     {
-        if (procesando)
-            return;
-
+        if (procesando) return;
         var nuevaCantidad = detalle.Cantidad + cambio;
-
-        if (nuevaCantidad < 1)
-            return;
+        if (nuevaCantidad < 1) return;
 
         if (detalle.ObraId.HasValue && nuevaCantidad > (detalle.Obra?.Cantidad ?? 0))
         {
@@ -293,7 +247,6 @@
         }
 
         procesando = true;
-
         try
         {
             var actualizado = new PedidosDetalle
@@ -316,7 +269,6 @@
 
             await carritoService.Guardar(actualizado);
             await CargarCarrito();
-
             toastService.ShowSuccess("Cantidad actualizada correctamente.");
         }
         catch (Exception)
@@ -329,30 +281,18 @@
         }
     }
 
-    private void SolicitarEliminar(PedidosDetalle detalle)
-    {
-        detalleEliminar = detalle;
-    }
-
-    private void CancelarEliminar()
-    {
-        detalleEliminar = null;
-    }
+    private void SolicitarEliminar(PedidosDetalle detalle) => detalleEliminar = detalle;
+    private void CancelarEliminar() => detalleEliminar = null;
 
     private async Task EliminarArticulo()
     {
-        if (detalleEliminar == null || procesando)
-            return;
-
+        if (detalleEliminar == null || procesando) return;
         procesando = true;
-
         try
         {
             await carritoService.Eliminar(detalleEliminar.DetalleId);
             detalleEliminar = null;
-
             await CargarCarrito();
-
             toastService.ShowSuccess("Artículo eliminado correctamente.");
         }
         catch (Exception)
@@ -365,42 +305,27 @@
         }
     }
 
-    private void SolicitarConfirmacion()
-    {
-        if (cantidadArticulos > 0)
-            mostrarConfirmacion = true;
-    }
-
-    private void CancelarConfirmacion()
-    {
-        mostrarConfirmacion = false;
-    }
+    private void SolicitarConfirmacion() => mostrarConfirmacion = cantidadArticulos > 0 && !procesando;
+    private void CancelarConfirmacion() => mostrarConfirmacion = false;
 
     private async Task ConfirmarPedido()
     {
-        if (procesando || pedidoId <= 0 || cantidadArticulos == 0)
-            return;
+        if (procesando || pedidoId <= 0 || cantidadArticulos == 0 || string.IsNullOrWhiteSpace(usuarioId)) return;
 
         procesando = true;
-
         try
         {
-            var autenticacion = await authenticationStateProvider.GetAuthenticationStateAsync();
-            var usuarioId = autenticacion.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var resultado = await pedidosService.ConfirmarCarrito(pedidoId, usuarioId);
 
-            if (string.IsNullOrWhiteSpace(usuarioId))
+            if (!resultado.IsSuccess)
             {
-                toastService.ShowError("Debes iniciar sesión para confirmar el pedido.");
+                toastService.ShowError("No se pudo confirmar el pedido. Revisa los artículos y sus requisitos.");
                 return;
             }
 
-            var resultado = await pedidosService.ConfirmarCarrito(pedidoId, usuarioId);
-
             mostrarConfirmacion = false;
-
             await CargarCarrito();
-
-            toastService.ShowSuccess("La solicitud de confirmación del pedido fue procesada. Revisa el estado en tus pedidos.");
+            toastService.ShowSuccess("Pedido enviado para aprobación. Consulta su estado en Facturación y Pagos.");
         }
         catch (Exception)
         {
