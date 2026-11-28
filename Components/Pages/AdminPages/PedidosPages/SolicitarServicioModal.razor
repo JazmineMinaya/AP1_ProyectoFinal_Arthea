@@ -1,0 +1,203 @@
+﻿@namespace AP1_ProyectoFinal_Arthea.Components.Pages.PedidosPages
+
+@inject ToastService toastService
+
+@if (Detalle is not null)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block arthea-modal-solicitud" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+
+                @* Encabezado *@
+                <div class="modal-header">
+                    <h5 class="modal-title">@(Editando ? "Modificar solicitud de servicio" : "Solicitar servicio")</h5>
+                    <button type="button" class="btn-close" @onclick="Cancelar"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    @* Servicio *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Servicio</strong></label>
+                        <input class="form-control" value="@Servicio?.Nombre" readonly />
+                    </div>
+
+                    @* Artista *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Artista</strong></label>
+                        <input class="form-control" value="@($"{Servicio?.Artista?.Usuario?.Nombres} {Servicio?.Artista?.Usuario?.Apellidos}")" readonly />
+                    </div>
+
+                    @* Precio *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Precio</strong></label>
+                        <input class="form-control" value="@Detalle.Precio.ToString("N2")" readonly />
+                    </div>
+
+                    @* Guía de requerimientos *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Guía de requerimientos</strong></label>
+                        <div class="form-control bg-light" style="white-space:pre-wrap;">@Detalle.GuiaRequerimientos</div>
+                    </div>
+
+                    @* Requerimientos *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Requerimientos del servicio</strong></label>
+                        <InputTextArea class="form-control" @bind-Value="Detalle.Requerimientos" placeholder="Describa lo que necesita para este servicio" />
+                    </div>
+
+                    @* Enlace de referencia *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Enlace de referencia (opcional)</strong></label>
+                        <InputText class="form-control" @bind-Value="Detalle.EnlaceReferencia" placeholder="https://..." />
+                    </div>
+
+                    @* Modalidad de entrega *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Modalidad de entrega</strong></label>
+                        <input class="form-control" value="@Detalle.ModalidadEntrega" readonly />
+                    </div>
+
+                    @if (Detalle.ModalidadEntrega == "Presencial")
+                    {
+                        @* Dirección de entrega *@
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Dirección de entrega</strong></label>
+                            <InputText class="form-control" @bind-Value="Detalle.DireccionEntrega" placeholder="Ej. Avenida Los Sueños, SFM, RD" />
+                        </div>
+                    }
+                    else if (Detalle.ModalidadEntrega == "Digital")
+                    {
+                        @* Medio de entrega *@
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Medio de entrega</strong></label>
+                            <InputSelect class="form-select" @bind-Value="Detalle.MedioEntrega">
+                                <option value="">-- Seleccione un medio --</option>
+                                <option value="Correo electrónico">Correo electrónico</option>
+                                <option value="WhatsApp">WhatsApp</option>
+                                <option value="Google Drive">Google Drive</option>
+                                <option value="Otro">Otro</option>
+                            </InputSelect>
+                        </div>
+
+                        @* Contacto de entrega *@
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Contacto de entrega</strong></label>
+                            <InputText class="form-control" @bind-Value="Detalle.ContactoEntrega" placeholder="Correo, número o enlace para recibir el servicio" />
+                        </div>
+                    }
+
+                    @* Imágenes de referencia *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Imágenes de referencia (máximo 3)</strong></label>
+                        <InputFile class="form-control" OnChange="CargarReferencias" multiple accept=".jpg,.jpeg,.png,.webp" />
+                        <small class="text-muted">Formatos JPG, PNG o WEBP. Máximo 3 imágenes de 2 MB cada una.</small>
+                    </div>
+
+                    @if (Detalle.Referencias.Any())
+                    {
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var referencia in Detalle.Referencias)
+                            {
+                                <div class="position-relative" @key="referencia">
+                                    <img src="@referencia.Imagen" alt="Referencia" style="width:100px;height:100px;object-fit:cover;" class="rounded border" />
+                                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0" @onclick="() => QuitarReferencia(referencia)">×</button>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                </div>
+
+                @* Footer *@
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+                    <button type="button" class="btn btn-primary" @onclick="Confirmar">@(Editando ? "Guardar cambios" : "Agregar servicio")</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public PedidosDetalle? Detalle { get; set; }
+    [Parameter] public Servicios? Servicio { get; set; }
+    [Parameter] public bool Editando { get; set; }
+    [Parameter] public EventCallback<PedidosDetalle> OnConfirmar { get; set; }
+    [Parameter] public EventCallback OnCancelar { get; set; }
+
+    private async Task Confirmar()
+    {
+        if (Detalle is null) return;
+
+        if (string.IsNullOrWhiteSpace(Detalle.Requerimientos))
+        {
+            toastService.ShowError("Debe ingresar los requerimientos del servicio");
+            return;
+        }
+
+        if (Detalle.ModalidadEntrega == "Presencial" && string.IsNullOrWhiteSpace(Detalle.DireccionEntrega))
+        {
+            toastService.ShowError("Debe ingresar la dirección de entrega");
+            return;
+        }
+
+        if (Detalle.ModalidadEntrega == "Digital" && (string.IsNullOrWhiteSpace(Detalle.MedioEntrega) || string.IsNullOrWhiteSpace(Detalle.ContactoEntrega)))
+        {
+            toastService.ShowError("Debe completar los datos de entrega digital");
+            return;
+        }
+
+        await OnConfirmar.InvokeAsync(Detalle);
+    }
+
+    private async Task Cancelar()
+    {
+        await OnCancelar.InvokeAsync();
+    }
+
+    private async Task CargarReferencias(InputFileChangeEventArgs e)
+    {
+        if (Detalle is null) return;
+
+        const long maximoBytes = 2 * 1024 * 1024;
+
+        if (Detalle.Referencias.Count + e.FileCount > 3)
+        {
+            toastService.ShowError("Solo se permiten 3 imágenes de referencia");
+            return;
+        }
+
+        foreach (var archivo in e.GetMultipleFiles(3))
+        {
+            if (archivo.Size > maximoBytes || (archivo.ContentType != "image/jpeg" && archivo.ContentType != "image/png" && archivo.ContentType != "image/webp"))
+            {
+                toastService.ShowError("La imagen debe ser JPG, PNG o WEBP y no superar 2 MB");
+                continue;
+            }
+
+            try
+            {
+                await using var stream = archivo.OpenReadStream(maximoBytes);
+                using var memoria = new MemoryStream();
+                await stream.CopyToAsync(memoria);
+
+                Detalle.Referencias.Add(new PedidosReferencias
+                {
+                    Imagen = $"data:{archivo.ContentType};base64,{Convert.ToBase64String(memoria.ToArray())}"
+                });
+            }
+            catch
+            {
+                toastService.ShowError("No se pudo cargar una de las imágenes");
+            }
+        }
+    }
+
+    private void QuitarReferencia(PedidosReferencias referencia)
+    {
+        Detalle?.Referencias.Remove(referencia);
+    }
+}

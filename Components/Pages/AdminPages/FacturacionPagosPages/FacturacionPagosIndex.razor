@@ -1,0 +1,257 @@
+﻿@page "/FacturacionPagos/Index"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Cliente, Administrador")]
+
+@inject PedidosService pedidosService
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject ToastService toastService
+@inject NavigationManager navigationManager
+
+<PageTitle>Facturación y Pagos - Arthea</PageTitle>
+
+<div class="container arthea-facturacion">
+    <div class="card shadow-lg">
+        <div class="card-header facturacion-encabezado">
+            <h2>Facturación y Pagos</h2>
+            <p>El recorrido de tus adquisiciones artísticas</p>
+        </div>
+
+        <div class="card-body">
+            <div class="facturacion-barra">
+                <div>
+                    <h3>Seguimiento de compras</h3>
+                    <p>Consulta las aprobaciones, importes y comprobantes de tus pedidos.</p>
+                </div>
+                <button type="button" class="facturacion-btn-secundario" disabled="@procesando" @onclick="CargarPedidos"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
+            </div>
+
+            @if (cargando)
+            {
+                <div class="facturacion-vacio"><i class="bi bi-hourglass-split"></i><p>Cargando información...</p></div>
+            }
+            else if (!pedidos.Any())
+            {
+                <div class="facturacion-vacio">
+                    <i class="bi bi-receipt"></i>
+                    <h4>Aún no tienes movimientos</h4>
+                    <p>Cuando confirmes una compra, podrás consultar su estado y facturación aquí.</p>
+                    <button type="button" class="facturacion-btn-principal" @onclick='() => navigationManager.NavigateTo("/Catalogo/Index")'>Explorar catálogo</button>
+                </div>
+            }
+            else
+            {
+                @foreach (var pedido in pedidos)
+                {
+                    <article class="facturacion-pedido" @key="pedido.PedidoId">
+                        <div class="facturacion-pedido-encabezado">
+                            <div>
+                                <h4>Pedido #@pedido.PedidoId</h4>
+                                <span>@pedido.Fecha.ToString("dd/MM/yyyy")</span>
+                            </div>
+                            <span class="facturacion-estado @ClaseEstado(pedido.Estado)">@NombreEstado(pedido.Estado)</span>
+                        </div>
+
+                        <div class="facturacion-pedido-cuerpo">
+                            @foreach (var detalle in pedido.PedidosDetalle.OrderBy(d => d.DetalleId))
+                            {
+                                <div class="facturacion-articulo">
+                                    <div class="facturacion-articulo-info">
+                                        <strong>@NombreArticulo(detalle)</strong>
+                                        <small>@detalle.Cantidad × @detalle.Precio.ToString("C", CulturaRD)</small>
+
+                                        @if (detalle.EstadoAprobacion == "Rechazado" && !string.IsNullOrWhiteSpace(detalle.MotivoRechazo))
+                                        {
+                                            <small class="facturacion-motivo">Motivo: @detalle.MotivoRechazo</small>
+                                        }
+                                    </div>
+                                    <div class="facturacion-articulo-estado">
+                                        <span class="facturacion-aprobacion @ClaseAprobacion(detalle.EstadoAprobacion)">@detalle.EstadoAprobacion</span>
+                                        <strong>@detalle.Subtotal.ToString("C", CulturaRD)</strong>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (pedido.Estado == "PendienteAprobacion")
+                            {
+                                <div class="facturacion-aviso"><i class="bi bi-clock-history"></i><span>Esperando la respuesta de los artistas. Podrás realizar el pago cuando finalicen las aprobaciones.</span></div>
+                            }
+                            else if (pedido.Estado == "PendientePago")
+                            {
+                                <div class="facturacion-resumen">
+                                    <h5><i class="bi bi-receipt-cutoff"></i> Resumen de facturación</h5>
+                                    <p>Únicamente se incluyen las obras y servicios aprobados.</p>
+
+                                    @foreach (var detalle in pedido.PedidosDetalle.Where(d => d.EstadoAprobacion == "Aprobado"))
+                                    {
+                                        <div class="facturacion-resumen-fila">
+                                            <span>@NombreArticulo(detalle) × @detalle.Cantidad</span>
+                                            <span>@detalle.Subtotal.ToString("C", CulturaRD)</span>
+                                        </div>
+                                    }
+
+                                    <div class="facturacion-resumen-total"><strong>Total a pagar</strong><strong>@pedido.Total.ToString("C", CulturaRD)</strong></div>
+                                    <div class="facturacion-acciones">
+                                        <button type="button" class="facturacion-btn-principal" disabled="@procesando" @onclick="() => SolicitarPago(pedido)"><i class="bi bi-credit-card"></i> Pagar ahora</button>
+                                    </div>
+                                </div>
+                            }
+                            else if (pedido.EstadoPago == "Pagado" || pedido.EstadoPago == "Reembolsado")
+                            {
+                                <div class="facturacion-resumen">
+                                    <h5><i class="bi bi-file-earmark-check"></i> Comprobante de facturación</h5>
+                                    @if (pedido.Factura != null)
+                                    {
+                                        <div class="facturacion-resumen-fila"><span>Número de factura</span><strong>@pedido.Factura.NumeroFactura</strong></div>
+                                        <div class="facturacion-resumen-fila"><span>Fecha de emisión</span><span>@pedido.Factura.Fecha.ToString("dd/MM/yyyy")</span></div>
+                                    }
+                                    <div class="facturacion-resumen-fila"><span>Estado del pago</span><span>@pedido.EstadoPago</span></div>
+                                    <div class="facturacion-resumen-total"><strong>Total facturado</strong><strong>@pedido.Total.ToString("C", CulturaRD)</strong></div>
+                                </div>
+                            }
+                            else if (pedido.Estado == "Cancelado")
+                            {
+                                <div class="facturacion-aviso"><i class="bi bi-info-circle"></i><span>Este pedido fue cancelado. No tiene pagos pendientes.</span></div>
+                            }
+                        </div>
+                    </article>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@* Confirmación de pago *@
+@if (pedidoPagar is not null)
+{
+    <div class="facturacion-modal-fondo" @onclick="CancelarPago">
+        <div class="facturacion-modal" role="dialog" aria-modal="true" aria-labelledby="tituloConfirmacionPago" @onclick:stopPropagation="true">
+            <button type="button" class="facturacion-modal-cerrar" disabled="@procesando" @onclick="CancelarPago"><i class="bi bi-x-lg"></i></button>
+
+            <i class="bi bi-credit-card-2-front facturacion-modal-icono"></i>
+            <h4 id="tituloConfirmacionPago">Confirmar pago</h4>
+            <p>Estás a un paso de finalizar tu adquisición artística.</p>
+
+            <div class="facturacion-modal-detalle">
+                <div><span>Pedido</span><strong>#@pedidoPagar.PedidoId</strong></div>
+                <div><span>Artículos aprobados</span><strong>@pedidoPagar.PedidosDetalle.Count(d => d.EstadoAprobacion == "Aprobado")</strong></div>
+                <div class="facturacion-modal-total"><span>Total a pagar</span><strong>@pedidoPagar.Total.ToString("C", CulturaRD)</strong></div>
+            </div>
+
+            <p>¿Deseas confirmar el pago de este pedido?</p>
+
+            <div class="facturacion-modal-acciones">
+                <button type="button" class="facturacion-btn-secundario" disabled="@procesando" @onclick="CancelarPago">Cancelar</button>
+                <button type="button" class="facturacion-btn-principal" disabled="@procesando" @onclick="ConfirmarPago"><i class="bi bi-check-circle"></i> Confirmar pago</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Pedidos> pedidos = new();
+    private Pedidos? pedidoPagar;
+    private string? usuarioId;
+    private bool cargando = true;
+    private bool procesando;
+    private readonly CultureInfo CulturaRD = new("es-DO");
+
+    protected override async Task OnInitializedAsync() => await CargarPedidos();
+
+    private async Task CargarPedidos()
+    {
+        cargando = true;
+        try
+        {
+            var autenticacion = await authenticationStateProvider.GetAuthenticationStateAsync();
+            usuarioId = autenticacion.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrWhiteSpace(usuarioId))
+            {
+                pedidos.Clear();
+                return;
+            }
+
+            var resultado = await pedidosService.GetList(p => p.UsuarioId == usuarioId && p.Estado != "Pendiente");
+            pedidos = (resultado.Value ?? new List<Pedidos>()).OrderByDescending(p => p.Fecha).ThenByDescending(p => p.PedidoId).ToList();
+        }
+        catch (Exception)
+        {
+            toastService.ShowError("No fue posible cargar la facturación.");
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private string NombreArticulo(PedidosDetalle detalle) => detalle.ObraId.HasValue ? detalle.Obra?.Titulo ?? "Obra no disponible" : detalle.Servicio?.Nombre ?? "Servicio no disponible";
+
+    private string NombreEstado(string estado) => estado switch
+    {
+        "PendienteAprobacion" => "En aprobación",
+        "PendientePago" => "Pendiente de pago",
+        "EnProceso" => "En proceso",
+        "Pagado" => "Pagado",
+        "Enviado" => "Enviado",
+        "Entregado" => "Entregado",
+        "Completado" => "Completado",
+        "Cancelado" => "Cancelado",
+        _ => estado
+    };
+
+    private string ClaseEstado(string estado) => estado switch
+    {
+        "PendientePago" => "pago",
+        "Pagado" or "EnProceso" or "Enviado" or "Entregado" or "Completado" => "completado",
+        "Cancelado" => "cancelado",
+        _ => "espera"
+    };
+
+    private string ClaseAprobacion(string estado) => estado switch
+    {
+        "Aprobado" => "aprobado",
+        "Rechazado" => "rechazado",
+        "Vencido" => "vencido",
+        _ => "pendiente"
+    };
+
+    private void SolicitarPago(Pedidos pedido)
+    {
+        if (!procesando && pedido.Estado == "PendientePago" && pedido.EstadoPago == "Pendiente") pedidoPagar = pedido;
+    }
+
+    private void CancelarPago()
+    {
+        if (!procesando) pedidoPagar = null;
+    }
+
+    private async Task ConfirmarPago()
+    {
+        if (procesando || pedidoPagar == null || string.IsNullOrWhiteSpace(usuarioId)) return;
+
+        procesando = true;
+        try
+        {
+            var pedidoId = pedidoPagar.PedidoId;
+            var realizado = await pedidosService.ConfirmarPagoComprador(pedidoId, usuarioId);
+
+            if (!realizado)
+            {
+                toastService.ShowError("No se pudo procesar el pago. Verifica el estado y la disponibilidad del pedido.");
+                return;
+            }
+
+            pedidoPagar = null;
+            await CargarPedidos();
+            toastService.ShowSuccess("Pago registrado correctamente. Tu factura está disponible.");
+        }
+        catch (Exception)
+        {
+            toastService.ShowError("No fue posible registrar el pago.");
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+}

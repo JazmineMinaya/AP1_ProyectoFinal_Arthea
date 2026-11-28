@@ -10,16 +10,21 @@ public partial class Pedidos
 
     public DateTime Fecha { get; set; } = DateTime.Now;
 
-    [Range(1, int.MaxValue, ErrorMessage = "Seleccione un cliente")]
-    public int ClienteId { get; set; }
+    public int? ClienteId { get; set; }
 
-    [Required(ErrorMessage = "Ingrese la dirección de entrega")]
-    public string DireccionEntrega { get; set; } = string.Empty;
+    public string? UsuarioId { get; set; }
+
+    [ForeignKey("UsuarioId")]
+    public Usuarios? Usuario { get; set; }
 
     [Required(ErrorMessage = "Seleccione el estado del pedido")]
     public string Estado { get; set; } = "Pendiente";
 
     public string EstadoPago { get; set; } = "Pendiente";
+
+    public DateTime FechaLimiteAprobacion { get; set; }
+
+    public DateTime? FechaConfirmacion { get; set; }
 
     public DateTime? FechaPago { get; set; }
 

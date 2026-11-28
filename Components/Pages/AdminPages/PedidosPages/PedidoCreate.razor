@@ -49,13 +49,6 @@
                     <ValidationMessage For="@(() => Pedido.Fecha)" />
                 </div>
 
-                @* Dirección de entrega *@
-                <div class="mb-3">
-                    <label class="form-label"><strong>Dirección de entrega</strong></label>
-                    <InputText class="form-control" @bind-Value="Pedido.DireccionEntrega" placeholder="Ej. Avenida Los Sueños, SFM, RD" />
-                    <ValidationMessage For="@(() => Pedido.DireccionEntrega)" />
-                </div>
-
                 @* Total *@
                 <div class="mb-3">
                     <label class="form-label"><strong>Total</strong></label>
@@ -91,21 +84,24 @@
                             <tr>
                                 <th>Servicio</th>
                                 <th>Artista</th>
+                                <th>Modalidad</th>
                                 <th>Precio</th>
-                                <th>Remover</th>
+                                <th>Opciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var detalle in Pedido.PedidosDetalle)
                             {
-                                var servicio = ListaServicios.FirstOrDefault(s => s.ServicioId == detalle.ServicioId);
+                                var servicio = ListaServicios.FirstOrDefault(s => s.ServicioId == detalle.ServicioId) ?? detalle.Servicio;
 
-                                <tr>
+                                <tr @key="detalle">
                                     <td>@servicio?.Nombre</td>
                                     <td>@servicio?.Artista?.Usuario?.Nombres @servicio?.Artista?.Usuario?.Apellidos</td>
+                                    <td>@detalle.ModalidadEntrega</td>
                                     <td>@detalle.Precio.ToString("N2")</td>
                                     <td>
-                                        <button type="button" class="btn btn-danger bi bi-trash" @onclick="() => QuitarServicio(detalle)"></button>
+                                        <button type="button" class="btn btn-outline-primary bi bi-pencil-square me-2" title="Modificar solicitud" @onclick="() => VerDetalle(detalle)"></button>
+                                        <button type="button" class="btn btn-danger bi bi-trash" title="Remover servicio" @onclick="() => QuitarServicio(detalle)"></button>
                                     </td>
                                 </tr>
                             }
@@ -124,12 +120,18 @@
     </div>
 </EditForm>
 
+@* Modal para solicitar servicios *@
+<SolicitarServicioModal Detalle="DetalleSeleccionado" Servicio="ServicioSeleccionado" Editando="EditandoDetalle" OnConfirmar="ConfirmarServicio" OnCancelar="CerrarModal" />
+
 @code {
     public Pedidos Pedido { get; set; } = new();
     public List<Clientes> ListaClientes { get; set; } = new();
     public List<Servicios> ListaServicios { get; set; } = new();
 
     public int ServicioId { get; set; }
+    public PedidosDetalle? DetalleSeleccionado { get; set; }
+    public Servicios? ServicioSeleccionado { get; set; }
+    public bool EditandoDetalle { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -156,15 +158,71 @@
             return;
         }
 
-        Pedido.PedidosDetalle.Add(new PedidosDetalle
+        ServicioSeleccionado = servicio;
+        EditandoDetalle = false;
+
+        DetalleSeleccionado = new PedidosDetalle
         {
-            ServicioId = ServicioId,
+            ServicioId = servicio.ServicioId,
             Cantidad = 1,
-            Precio = Convert.ToDouble(servicio.Precio)
-        });
+            Precio = Convert.ToDouble(servicio.Precio),
+            GuiaRequerimientos = servicio.GuiaRequerimientos,
+            ModalidadEntrega = servicio.ModalidadEntrega
+        };
+    }
+
+    private void VerDetalle(PedidosDetalle detalle)
+    {
+        ServicioSeleccionado = ListaServicios.FirstOrDefault(s => s.ServicioId == detalle.ServicioId) ?? detalle.Servicio;
+        EditandoDetalle = true;
+
+        DetalleSeleccionado = new PedidosDetalle
+        {
+            ServicioId = detalle.ServicioId,
+            Cantidad = detalle.Cantidad,
+            Precio = detalle.Precio,
+            GuiaRequerimientos = detalle.GuiaRequerimientos,
+            ModalidadEntrega = detalle.ModalidadEntrega,
+            Requerimientos = detalle.Requerimientos,
+            EnlaceReferencia = detalle.EnlaceReferencia,
+            DireccionEntrega = detalle.DireccionEntrega,
+            MedioEntrega = detalle.MedioEntrega,
+            ContactoEntrega = detalle.ContactoEntrega,
+            Referencias = detalle.Referencias.Select(r => new PedidosReferencias { Imagen = r.Imagen }).ToList()
+        };
+    }
+
+    private void ConfirmarServicio(PedidosDetalle detalleSeleccionado)
+    {
+        if (EditandoDetalle)
+        {
+            var detalle = Pedido.PedidosDetalle.FirstOrDefault(d => d.ServicioId == detalleSeleccionado.ServicioId);
+
+            if (detalle is not null)
+            {
+                detalle.Requerimientos = detalleSeleccionado.Requerimientos;
+                detalle.EnlaceReferencia = detalleSeleccionado.EnlaceReferencia;
+                detalle.DireccionEntrega = detalleSeleccionado.DireccionEntrega;
+                detalle.MedioEntrega = detalleSeleccionado.MedioEntrega;
+                detalle.ContactoEntrega = detalleSeleccionado.ContactoEntrega;
+                detalle.Referencias = detalleSeleccionado.Referencias;
+            }
+        }
+        else
+        {
+            Pedido.PedidosDetalle.Add(detalleSeleccionado);
+        }
 
         CalcularTotal();
         ServicioId = 0;
+        CerrarModal();
+    }
+
+    private void CerrarModal()
+    {
+        DetalleSeleccionado = null;
+        ServicioSeleccionado = null;
+        EditandoDetalle = false;
     }
 
     private void QuitarServicio(PedidosDetalle detalle)
@@ -175,7 +233,7 @@
 
     private void CalcularTotal()
     {
-        Pedido.Total = Pedido.PedidosDetalle.Sum(d => d.Precio);
+        Pedido.Total = Pedido.PedidosDetalle.Sum(d => d.Subtotal);
     }
 
     private async Task Guardar()
@@ -183,6 +241,12 @@
         if (Pedido.PedidosDetalle.Count == 0)
         {
             toastService.ShowError("Debe agregar al menos un servicio");
+            return;
+        }
+
+        if (Pedido.PedidosDetalle.Any(d => string.IsNullOrWhiteSpace(d.Requerimientos)))
+        {
+            toastService.ShowError("Debe completar los requerimientos de todos los servicios");
             return;
         }
 

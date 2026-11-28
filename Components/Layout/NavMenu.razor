@@ -12,17 +12,13 @@
     </div>
 </div>
 
-<input type="checkbox"
-       title="Navigation menu"
-       class="navbar-toggler" />
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
 <div class="nav-scrollable">
 
     @* Logotipo *@
     <div class="text-center my-3">
-        <img src="/imagenes/logo-arthea.png"
-             alt="Logo Arthea"
-             class="logo-arthea" />
+        <img src="/imagenes/logo-arthea.png" alt="Logo Arthea" class="logo-arthea" />
     </div>
 
     @* Perfil del usuario *@
@@ -55,11 +51,7 @@
 
         @* Gestión de Usuarios *@
         <div class="nav-item px-3">
-            <button class="nav-link menu-desplegable"
-                    type="button"
-                    @onclick='() => AlternarMenu("Usuarios")'
-                    aria-expanded='@(menuAbierto == "Usuarios")'>
-
+            <button class="nav-link menu-desplegable" type="button" @onclick='() => AlternarMenu("Usuarios")' aria-expanded='@(menuAbierto == "Usuarios")'>
                 <span class="bi bi-people-fill"></span>
                 Gestión de Usuarios
                 <span class="bi bi-chevron-down ms-auto"></span>
@@ -68,13 +60,11 @@
             @if (menuAbierto == "Usuarios")
             {
                 <div class="submenu">
-                    <NavLink class="nav-link"
-                             href="/Artistas/Index">
+                    <NavLink class="nav-link" href="/Artistas/Index" @onclick="CerrarMenu">
                         Artistas
                     </NavLink>
 
-                    <NavLink class="nav-link"
-                             href="/Clientes/Index">
+                    <NavLink class="nav-link" href="/Clientes/Index" @onclick="CerrarMenu">
                         Clientes
                     </NavLink>
                 </div>
@@ -83,11 +73,7 @@
 
         @* Gestión Artística *@
         <div class="nav-item px-3">
-            <button class="nav-link menu-desplegable"
-                    type="button"
-                    @onclick='() => AlternarMenu("Artistica")'
-                    aria-expanded='@(menuAbierto == "Artistica")'>
-
+            <button class="nav-link menu-desplegable" type="button" @onclick='() => AlternarMenu("Artistica")' aria-expanded='@(menuAbierto == "Artistica")'>
                 <span class="bi bi-palette-fill"></span>
                 Gestión Artística
                 <span class="bi bi-chevron-down ms-auto"></span>
@@ -96,18 +82,15 @@
             @if (menuAbierto == "Artistica")
             {
                 <div class="submenu">
-                    <NavLink class="nav-link"
-                             href="/Portafolios/Index">
+                    <NavLink class="nav-link" href="/Portafolios/Index" @onclick="CerrarMenu">
                         Portafolios
                     </NavLink>
 
-                    <NavLink class="nav-link"
-                             href="/Obras/Index">
+                    <NavLink class="nav-link" href="/Obras/Index" @onclick="CerrarMenu">
                         Obras
                     </NavLink>
 
-                    <NavLink class="nav-link"
-                             href="/Servicios/Index">
+                    <NavLink class="nav-link" href="/Servicios/Index" @onclick="CerrarMenu">
                         Servicios
                     </NavLink>
                 </div>
@@ -116,11 +99,7 @@
 
         @* Gestión Comercial *@
         <div class="nav-item px-3">
-            <button class="nav-link menu-desplegable"
-                    type="button"
-                    @onclick='() => AlternarMenu("Comercial")'
-                    aria-expanded='@(menuAbierto == "Comercial")'>
-
+            <button class="nav-link menu-desplegable" type="button" @onclick='() => AlternarMenu("Comercial")' aria-expanded='@(menuAbierto == "Comercial")'>
                 <span class="bi bi-bag-fill"></span>
                 Gestión Comercial
                 <span class="bi bi-chevron-down ms-auto"></span>
@@ -129,21 +108,32 @@
             @if (menuAbierto == "Comercial")
             {
                 <div class="submenu">
-                    <NavLink class="nav-link"
-                             href="/Pedidos/Index">
+                    <NavLink class="nav-link" href="/Pedidos/Index" @onclick="CerrarMenu">
                         Pedidos
                     </NavLink>
+
+                    <AuthorizeView Roles="Administrador,Artista">
+                        <Authorized>
+                            <NavLink class="nav-link" href="/SolicitudesPedidos/Index" @onclick="CerrarMenu">
+                                Solicitudes de Pedidos
+                            </NavLink>
+                        </Authorized>
+                    </AuthorizeView>
+
+                    <AuthorizeView Roles="Cliente,Administrador">
+                        <Authorized>
+                            <NavLink class="nav-link" href="/FacturacionPagos/Index" @onclick="CerrarMenu">
+                                Facturación y Pagos
+                            </NavLink>
+                        </Authorized>
+                    </AuthorizeView>
                 </div>
             }
         </div>
 
         @* Administración *@
         <div class="nav-item px-3">
-            <button class="nav-link menu-desplegable"
-                    type="button"
-                    @onclick='() => AlternarMenu("Administracion")'
-                    aria-expanded='@(menuAbierto == "Administracion")'>
-
+            <button class="nav-link menu-desplegable" type="button" @onclick='() => AlternarMenu("Administracion")' aria-expanded='@(menuAbierto == "Administracion")'>
                 <span class="bi bi-gear-fill"></span>
                 Administración
                 <span class="bi bi-chevron-down ms-auto"></span>
@@ -152,8 +142,7 @@
             @if (menuAbierto == "Administracion")
             {
                 <div class="submenu">
-                    <NavLink class="nav-link"
-                             href="/Administradores/Index">
+                    <NavLink class="nav-link" href="/Administradores/Index" @onclick="CerrarMenu">
                         Administradores
                     </NavLink>
                 </div>
@@ -162,9 +151,7 @@
 
         @* Reportes *@
         <div class="nav-item px-3">
-            <NavLink class="nav-link"
-                     href="Reportes"
-                     @onclick="CerrarMenu">
+            <NavLink class="nav-link" href="Reportes" @onclick="CerrarMenu">
                 <span class="bi bi-bar-chart-fill"></span>
                 Reportes
             </NavLink>

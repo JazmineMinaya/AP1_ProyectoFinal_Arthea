@@ -23,6 +23,7 @@ builder.Services.AddScoped<ClientesService>();
 builder.Services.AddScoped<ObrasService>();
 builder.Services.AddScoped<PedidosService>();
 builder.Services.AddScoped<PortafoliosService>();
+builder.Services.AddScoped<CarritoService>();
 builder.Services.AddScoped<RegistroService>();
 
 builder.Services.AddIdentity<Usuarios, IdentityRole>(options =>

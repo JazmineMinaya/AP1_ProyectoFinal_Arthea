@@ -1,0 +1,360 @@
+﻿@page "/SolicitudesPedidos/Index"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador, Artista")]
+
+@inject PedidosService pedidosService
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject ToastService toastService
+
+<PageTitle>Solicitudes de Pedidos - Arthea</PageTitle>
+
+<div class="container arthea-solicitudes">
+    <div class="card shadow-lg">
+
+        @* Encabezado *@
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title">Solicitudes de Pedidos</h5>
+            <button type="button" class="btn btn-primary" @onclick="CargarSolicitudes" disabled="@procesando">
+                <span class="bi bi-arrow-clockwise"></span> Actualizar
+            </button>
+        </div>
+
+        <div class="card-body">
+
+            @* Labels *@
+            <div class="row">
+                <div class="col-3">
+                    <label class="col-form-label"><strong>Filtrar por estado</strong></label>
+                </div>
+                <div class="col-4">
+                    <label class="col-form-label"><strong>Búsqueda</strong></label>
+                </div>
+            </div>
+
+            @* Filtros *@
+            <div class="row align-items-end mb-4">
+                <div class="col-3">
+                    <InputSelect class="form-select" @bind-Value="FiltroEstado">
+                        <option value="Pendiente">Pendientes</option>
+                        <option value="Todos">Todos</option>
+                        <option value="Aprobado">Aprobados</option>
+                        <option value="Rechazado">Rechazados</option>
+                        <option value="Vencido">Vencidos</option>
+                    </InputSelect>
+                </div>
+
+                <div class="col-4">
+                    <div class="input-group">
+                        <input class="form-control" @bind="ValorFiltro" @onkeydown="BuscarConEnter" placeholder="Buscar" />
+                        <button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar" disabled="@procesando" title="Buscar"></button>
+                    </div>
+                </div>
+
+                <div class="col-2">
+                    <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Reestablecer" disabled="@procesando" title="Restablecer"></button>
+                </div>
+            </div>
+
+            @if (cargando)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-secondary"></div>
+                    <p class="mt-2">Cargando solicitudes...</p>
+                </div>
+            }
+            else if (!SolicitudesFiltradas.Any())
+            {
+                <div class="solicitudes-vacio text-center">
+                    <i class="bi bi-inbox"></i>
+                    <p>No hay solicitudes que coincidan con los filtros.</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var detalle in SolicitudesFiltradas)
+                {
+                    var pedido = detalle.Pedido;
+                    var nombreComprador = pedido?.Usuario == null ? "Usuario no disponible" : $"{pedido.Usuario.Nombres} {pedido.Usuario.Apellidos}";
+                    var nombreArticulo = detalle.ObraId.HasValue ? detalle.Obra?.Titulo ?? "Obra no disponible" : detalle.Servicio?.Nombre ?? "Servicio no disponible";
+                    var nombreArtista = detalle.ObraId.HasValue ? detalle.Obra?.Artista?.Usuario : detalle.Servicio?.Artista?.Usuario;
+
+                    <div class="solicitud-item mb-3" @key="detalle.DetalleId">
+                        <div class="solicitud-encabezado d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h6>Pedido #@detalle.PedidoId — @nombreArticulo</h6>
+                            <span class="solicitud-estado @ColorEstado(detalle.EstadoAprobacion)">@detalle.EstadoAprobacion</span>
+                        </div>
+
+                        <div class="solicitud-cuerpo">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <p><strong>Comprador:</strong> @nombreComprador</p>
+                                    <p><strong>Fecha:</strong> @pedido?.Fecha.ToString("dd/MM/yyyy hh:mm tt")</p>
+                                    <p><strong>Tipo:</strong> @(detalle.ObraId.HasValue ? "Obra" : "Servicio")</p>
+                                    <p><strong>Artista:</strong> @nombreArtista?.Nombres @nombreArtista?.Apellidos</p>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <p><strong>Cantidad:</strong> @detalle.Cantidad</p>
+                                    <p><strong>Precio:</strong> RD$ @detalle.Precio.ToString("N2")</p>
+                                    <p><strong>Subtotal:</strong> RD$ @detalle.Subtotal.ToString("N2")</p>
+                                    <p><strong>Estado del pedido:</strong> @pedido?.Estado</p>
+                                </div>
+                            </div>
+
+                            @if (detalle.ServicioId.HasValue)
+                            {
+                                <hr />
+                                <p><strong>Requerimientos:</strong> @detalle.Requerimientos</p>
+                                <p><strong>Modalidad de entrega:</strong> @detalle.ModalidadEntrega</p>
+
+                                @if (!string.IsNullOrWhiteSpace(detalle.DireccionEntrega))
+                                {
+                                    <p><strong>Dirección:</strong> @detalle.DireccionEntrega</p>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(detalle.MedioEntrega))
+                                {
+                                    <p><strong>Medio de entrega:</strong> @detalle.MedioEntrega</p>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(detalle.ContactoEntrega))
+                                {
+                                    <p><strong>Contacto:</strong> @detalle.ContactoEntrega</p>
+                                }
+
+                                @if (detalle.Referencias.Any())
+                                {
+                                    <p><strong>Referencias:</strong></p>
+                                    <div class="solicitud-referencias">
+                                        @foreach (var referencia in detalle.Referencias)
+                                        {
+                                            <img src="@referencia.Imagen" alt="Referencia del servicio" />
+                                        }
+                                    </div>
+                                }
+                            }
+
+                            @if (detalle.EstadoAprobacion == "Rechazado")
+                            {
+                                <div class="solicitud-rechazo">
+                                    <strong>Motivo del rechazo:</strong> @detalle.MotivoRechazo
+                                </div>
+                            }
+
+                            @if (detalle.FechaRespuesta.HasValue)
+                            {
+                                <p class="solicitud-fecha-respuesta">
+                                    Respondido el @detalle.FechaRespuesta.Value.ToLocalTime().ToString("dd/MM/yyyy hh:mm tt")
+                                </p>
+                            }
+
+                            @if (detalle.EstadoAprobacion == "Pendiente" && pedido?.Estado == "PendienteAprobacion")
+                            {
+                                <hr />
+
+                                <div class="mb-3">
+                                    <label class="col-form-label"><strong>Motivo del rechazo</strong></label>
+                                    <textarea class="form-control" rows="2" @bind="motivos[detalle.DetalleId]" placeholder="Obligatorio únicamente si rechaza la solicitud"></textarea>
+                                </div>
+
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="button" class="btn btn-outline-danger" disabled="@procesando" @onclick="() => Rechazar(detalle.DetalleId)">
+                                        <i class="bi bi-x-circle"></i> Rechazar
+                                    </button>
+
+                                    <button type="button" class="btn btn-primary" disabled="@procesando" @onclick="() => Aprobar(detalle.DetalleId)">
+                                        <i class="bi bi-check-circle"></i> Aprobar
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        @* Footer *@
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <label><strong>Cantidad:</strong> @SolicitudesFiltradas.Count()</label>
+            <label><strong>Total:</strong> RD$ @SolicitudesFiltradas.Sum(d => d.Subtotal).ToString("N2")</label>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<PedidosDetalle> solicitudes = new();
+    private Dictionary<int, string> motivos = new();
+    private List<PedidosDetalle> solicitudesFiltradas = new();
+
+    private string? usuarioId;
+    private string FiltroEstado = "Pendiente";
+    private string ValorFiltro = string.Empty;
+    private bool esAdministrador;
+    private bool cargando = true;
+    private bool procesando;
+
+    private IEnumerable<PedidosDetalle> SolicitudesFiltradas => solicitudesFiltradas;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarSolicitudes();
+    }
+
+    private async Task CargarSolicitudes()
+    {
+        cargando = true;
+
+        try
+        {
+            var autenticacion = await authenticationStateProvider.GetAuthenticationStateAsync();
+            usuarioId = autenticacion.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            esAdministrador = autenticacion.User.IsInRole("Administrador");
+
+            if (string.IsNullOrWhiteSpace(usuarioId))
+            {
+                solicitudes.Clear();
+                solicitudesFiltradas.Clear();
+                return;
+            }
+
+            var resultado = await pedidosService.GetList(p => p.Estado != "Carrito");
+
+            solicitudes = (resultado.Value ?? new List<Pedidos>())
+                .SelectMany(p => p.PedidosDetalle.Select(d =>
+                {
+                    d.Pedido = p;
+                    return d;
+                }))
+                .Where(d => esAdministrador
+                    || (d.ObraId.HasValue && d.Obra?.Artista?.UsuarioId == usuarioId)
+                    || (d.ServicioId.HasValue && d.Servicio?.Artista?.UsuarioId == usuarioId))
+                .ToList();
+
+            foreach (var detalle in solicitudes)
+            {
+                if (!motivos.ContainsKey(detalle.DetalleId))
+                    motivos[detalle.DetalleId] = string.Empty;
+            }
+
+            AplicarFiltros();
+        }
+        catch (Exception)
+        {
+            toastService.ShowError("No se pudieron cargar las solicitudes.");
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void AplicarFiltros()
+    {
+        var valor = ValorFiltro.Trim();
+
+        solicitudesFiltradas = solicitudes
+            .Where(d => FiltroEstado == "Todos" || d.EstadoAprobacion == FiltroEstado)
+            .Where(d => string.IsNullOrWhiteSpace(valor)
+                || d.PedidoId.ToString().Contains(valor, StringComparison.OrdinalIgnoreCase)
+                || ($"{d.Pedido?.Usuario?.Nombres} {d.Pedido?.Usuario?.Apellidos}").Contains(valor, StringComparison.OrdinalIgnoreCase)
+                || (d.Obra?.Titulo ?? "").Contains(valor, StringComparison.OrdinalIgnoreCase)
+                || (d.Servicio?.Nombre ?? "").Contains(valor, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(d => d.Pedido?.Fecha)
+            .ThenByDescending(d => d.DetalleId)
+            .ToList();
+    }
+
+    private void Buscar()
+    {
+        AplicarFiltros();
+    }
+
+    private void BuscarConEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            Buscar();
+    }
+
+    private void Reestablecer()
+    {
+        FiltroEstado = "Pendiente";
+        ValorFiltro = string.Empty;
+        AplicarFiltros();
+    }
+
+    private async Task Aprobar(int detalleId)
+    {
+        if (procesando || string.IsNullOrWhiteSpace(usuarioId))
+            return;
+
+        procesando = true;
+
+        try
+        {
+            await pedidosService.AprobarDetalle(detalleId, usuarioId);
+            await CargarSolicitudes();
+
+            var detalle = solicitudes.FirstOrDefault(d => d.DetalleId == detalleId);
+
+            if (detalle?.EstadoAprobacion == "Aprobado")
+                toastService.ShowSuccess("Solicitud aprobada correctamente.");
+            else
+                toastService.ShowError("No fue posible aprobar la solicitud.");
+        }
+        catch (Exception)
+        {
+            toastService.ShowError("Ocurrió un error al aprobar la solicitud.");
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+
+    private async Task Rechazar(int detalleId)
+    {
+        if (procesando || string.IsNullOrWhiteSpace(usuarioId))
+            return;
+
+        if (!motivos.TryGetValue(detalleId, out var motivo) || string.IsNullOrWhiteSpace(motivo))
+        {
+            toastService.ShowError("Debe indicar el motivo del rechazo.");
+            return;
+        }
+
+        procesando = true;
+
+        try
+        {
+            await pedidosService.RechazarDetalle(detalleId, usuarioId, motivo);
+            await CargarSolicitudes();
+
+            var detalle = solicitudes.FirstOrDefault(d => d.DetalleId == detalleId);
+
+            if (detalle?.EstadoAprobacion == "Rechazado")
+            {
+                motivos[detalleId] = string.Empty;
+                toastService.ShowSuccess("Solicitud rechazada correctamente.");
+            }
+            else
+                toastService.ShowError("No fue posible rechazar la solicitud.");
+        }
+        catch (Exception)
+        {
+            toastService.ShowError("Ocurrió un error al rechazar la solicitud.");
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+
+    private string ColorEstado(string estado) => estado switch
+    {
+        "Aprobado" => "aprobado",
+        "Rechazado" => "rechazado",
+        "Pendiente" => "pendiente",
+        "Vencido" => "vencido",
+        _ => "vencido"
+    };
+}

@@ -25,6 +25,12 @@ public class Servicios
     [Required(ErrorMessage = "Ingrese la descripción del servicio")]
     public string Descripcion { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Ingrese la guía de requerimientos")]
+    public string GuiaRequerimientos { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Seleccione la modalidad de entrega")]
+    public string ModalidadEntrega { get; set; } = string.Empty;
+
     [Range(0.01, double.MaxValue, ErrorMessage = "Ingrese un precio válido")]
     [Column(TypeName = "decimal(18,2)")]
     public decimal Precio { get; set; }
